@@ -135,7 +135,7 @@
 <li>完成后rehashidx置为-1</li>
 </ol>
 <h4 id="跳表"><a href="#跳表" class="headerlink" title="跳表"></a>跳表</h4><p>有序数据结构，本质上为一个有序链表，核心设计思想为通过分层的思想，设计不同级别的索引，实现每次跳跃不同的距离，层数越高，对应的索引每次的跳跃幅度就越大，从而达到快速搜索的目的</p>
-<p><img src="/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D.assets/1eca7135d38de2yy16681c2bbc4f3fb4.jpg" alt="img"></p>
+<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg" alt="img"></p>
 <p><strong>实现</strong></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line">    <span class="comment">// 后退指针</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span></span><br><span class="line">    <span class="comment">// 分值</span></span><br><span class="line">    <span class="type">double</span> score;</span><br><span class="line">    <span class="comment">// 成员对象</span></span><br><span class="line">    robj *obj;</span><br><span class="line">    <span class="comment">// 层</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">        <span class="comment">// 前进指针</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line">        <span class="comment">// 跨度</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> span;</span><br><span class="line">    &#125; level[];</span><br><span class="line">    </span><br><span class="line">&#125; zskiplistNode;</span><br></pre></td></tr></table></figure>
 
@@ -265,7 +265,7 @@
 <p>表明在seconds时间段内,如果修改了changes次，则触发自动写RDB</p>
 <p>serverCron函数每过100ms被调用一次，遍历saveparms判断条件是否满足</p>
 <h4 id="文件结构"><a href="#文件结构" class="headerlink" title="文件结构"></a>文件结构</h4><p>二进制文件，并非C字符串</p>
-<img src="“Redis设计与实现”.assets/image-20220724163629597.png" alt="image-20220724163629597" style="zoom:67%;" />
+<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724163629597.png" alt="image-20220724163629597" style="zoom:67%;">
 
 <ul>
 <li>REDIS为五个字符，用于辨别是否为RDB文件</li>
@@ -281,8 +281,8 @@
 <li>selectdb：标志下一位为一个数据库号码</li>
 <li>db_number：数据库号码</li>
 <li>key_value_pairs：键值对 type为对象类型或底层编码，EXPIRETIME_MS为标志下一位为过期时间<ul>
-<li>不带过期时间：<img src="“Redis设计与实现”.assets/image-20220724170955909.png" alt="image-20220724170955909" style="zoom: 33%;" /></li>
-<li>带过期时间：<img src="“Redis设计与实现”.assets/image-20220724171042314.png" alt="image-20220724171042314" style="zoom:33%;" /></li>
+<li>不带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724170955909.png" alt="image-20220724170955909" style="zoom: 33%;"></li>
+<li>带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724171042314.png" alt="image-20220724171042314" style="zoom:33%;"></li>
 </ul>
 </li>
 </ul>
@@ -359,10 +359,10 @@
 <li>argc 参数数量</li>
 </ul>
 <p>例：<code>SET KEY VALUE</code>解析成：</p>
-<p><img src="/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D.assets/image-20220725210114777.png" alt="image-20220725210114777"></p>
+<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png" alt="image-20220725210114777"></p>
 </li>
 <li><p>命令实现函数：在命令解析完成后，通过argv[0],即具体的命令动作，区查询命令表，找到对应的实现函数，将其赋给cmd</p>
-<p><img src="/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D.assets/image-20220725211303884.png" alt="image-20220725211303884"></p>
+<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png" alt="image-20220725211303884"></p>
 </li>
 <li><p>回复缓冲区：存储回复给客户端的命令，较短的使用固定长度的字节数组，REDIS_REPLY_CHUNK_BYTES默认大小为16*1024，即大小为16KB，当固定数组存慢了之后便改用可变长度，使用reply链表，串联起多个字符串对象</p>
 </li>
@@ -413,7 +413,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" data-id="cl6jn5tjd0001hkuhgvysel5k" data-title="" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" data-id="cl6jnis9w0001bwuh4qx4ds89" data-title="" class="article-share-link">Share</a>
       
       
       
@@ -464,7 +464,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/08/hello-world/" data-id="cl6jn5tj80000hkuh7vci1d3p" data-title="Hello World" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2022/08/08/hello-world/" data-id="cl6jnis9p0000bwuhg0yrhae8" data-title="Hello World" class="article-share-link">Share</a>
       
       
       

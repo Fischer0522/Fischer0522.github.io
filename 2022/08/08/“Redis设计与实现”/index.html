@@ -1,12 +1,22 @@
+
+
 <!DOCTYPE html>
-<html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
   
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
   
-  <title>Hexo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="Redis设计与实现数据结构redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中 底层实现简单字符串SDS定义： 12345678struct sdshdr &amp;#123;    &#x2F;&#x2F; buf数组中已经使用的长度    int len">
+    <meta name="description" content="Redis设计与实现数据结构redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中 底层实现简单字符串SDS定义： 12345678struct sdshdr &amp;#123;    &#x2F;&#x2F; buf数组中已经使用的长度    int len">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/index.html">
@@ -22,79 +32,256 @@
 <meta property="article:published_time" content="2022-08-07T18:10:24.862Z">
 <meta property="article:modified_time" content="2022-08-07T18:21:08.426Z">
 <meta property="article:author" content="John Doe">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg">
   
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
   
-    <link rel="shortcut icon" href="/favicon.png">
-  
-  
-    
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+  <title>Hexo</title>
 
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
   
-    
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
 
   
 <meta name="generator" content="Hexo 6.2.0"></head>
 
-<body>
-  <div id="container">
-    <div id="wrap">
-      <header id="header">
-  <div id="banner"></div>
-  <div id="header-outer" class="outer">
-    <div id="header-title" class="inner">
-      <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
-      </h1>
-      
-    </div>
-    <div id="header-inner" class="inner">
-      <nav id="main-nav">
-        <a id="main-nav-toggle" class="nav-icon"></a>
-        
-          <a class="main-nav-link" href="/">Home</a>
-        
-          <a class="main-nav-link" href="/archives">Archives</a>
-        
-      </nav>
-      <nav id="sub-nav">
-        
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
-        
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
-      </nav>
-      <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
-      </div>
-    </div>
-  </div>
-</header>
 
-      <div class="outer">
-        <section id="main"><article id="post-“Redis设计与实现”" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" class="article-date">
-  <time class="dt-published" datetime="2022-08-07T18:10:24.862Z" itemprop="datePublished">2022-08-08</time>
-</a>
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text=""></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-08 02:10" pubdate>
+          August 8, 2022 am
+        </time>
+      </span>
     
   </div>
-  <div class="article-inner">
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          10k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          88 mins
+        
+      </span>
+    
+
     
     
-    <div class="e-content article-entry" itemprop="articleBody">
+  </div>
+
+
+        
+      </div>
+
       
-        <h1 id="Redis设计与实现"><a href="#Redis设计与实现" class="headerlink" title="Redis设计与实现"></a>Redis设计与实现</h1><h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none"></h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Redis设计与实现"><a href="#Redis设计与实现" class="headerlink" title="Redis设计与实现"></a>Redis设计与实现</h1><h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中</p>
 <h3 id="底层实现"><a href="#底层实现" class="headerlink" title="底层实现"></a>底层实现</h3><h4 id="简单字符串SDS"><a href="#简单字符串SDS" class="headerlink" title="简单字符串SDS"></a>简单字符串SDS</h4><p>定义：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sdshdr</span> &#123;</span></span><br><span class="line">    <span class="comment">// buf数组中已经使用的长度</span></span><br><span class="line">    <span class="type">int</span> len;</span><br><span class="line">    <span class="comment">// buf数组中空余的字节数</span></span><br><span class="line">    <span class="type">int</span> <span class="built_in">free</span>;</span><br><span class="line">    <span class="comment">//真实存储的字符数组，符合C的规范，以\0结尾</span></span><br><span class="line">    <span class="type">char</span> buf[];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sdshdr</span> &#123;</span><br>    <span class="hljs-comment">// buf数组中已经使用的长度</span><br>    <span class="hljs-type">int</span> len;<br>    <span class="hljs-comment">// buf数组中空余的字节数</span><br>    <span class="hljs-type">int</span> <span class="hljs-built_in">free</span>;<br>    <span class="hljs-comment">//真实存储的字符数组，符合C的规范，以\0结尾</span><br>    <span class="hljs-type">char</span> buf[];<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>特点：</p>
 <ul>
@@ -108,30 +295,30 @@
 <li>buf遵循C字符串的规则，因此兼容C的字符串函数</li>
 </ul>
 <h4 id="链表"><a href="#链表" class="headerlink" title="链表"></a>链表</h4><p>Redis中实现为双向链表，分为节点和链表本身，定义如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">prev</span>;</span></span><br><span class="line">    </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">next</span>;</span></span><br><span class="line">    </span><br><span class="line">    <span class="type">void</span> *vaule;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">listNode</span> &#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">listNode</span> *<span class="hljs-title">prev</span>;</span><br>    <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">listNode</span> *<span class="hljs-title">next</span>;</span><br>    <br>    <span class="hljs-type">void</span> *vaule;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>链表：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">list</span> &#123;</span></span><br><span class="line">    listNode *head;</span><br><span class="line">    </span><br><span class="line">    listNode *tail;</span><br><span class="line">    </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> len;</span><br><span class="line">    <span class="comment">// 复制节点保存的值</span></span><br><span class="line">    <span class="type">void</span> *(*dup) (<span class="type">void</span> *ptr);</span><br><span class="line">    <span class="comment">// 释放节点</span></span><br><span class="line">    <span class="type">void</span> (*<span class="built_in">free</span>) (<span class="type">void</span> *ptr);</span><br><span class="line">    <span class="comment">// 比较节点和输入的值</span></span><br><span class="line">    <span class="type">int</span> (*match) (<span class="type">void</span> *ptr,<span class="type">void</span> *key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> &#123;</span><br>    listNode *head;<br>    <br>    listNode *tail;<br>    <br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> len;<br>    <span class="hljs-comment">// 复制节点保存的值</span><br>    <span class="hljs-type">void</span> *(*dup) (<span class="hljs-type">void</span> *ptr);<br>    <span class="hljs-comment">// 释放节点</span><br>    <span class="hljs-type">void</span> (*<span class="hljs-built_in">free</span>) (<span class="hljs-type">void</span> *ptr);<br>    <span class="hljs-comment">// 比较节点和输入的值</span><br>    <span class="hljs-type">int</span> (*match) (<span class="hljs-type">void</span> *ptr,<span class="hljs-type">void</span> *key);<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p><strong>多态</strong>：其中 节点的值以及free dup match函数均使用void *无类型指针来表示，可以指向任意一种数据类型，从而实现了链表可以存储多种数据类型，不存在泛型，设计思想类似于Java中的Object类</p>
 <h4 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h4><p>字典的底层实现为哈希表，字典再对于哈希表进行进一步封装，用于特定操作和复制</p>
 <p><strong>哈希表</strong></p>
 <p>实现：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictht</span> &#123;</span></span><br><span class="line">    </span><br><span class="line">    dictEntry **table;</span><br><span class="line">    </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> size;</span><br><span class="line">    <span class="comment">// 哈希表大小掩码，用于计算索引值 等于size - 1</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> sizemask;</span><br><span class="line">    <span class="comment">// 已使用的节点数</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> used;</span><br><span class="line">    </span><br><span class="line">&#125; dictht;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">dictht</span> &#123;</span><br>    <br>    dictEntry **table;<br>    <br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> size;<br>    <span class="hljs-comment">// 哈希表大小掩码，用于计算索引值 等于size - 1</span><br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> sizemask;<br>    <span class="hljs-comment">// 已使用的节点数</span><br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> used;<br>    <br>&#125; dictht;<br></code></pre></td></tr></table></figure>
 
 <p>table为一个数组，数组中的每一个元素指向一个dictEntry结构的指针，多个dictEntry，通过链表的形式组织起来形成哈希桶，结构如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dictEntry</span> &#123;</span></span><br><span class="line">    <span class="type">void</span> *key;</span><br><span class="line">    </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="type">void</span> *val;</span><br><span class="line">        <span class="type">unit64_t</span> u64;</span><br><span class="line">        <span class="type">int64_t</span> s64;</span><br><span class="line">    &#125; v;</span><br><span class="line">    </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dictEntry</span> *<span class="title">next</span>;</span></span><br><span class="line">    </span><br><span class="line">&#125;dictEntry;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">dictEntry</span> &#123;</span><br>    <span class="hljs-type">void</span> *key;<br>    <br>    <span class="hljs-class"><span class="hljs-keyword">union</span> &#123;</span><br>        <span class="hljs-type">void</span> *val;<br>        <span class="hljs-type">unit64_t</span> u64;<br>        <span class="hljs-type">int64_t</span> s64;<br>    &#125; v;<br>    <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">dictEntry</span> *<span class="hljs-title">next</span>;</span><br>    <br>&#125;dictEntry;<br></code></pre></td></tr></table></figure>
 
 <p>dictEntrty ，K-V类型V通过union的形式，存储的值为三者其中之一，三者共用同一段内存，存在内存覆盖</p>
 <p><strong>字典实现</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">dict</span> &#123;</span></span><br><span class="line">    dictType *type;</span><br><span class="line">    </span><br><span class="line">    <span class="type">void</span> *privdata;</span><br><span class="line">    </span><br><span class="line">    dictht ht[<span class="number">2</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="type">int</span> rehashidx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">dict</span> &#123;</span><br>    dictType *type;<br>    <br>    <span class="hljs-type">void</span> *privdata;<br>    <br>    dictht ht[<span class="hljs-number">2</span>];<br>    <br>    <span class="hljs-type">int</span> rehashidx;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>其中type为一组特定函数封装成的结构体，privdata保存的为传给type中函数的参数，</p>
 <p>ht为两个哈希表，正常情况下只使用ht[0]，在rehash复制时才使用到ht[1]</p>
 <p>trehashidx为rehash的进度</p>
 <p><strong>哈希算法</strong></p>
 <p>K-V为(k0,v0),首先通过type中的hashFunction函数计算出哈希值,在根据sizemask计算出索引值</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hash = dict-&gt;type-&gt;hashFunction(k0);</span><br><span class="line">index = hash&amp;dict-&gt;ht[<span class="number">0</span>].sizemask <span class="comment">// </span></span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">hash = dict-&gt;type-&gt;hashFunction(k0);<br>index = hash&amp;dict-&gt;ht[<span class="hljs-number">0</span>].sizemask <span class="hljs-comment">// </span><br></code></pre></td></tr></table></figure>
 
 <p>通过位与运算，可将计算处的哈希值转换到[0,size-1]的范围之内，获得合适的索引</p>
 <p><strong>冲突&#x2F;rehash</strong></p>
@@ -144,16 +331,16 @@
 <li>完成后rehashidx置为-1</li>
 </ol>
 <h4 id="跳表"><a href="#跳表" class="headerlink" title="跳表"></a>跳表</h4><p>有序数据结构，本质上为一个有序链表，核心设计思想为通过分层的思想，设计不同级别的索引，实现每次跳跃不同的距离，层数越高，对应的索引每次的跳跃幅度就越大，从而达到快速搜索的目的</p>
-<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg" alt="img"></p>
+<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
 <p><strong>实现</strong></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line">    <span class="comment">// 后退指针</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span></span><br><span class="line">    <span class="comment">// 分值</span></span><br><span class="line">    <span class="type">double</span> score;</span><br><span class="line">    <span class="comment">// 成员对象</span></span><br><span class="line">    robj *obj;</span><br><span class="line">    <span class="comment">// 层</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line">        <span class="comment">// 前进指针</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line">        <span class="comment">// 跨度</span></span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> span;</span><br><span class="line">    &#125; level[];</span><br><span class="line">    </span><br><span class="line">&#125; zskiplistNode;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistNode</span> &#123;</span><br>    <span class="hljs-comment">// 后退指针</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistNode</span> *<span class="hljs-title">backward</span>;</span><br>    <span class="hljs-comment">// 分值</span><br>    <span class="hljs-type">double</span> score;<br>    <span class="hljs-comment">// 成员对象</span><br>    robj *obj;<br>    <span class="hljs-comment">// 层</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistLevel</span> &#123;</span><br>        <span class="hljs-comment">// 前进指针</span><br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistNode</span> *<span class="hljs-title">forward</span>;</span><br>        <span class="hljs-comment">// 跨度</span><br>        <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> span;<br>    &#125; level[];<br>    <br>&#125; zskiplistNode;<br></code></pre></td></tr></table></figure>
 
 <p>其中，后退指针用于向后遍历，指向后面的一个节点，</p>
 <p>分值用于进行排序，obj为真正存储的对象</p>
 <p>level为层数组，表示每一层指向的下一个节点和这两个这点直接的跨度</p>
 <p>通过跳表节点即可形成跳表</p>
 <p>跳表：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span></span><br><span class="line">   </span><br><span class="line">    zskiplistNode * header;</span><br><span class="line">    </span><br><span class="line">    zskiplistNode *tail;</span><br><span class="line">    </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> length;</span><br><span class="line">    </span><br><span class="line">    <span class="type">int</span> level;</span><br><span class="line">    </span><br><span class="line">&#125; zskiplist</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplist</span> &#123;</span><br>   <br>    zskiplistNode * header;<br>    <br>    zskiplistNode *tail;<br>    <br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> length;<br>    <br>    <span class="hljs-type">int</span> level;<br>    <br>&#125; zskiplist<br></code></pre></td></tr></table></figure>
 
 <p><strong>跳表构建</strong></p>
 <p>除了level层索引之外，构建的过程和链表一致，而对于level,Redis设计的level的层数为1-32之间的随机整数，具体的实现过程为二分确定，即构建新节点时，新增加一个层的概率为1&#x2F;4，即三层的概率为 <code>1/4 * 1/4 * 3/4</code></p>
@@ -175,7 +362,7 @@
 </ul>
 <h4 id="整数集合"><a href="#整数集合" class="headerlink" title="整数集合"></a>整数集合</h4><p>存储的类型为int16_t,int32_t,int_64t,且不可重复出现</p>
 <p>结构定义：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">intset</span> &#123;</span></span><br><span class="line">    <span class="type">uint32_t</span> encoding;</span><br><span class="line">    </span><br><span class="line">    <span class="type">uint32_t</span> length;</span><br><span class="line">    </span><br><span class="line">    <span class="type">int8_t</span> contents[];</span><br><span class="line">&#125; intset;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">intset</span> &#123;</span><br>    <span class="hljs-type">uint32_t</span> encoding;<br>    <br>    <span class="hljs-type">uint32_t</span> length;<br>    <br>    <span class="hljs-type">int8_t</span> contents[];<br>&#125; intset;<br></code></pre></td></tr></table></figure>
 
 
 
@@ -195,7 +382,7 @@
 <p>删除节点同样也会引起连锁更新</p>
 <p>最坏情况下(在列表头部插入),需要进行N次内存分配，每次内存分配的复杂度为O(N),最终的最坏复杂度为$O(N^2)$</p>
 <h3 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h3><p>Redis中的每一个对象通过一个对象系统redisObject来表示</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisObject</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span>  type;</span><br><span class="line">    <span class="type">unsigned</span> encoding;</span><br><span class="line">    <span class="type">void</span> *ptr;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125; robj;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisObject</span> &#123;</span><br>    <span class="hljs-type">unsigned</span>  type;<br>    <span class="hljs-type">unsigned</span> encoding;<br>    <span class="hljs-type">void</span> *ptr;<br>    <span class="hljs-comment">// ...</span><br>&#125; robj;<br></code></pre></td></tr></table></figure>
 
 <p>type表示对象的类型，encoding表示底层编码的实现方式</p>
 <h4 id="字符串对象"><a href="#字符串对象" class="headerlink" title="字符串对象"></a>字符串对象</h4><p>可作为元素嵌套在其他的对象其中</p>
@@ -263,18 +450,18 @@
 <li>AOF重写命令BGWRITEAOF会在BGSAVE执行结束后再执行</li>
 </ul>
 <p>载入：在服务器启动时，会载入RDB文件来恢复redis状态，并且服务器会阻塞，直至载入完成。但是RDB的优先级低于AOF文件，在开启了AOF持久化后会优先从AOF中载入</p>
-<h4 id="保存"><a href="#保存" class="headerlink" title="保存"></a>保存</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisServer</span> &#123;</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="comment">//条件数组</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">saveparm</span> *<span class="title">saveparams</span>;</span></span><br><span class="line">    <span class="comment">// 修改计数器，距上一次rdbSave后修改次数</span></span><br><span class="line">    <span class="type">long</span> <span class="type">long</span> dirty;</span><br><span class="line">    <span class="comment">// 上次执行保存的时间</span></span><br><span class="line">    <span class="type">time_t</span> lastsave;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="保存"><a href="#保存" class="headerlink" title="保存"></a>保存</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisServer</span> &#123;</span><br>    <span class="hljs-comment">// ...</span><br>    <span class="hljs-comment">//条件数组</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">saveparm</span> *<span class="hljs-title">saveparams</span>;</span><br>    <span class="hljs-comment">// 修改计数器，距上一次rdbSave后修改次数</span><br>    <span class="hljs-type">long</span> <span class="hljs-type">long</span> dirty;<br>    <span class="hljs-comment">// 上次执行保存的时间</span><br>    <span class="hljs-type">time_t</span> lastsave;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 
 
 <p>通过配置条件来进行自动保存，在redisServer结构体中，通过saveparms数组来维护不同的保存条件</p>
 <p>saveparm结构如下</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">saveparm</span> &#123;</span></span><br><span class="line">    <span class="comment">// 时间段</span></span><br><span class="line">    <span class="type">time_t</span> seconds;</span><br><span class="line">    <span class="comment">// 修改次数</span></span><br><span class="line">    <span class="type">int</span> changes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">saveparm</span> &#123;</span><br>    <span class="hljs-comment">// 时间段</span><br>    <span class="hljs-type">time_t</span> seconds;<br>    <span class="hljs-comment">// 修改次数</span><br>    <span class="hljs-type">int</span> changes;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>表明在seconds时间段内,如果修改了changes次，则触发自动写RDB</p>
 <p>serverCron函数每过100ms被调用一次，遍历saveparms判断条件是否满足</p>
 <h4 id="文件结构"><a href="#文件结构" class="headerlink" title="文件结构"></a>文件结构</h4><p>二进制文件，并非C字符串</p>
-<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724163629597.png" alt="image-20220724163629597" style="zoom:67%;">
+<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724163629597.png" srcset="/img/loading.gif" lazyload alt="image-20220724163629597" style="zoom:67%;">
 
 <ul>
 <li>REDIS为五个字符，用于辨别是否为RDB文件</li>
@@ -290,15 +477,15 @@
 <li>selectdb：标志下一位为一个数据库号码</li>
 <li>db_number：数据库号码</li>
 <li>key_value_pairs：键值对 type为对象类型或底层编码，EXPIRETIME_MS为标志下一位为过期时间<ul>
-<li>不带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724170955909.png" alt="image-20220724170955909" style="zoom: 33%;"></li>
-<li>带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724171042314.png" alt="image-20220724171042314" style="zoom:33%;"></li>
+<li>不带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724170955909.png" srcset="/img/loading.gif" lazyload alt="image-20220724170955909" style="zoom: 33%;"></li>
+<li>带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724171042314.png" srcset="/img/loading.gif" lazyload alt="image-20220724171042314" style="zoom:33%;"></li>
 </ul>
 </li>
 </ul>
 <p>对于不同的type,value的具体结构也不同</p>
 <h3 id="AOF持久化"><a href="#AOF持久化" class="headerlink" title="AOF持久化"></a>AOF持久化</h3><h4 id="写入与载入"><a href="#写入与载入" class="headerlink" title="写入与载入"></a>写入与载入</h4><p><strong>写入</strong></p>
 <p>redisServer维护一个aof_buf,服务器在执行完一个写命令之后， 会以协议格式将被执行的写命令追加到服务器状态的 <code>aof_buf</code> 缓冲区的末尾：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">redisServer</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// AOF 缓冲区</span></span><br><span class="line">    sds aof_buf;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisServer</span> &#123;</span><br><br>    <span class="hljs-comment">// AOF 缓冲区</span><br>    sds aof_buf;<br><br>    <span class="hljs-comment">// ...</span><br>&#125;;<br></code></pre></td></tr></table></figure>
 
 <p>服务器进程为一个事件循环(详情见事件)，每次循环结束之前，调用<code>flushAppendOnlyFile</code>把缓冲区中的内容写到硬盘中的AOF文件当中<code>flushAppendOnlyFile</code>的行为由appendfsync来控制：</p>
 <ul>
@@ -348,7 +535,7 @@
 <p><strong>实现：</strong></p>
 <p>服务器将所有的时间事件都放置在一个无序链表中，时间事件执行器运行时，遍历整个链表，，查找已经到达的时间事件，调用对应的处理器</p>
 <h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><h4 id="客户端属性"><a href="#客户端属性" class="headerlink" title="客户端属性"></a>客户端属性</h4><p>redis客户端的信息主要靠redisClient结构体进行维护，其中保存着所连接的数据库号：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisClient</span> &#123;</span></span><br><span class="line">    <span class="comment">// 当前正在连接的数据库，指向数据库数组中的一个元素</span></span><br><span class="line">    redisDb *db;</span><br><span class="line">    <span class="comment">// 正在使用的套接字描述符 -1为伪客户端 大于-1的整数为正常客户端</span></span><br><span class="line">    <span class="type">int</span> fd;</span><br><span class="line">    <span class="comment">// 客户端名称 正常情况下没名字，可手动设置</span></span><br><span class="line">    robj *name</span><br><span class="line">    <span class="comment">// 客户端角色和客户端当前处于的状态</span></span><br><span class="line">    <span class="type">int</span> flags;</span><br><span class="line">    <span class="comment">// 输入缓冲区 存放命令</span></span><br><span class="line">    sds querybuf;</span><br><span class="line">    <span class="comment">// 命令参数</span></span><br><span class="line">    robj **argv;</span><br><span class="line">    <span class="comment">// 命令参数的个数</span></span><br><span class="line">    <span class="type">int</span> argc;</span><br><span class="line">    <span class="comment">// 命令的实现函数</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">redisCommand</span> *<span class="title">cmd</span>;</span></span><br><span class="line">    <span class="comment">// 存放给客户端的回复 固定长度</span></span><br><span class="line">    <span class="type">char</span> buf[REDIS_REPLY_CHUNK_BYTES];</span><br><span class="line">    <span class="comment">// 当前已经使用的字节数量</span></span><br><span class="line">    <span class="type">int</span> bufpos;</span><br><span class="line">    <span class="comment">// 可变大小缓冲区</span></span><br><span class="line">    <span class="built_in">list</span> *reply</span><br><span class="line">    <span class="comment">// 身份验证位，1为通过验证，0为未通过验证，则只能调用AUTH命令</span></span><br><span class="line">    <span class="type">int</span> authenticated;</span><br><span class="line">    <span class="comment">// 时间相关参数</span></span><br><span class="line">    <span class="comment">// 客户端创建的时间</span></span><br><span class="line">    <span class="type">time_t</span> ctime;</span><br><span class="line">    <span class="comment">// 最后一次互动的时间</span></span><br><span class="line">    <span class="type">time_t</span> lastinteration;</span><br><span class="line">    <span class="comment">// 缓冲区第一次达到软限制的时间</span></span><br><span class="line">    <span class="type">time_t</span> obuf_soft_limit_reached_time;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisClient</span> &#123;</span><br>    <span class="hljs-comment">// 当前正在连接的数据库，指向数据库数组中的一个元素</span><br>    redisDb *db;<br>    <span class="hljs-comment">// 正在使用的套接字描述符 -1为伪客户端 大于-1的整数为正常客户端</span><br>    <span class="hljs-type">int</span> fd;<br>    <span class="hljs-comment">// 客户端名称 正常情况下没名字，可手动设置</span><br>    robj *name<br>    <span class="hljs-comment">// 客户端角色和客户端当前处于的状态</span><br>    <span class="hljs-type">int</span> flags;<br>    <span class="hljs-comment">// 输入缓冲区 存放命令</span><br>    sds querybuf;<br>    <span class="hljs-comment">// 命令参数</span><br>    robj **argv;<br>    <span class="hljs-comment">// 命令参数的个数</span><br>    <span class="hljs-type">int</span> argc;<br>    <span class="hljs-comment">// 命令的实现函数</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisCommand</span> *<span class="hljs-title">cmd</span>;</span><br>    <span class="hljs-comment">// 存放给客户端的回复 固定长度</span><br>    <span class="hljs-type">char</span> buf[REDIS_REPLY_CHUNK_BYTES];<br>    <span class="hljs-comment">// 当前已经使用的字节数量</span><br>    <span class="hljs-type">int</span> bufpos;<br>    <span class="hljs-comment">// 可变大小缓冲区</span><br>    <span class="hljs-built_in">list</span> *reply<br>    <span class="hljs-comment">// 身份验证位，1为通过验证，0为未通过验证，则只能调用AUTH命令</span><br>    <span class="hljs-type">int</span> authenticated;<br>    <span class="hljs-comment">// 时间相关参数</span><br>    <span class="hljs-comment">// 客户端创建的时间</span><br>    <span class="hljs-type">time_t</span> ctime;<br>    <span class="hljs-comment">// 最后一次互动的时间</span><br>    <span class="hljs-type">time_t</span> lastinteration;<br>    <span class="hljs-comment">// 缓冲区第一次达到软限制的时间</span><br>    <span class="hljs-type">time_t</span> obuf_soft_limit_reached_time;<br>    <br>    <span class="hljs-comment">// ...</span><br>    <br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p><strong>解释</strong></p>
 <ul>
@@ -368,10 +555,10 @@
 <li>argc 参数数量</li>
 </ul>
 <p>例：<code>SET KEY VALUE</code>解析成：</p>
-<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png" alt="image-20220725210114777"></p>
+<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png" srcset="/img/loading.gif" lazyload alt="image-20220725210114777"></p>
 </li>
 <li><p>命令实现函数：在命令解析完成后，通过argv[0],即具体的命令动作，区查询命令表，找到对应的实现函数，将其赋给cmd</p>
-<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png" alt="image-20220725211303884"></p>
+<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png" srcset="/img/loading.gif" lazyload alt="image-20220725211303884"></p>
 </li>
 <li><p>回复缓冲区：存储回复给客户端的命令，较短的使用固定长度的字节数组，REDIS_REPLY_CHUNK_BYTES默认大小为16*1024，即大小为16KB，当固定数组存慢了之后便改用可变长度，使用reply链表，串联起多个字符串对象</p>
 </li>
@@ -382,9 +569,9 @@
 <p>客户端因为多种原因被关闭，如客户端进程退出或被杀死，不符合协议格式的命令请求，或者输出，输入缓冲区大小超出限制</p>
 <p>输出硬性限制(hard limit)：超出之后直接关闭客户端</p>
 <p>输出软性限制(soft limit)：超出之后如果在指定时间内不再超出，则不会关闭客户端</p>
-<h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3><h4 id="服务器属性"><a href="#服务器属性" class="headerlink" title="服务器属性"></a>服务器属性</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisServer</span> &#123;</span></span><br><span class="line">    <span class="comment">// db数组，元素为redisDb结构，代表一个数据库</span></span><br><span class="line">    redisDb *db;</span><br><span class="line">    <span class="comment">// 数据库数量根据配置的database选项决定</span></span><br><span class="line">    <span class="type">int</span> dbnum;</span><br><span class="line">    <span class="comment">// 秒级unix时间戳</span></span><br><span class="line">    <span class="type">time_t</span> unixtime;</span><br><span class="line">    <span class="comment">// 毫秒级unix时间戳</span></span><br><span class="line">    <span class="type">long</span> <span class="type">long</span> mstime;</span><br><span class="line">    <span class="comment">// 内存峰值</span></span><br><span class="line">    <span class="type">size_t</span> stat_peak_memory；</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h3><h4 id="服务器属性"><a href="#服务器属性" class="headerlink" title="服务器属性"></a>服务器属性</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisServer</span> &#123;</span><br>    <span class="hljs-comment">// db数组，元素为redisDb结构，代表一个数据库</span><br>    redisDb *db;<br>    <span class="hljs-comment">// 数据库数量根据配置的database选项决定</span><br>    <span class="hljs-type">int</span> dbnum;<br>    <span class="hljs-comment">// 秒级unix时间戳</span><br>    <span class="hljs-type">time_t</span> unixtime;<br>    <span class="hljs-comment">// 毫秒级unix时间戳</span><br>    <span class="hljs-type">long</span> <span class="hljs-type">long</span> mstime;<br>    <span class="hljs-comment">// 内存峰值</span><br>    <span class="hljs-type">size_t</span> stat_peak_memory；<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h4 id="数据库键空间"><a href="#数据库键空间" class="headerlink" title="数据库键空间"></a>数据库键空间</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisDb</span> &#123;</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="comment">// 数据库键空间,保存数据库中所有的K-V</span></span><br><span class="line">    dict *dict;</span><br><span class="line">    <span class="comment">// 过期字典，保存过期时间</span></span><br><span class="line">    dict *expires;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="数据库键空间"><a href="#数据库键空间" class="headerlink" title="数据库键空间"></a>数据库键空间</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">redisDb</span> &#123;</span><br>    <span class="hljs-comment">// ...</span><br>    <span class="hljs-comment">// 数据库键空间,保存数据库中所有的K-V</span><br>    dict *dict;<br>    <span class="hljs-comment">// 过期字典，保存过期时间</span><br>    dict *expires;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>dict和expires为两个键指向同一个键对象，不造成空间浪费</p>
 <p>CRUD即为对这两个字典进行操作</p>
@@ -412,120 +599,313 @@
 <li>将命令回复发送给客户端，客户端接收打印显示</li>
 </ol>
 <h2 id="多机数据库的实现"><a href="#多机数据库的实现" class="headerlink" title="多机数据库的实现"></a>多机数据库的实现</h2><p>Redis主从配置：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">2.2配置文件</span><br><span class="line">	配置主redis配置	vim redis_m.conf</span><br><span class="line">	bind 0.0.0.0 //允许任意IP连接 可以根据需要调整本机127.0.0.1 或者任意指定ip</span><br><span class="line">	port 10001 //最好调整下默认端口号 10000-60000均可</span><br><span class="line">	daemonize yes  //开启后台启动 使用docker时配置为no，否则会和-</span><br><span class="line">	pidfile /var/run/redis_10001.pid  //独立的和端口号直接挂钩即可</span><br><span class="line">	logfile &quot;/*/10001.log&quot; //自定义独立日志文件即可</span><br><span class="line">	dir &quot;/*/10001&quot; //自定义独立目录即可</span><br><span class="line">	requirepass &quot;123456&quot; //配置redis密码</span><br><span class="line"></span><br><span class="line">	配置从redis配置  vim redis_s.conf</span><br><span class="line">	主redis配置均需要同样的配置</span><br><span class="line">	另新增	</span><br><span class="line">	masterauth &quot;123456&quot; //主redis的密码</span><br><span class="line">	replicaof 127.0.0.1 10001 //ip + 端口号 注意5.0版本前是slaveof命令</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs stata">2.2配置文件<br>	配置主redis配置	vim redis_m.<span class="hljs-keyword">conf</span><br>	bind 0.0.0.0 <span class="hljs-comment">//允许任意IP连接 可以根据需要调整本机127.0.0.1 或者任意指定ip</span><br>	port 10001 <span class="hljs-comment">//最好调整下默认端口号 10000-60000均可</span><br>	daemonize yes  <span class="hljs-comment">//开启后台启动 使用docker时配置为no，否则会和-</span><br>	pidfile /<span class="hljs-keyword">var</span>/<span class="hljs-keyword">run</span>/redis_10001.pid  <span class="hljs-comment">//独立的和端口号直接挂钩即可</span><br>	logfile <span class="hljs-string">&quot;/*/10001.log&quot;</span> <span class="hljs-comment">//自定义独立日志文件即可</span><br>	<span class="hljs-keyword">dir</span> <span class="hljs-string">&quot;/*/10001&quot;</span> <span class="hljs-comment">//自定义独立目录即可</span><br>	requirepass <span class="hljs-string">&quot;123456&quot;</span> <span class="hljs-comment">//配置redis密码</span><br><br>	配置从redis配置  vim redis_s.<span class="hljs-keyword">conf</span><br>	主redis配置均需要同样的配置<br>	另新增	<br>	masterauth <span class="hljs-string">&quot;123456&quot;</span> <span class="hljs-comment">//主redis的密码</span><br>	replicaof 127.0.0.1 10001 <span class="hljs-comment">//ip + 端口号 注意5.0版本前是slaveof命令</span><br><br></code></pre></td></tr></table></figure>
 
 
 
 
 
 
-      
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div></div>
+      <div>http://example.com/2022/08/08/“Redis设计与实现”/</div>
     </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" data-id="cl6jnvgov0001iguh8dcz3ywv" data-title="" class="article-share-link">Share</a>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>John Doe</div>
+        </div>
       
       
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>August 8, 2022</div>
+        </div>
       
-    </footer>
-  </div>
-  
-    
-<nav id="article-nav">
-  
-  
-    <a href="/2022/08/08/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">Hello World</div>
-    </a>
-  
-</nav>
-
-  
-</article>
-
-
-</section>
-        
-          <aside id="sidebar">
-  
-    
-
-  
-    
-
-  
-    
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/">(no title)</a>
-          </li>
-        
-          <li>
-            <a href="/2022/08/08/hello-world/">Hello World</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-</aside>
-        
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
       </div>
-      <footer id="footer">
-  
-  <div class="outer">
-    <div id="footer-info" class="inner">
-      
-      &copy; 2022 John Doe<br>
-      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
+    <div class="license-icon iconfont"></div>
   </div>
-</footer>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/08/hello-world/" title="Hello World">
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
 
     </div>
-    <nav id="mobile-nav">
+  </div>
+</div>
+
+
+
+
+
   
-    <a href="/" class="mobile-nav-link">Home</a>
+
+
+
   
-    <a href="/archives" class="mobile-nav-link">Archives</a>
+
+
+
   
-</nav>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
     
 
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
 
-<script src="/js/jquery-3.4.1.min.js"></script>
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
 
 
 
   
-<script src="/fancybox/jquery.fancybox.min.js"></script>
+    <script  src="/js/img-lazyload.js" ></script>
+  
 
 
 
 
-<script src="/js/script.js"></script>
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
 
 
 
 
 
-  </div>
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
 </body>
 </html>

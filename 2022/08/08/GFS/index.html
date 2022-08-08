@@ -1,0 +1,762 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="GFS矛盾与设计难点 我们之所以采用分布式的存储方式，是为了追求更高的性能  为了追求更高的性能，采用了分片(sharding)的方式，将数据放置在几千台服务器之上-&gt;  分片之后就会存在个别服务器宕机的情况，因此需要引入Fault Tolerance-&gt;  为确保容错功能则需要将数据进行复制-&gt;  对数据进行复制之后则会导致一致性的问题-&gt;  一致性存在问题则又会导致低性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GFS">
+<meta property="og:url" content="http://example.com/2022/08/08/GFS/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="GFS矛盾与设计难点 我们之所以采用分布式的存储方式，是为了追求更高的性能  为了追求更高的性能，采用了分片(sharding)的方式，将数据放置在几千台服务器之上-&gt;  分片之后就会存在个别服务器宕机的情况，因此需要引入Fault Tolerance-&gt;  为确保容错功能则需要将数据进行复制-&gt;  对数据进行复制之后则会导致一致性的问题-&gt;  一致性存在问题则又会导致低性">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/figure-1.png">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/image-20220731010234980.png">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/v2-d705977bef3d6819ece8a583944bb18d_720w.jpg">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/image-20220730225111467.png">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/v2-839bae1bb3874f5752fa8029c478cbf1_720w.jpg">
+<meta property="article:published_time" content="2022-08-08T07:22:04.000Z">
+<meta property="article:modified_time" content="2022-08-08T07:23:45.035Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="分布式系统">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/figure-1.png">
+  
+  
+  
+  <title>GFS - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fischer</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="GFS"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-08 15:22" pubdate>
+          August 8, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.7k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          48 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">GFS</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="GFS"><a href="#GFS" class="headerlink" title="GFS"></a>GFS</h1><p><strong>矛盾与设计难点</strong></p>
+<p>我们之所以采用分布式的存储方式，是为了追求更高的性能</p>
+<ul>
+<li><p>为了追求更高的性能，采用了分片(sharding)的方式，将数据放置在几千台服务器之上-&gt;</p>
+</li>
+<li><p>分片之后就会存在个别服务器宕机的情况，因此需要引入Fault Tolerance-&gt;</p>
+</li>
+<li><p>为确保容错功能则需要将数据进行复制-&gt;</p>
+</li>
+<li><p>对数据进行复制之后则会导致一致性的问题-&gt;</p>
+</li>
+<li><p>一致性存在问题则又会导致低性能-&gt;</p>
+</li>
+</ul>
+<p>一顿操作以后，达到的效果与我们的设计初衷相违背</p>
+<p><strong>主要需求</strong></p>
+<ul>
+<li>构建在普通机器上，因此节点失效为常态，需要较高的容错性(Fault Tolerance),并且持续监控自身状态，并且从失效中快速恢复</li>
+<li><strong>存储内容以大文件为主</strong>。系统需要存储的内容在通常情况下由数量不多的大文件构成，每个文件通常有几百 MB 甚至是几 GB 的大小；系统应当支持小文件，但不需要为其做出优化</li>
+<li>主要负载为<strong>大容量连续读</strong>、<strong>小容量随机读</strong>以及<strong>追加式的连续写</strong></li>
+<li>系统应当支持<strong>高效且原子的文件追加操作</strong>，源于在 Google 的情境中，这些文件多用于生产者-消费者模式或是多路归并</li>
+<li>当需要做出取舍时，系统应<strong>选择高数据吞吐量而不是低延时</strong></li>
+</ul>
+<h2 id="GFS设计"><a href="#GFS设计" class="headerlink" title="GFS设计"></a>GFS设计</h2><ul>
+<li>Big，fast</li>
+<li>Global：访问权限上允许即可全球化使用</li>
+<li>Sharding：分布式存储，以便用户并行化读取，提高吞吐量</li>
+<li>Automatic recovery</li>
+<li>Single data center</li>
+<li>Internal use</li>
+<li>Big sequential access：只处理大文件的顺序访问，而非随机访问</li>
+</ul>
+<p>谷歌认为存储系统设计为弱一致性是可以忍受的，为了获取更好的性能，类似于搜索引擎查询的结果，少几条也无所谓，不需要像银行般强烈保证数据的正确性</p>
+<p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/figure-1.png" srcset="/img/loading.gif" lazyload alt="图1 GFS架构图"></p>
+<p>谷歌设计为一个master server和多个chunk server，master用于进行协调调度，并且维护系统的所有元数据(命名空间，访问控制信息等)chunk为真正进行存储读取工作的节点，二者使用独立的特性进行独立设计，master能够追踪文件 chunk chunk标识符</p>
+<blockquote>
+<p>如果资源允许且可以接受不稳定的应用程序代码所带来的低可靠性，那么可以轻松地在一台机器上同时运行chunkserver和client。</p>
+<p>client不会直接从master读取文件数据，而是询问master它需要与哪个chunkserver通信。</p>
+</blockquote>
+<p>数据通过sharding分片分为多个chunk(块),存储在不同的chunk server上，注意区分 chunk与chunk server，chunk为数据的分块，包含文件的连续片段，每个chunk 的大小为64MB,chunk server为负责存储的服务器，一个chunk和chunk server并不存在一一对应的关系</p>
+<p>master主要维护三个元数据：</p>
+<ul>
+<li>文件和chunk的命名空间</li>
+<li>文件到chunk的映射</li>
+<li>每个chunk副本的位置</li>
+</ul>
+<blockquote>
+<ul>
+<li>文件名到chunk handle(id)数组的映射</li>
+<li>chunk handle(id)到：<ul>
+<li>chunk server list的映射，一个chunk被存储在多个chunk server上(副本，并非将一个chunk再划分)</li>
+<li>chunk的版本号</li>
+<li>对于chunk的读写操作必须早主chunk上顺序化，因此需要保存那个chunk server 为主节点和chunkserver 的租赁时间</li>
+</ul>
+</li>
+</ul>
+<p>来自6.824</p>
+</blockquote>
+<p>以上数据存储在内存当中，并且部分持久化到硬盘当中(版本号)，对应master存在一个日志系统(唯一被持久化的元数据)和快照(由日志产生，同样也持久化)，日志为完整的记录，快照(checkpoint)为一个状态，master宕机后恢复通过checkpoint即可</p>
+<blockquote>
+<p>master不会持久化保存哪台chunkserver含有给定的chunk的副本的记录，而是简单地在启动时从chunkserver获取信息</p>
+</blockquote>
+<h2 id="集群常见操作"><a href="#集群常见操作" class="headerlink" title="集群常见操作"></a>集群常见操作</h2><h3 id="master-Namespace管理"><a href="#master-Namespace管理" class="headerlink" title="master Namespace管理"></a>master Namespace管理</h3><p>为了管理不同客户端的并发请求，Master 会为 Namespace 中的每个文件和目录都分配一个读写锁（Read-Write Lock）。由此，对不同 Namespace 区域的并发请求便可以同时进行。</p>
+<p>所有 Master 操作在执行前都会需要先获取一系列的锁：通常，当操作涉及某个路径 <code>/d1/d2/.../dn/leaf</code> 时，Master 会需要先获取从 <code>/d1</code>、<code>/d1/d2</code> 到 <code>/d1/d2/.../dn</code> 的读锁，然后再根据操作的类型获取 <code>/d1/d2/.../dn/lead</code> 的读锁或写锁 —— 获取父目录的读锁是为了避免父目录在此次操作执行的过程中被重命名或删除。</p>
+<h3 id="读取"><a href="#读取" class="headerlink" title="读取"></a>读取</h3><p>过程：</p>
+<ol>
+<li>客户端首先先向Master节点发送文件名和偏移量(读取范围)</li>
+<li>Master根据文件名和偏移量进行查询，查询到对应chunk handle,再通过chunk handle查询到对应的chunk server ，将chunk handle和对应副本所在的chunk server返回给客户端</li>
+<li>客户端对chunk server的结果进行缓存，并且选择一个chunk server进行读取(通过同一个交换机的chunk server进行读取)</li>
+</ol>
+<h3 id="写入"><a href="#写入" class="headerlink" title="写入"></a>写入</h3><p>首先假设写入为在尾部追加的情况，并且由于primary存在租赁的机制，因此同样假设当前并无primary节点</p>
+<p>过程：</p>
+<ol>
+<li><p>client通知master要进行文件的追加写入</p>
+</li>
+<li><p>进行追加写入时，master首先要找到最近的版本(up tp date)</p>
+</li>
+<li><p>之后 master在这些最新的版本的chunk server中，选择出一个primary节点，以及其他的secondary节点</p>
+</li>
+<li><p>由于重新选择了primary节点，因此对版本号进行更新</p>
+</li>
+<li><p>告知primary和secondary节点版本号的更新，并且对primary设置租赁时间</p>
+</li>
+<li><p>master节点把版本号持久化到磁盘当中</p>
+</li>
+<li><p>primary节点选择一个偏移量，并且告知所有的secondary节点在该偏移量出进行追加写入</p>
+</li>
+<li><p>之后primary等待secondary的写入成功通知，如果所有的secondary都写入成功，则向client返回success，如果不是全部写入成功，则回复client “NO”,之后client再重新尝试发送写入请求</p>
+<p>例如以下该种情况：A写入成功后B写入失败，返回给client NO，之后client便会尝试重写写入(完全重新，不对上次失败写入的成功的secondary节点做任何处理，直接进行冗余存储)，B在C写入之后重新写入，C的偏移量由primary同一决定，对于上一次写入B失败的secondary节点，选择primary确定的偏移量而不是在末尾进行追加，之前写入失败的部分保持空白即可</p>
+<p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/image-20220731010234980.png" srcset="/img/loading.gif" lazyload alt="image-20220731010234980"></p>
+</li>
+</ol>
+<p>注意事项：</p>
+<ul>
+<li><p>只有没用primary时版本号才会增加</p>
+</li>
+<li><p>secondary出现严重错误时，master重新规划副本，丢弃掉该节点,防止对于此次写入无论客户端如何尝试，返回的结果均为No</p>
+</li>
+<li><p>租赁为超时机制，保证不会由多个primary, master的ping可能只是传输过程中丢失，但primary本身并无问题，但是master认为primary挂掉，如果重新选择primary，则会导致多个primary的问题</p>
+</li>
+</ul>
+<p><strong>对于存在Primary的情况：</strong></p>
+<ol>
+<li>客户端向 Master 询问目前哪个 Chunk Server 持有该 Chunk 的 Lease</li>
+<li>Master 向客户端返回 Primary 和其他 Replica 的位置</li>
+<li>客户端将数据推送到所有的 Replica 上。Chunk Server 会把这些数据保存在缓冲区中，等待使用</li>
+<li>待所有 Replica 都接收到数据后，客户端发送写请求给 Primary。Primary 为来自各个客户端的修改操作安排连续的执行序列号，并按顺序地应用于其本地存储的数据</li>
+<li>Primary 将写请求转发给其他 Secondary Replica，Replica 们按照相同的顺序应用这些修改</li>
+<li>Secondary Replica 响应 Primary，示意自己已经完成操作</li>
+<li>Primary 响应客户端，并返回该过程中发生的错误（若有）</li>
+</ol>
+<p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/v2-d705977bef3d6819ece8a583944bb18d_720w.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>个流程特意将数据流与控制流分开：客户端先向 Chunk Server 提交数据，再将写请求发往 Primary。这么做的好处在于 GFS 能够更好地利用网络带宽资源</p>
+<h3 id="Replica管理"><a href="#Replica管理" class="headerlink" title="Replica管理"></a>Replica管理</h3><p>Replica生命周期转换只有两个操作：创建和删除</p>
+<p>创建主要源于 ：创建chunk 为chunk重备份 Replica均衡</p>
+<p>创建chunk时放置新的replica时主要考虑因素：</p>
+<ol>
+<li>Master 会倾向于把新的 Replica 放在磁盘使用率较低的 Chunk Server 上</li>
+<li>Master 会倾向于确保每个 Chunk Server 上“较新”的 Replica 不会太多，因为新 Chunk 的创建意味着接下来会有大量的写入，如果某些 Chunk Server 上有太多的新 Chunk Replica，那么写操作压力就会集中在这些 Chunk Server 上</li>
+<li>如上文所述，Master 会倾向于把 Replica 放在不同的机架上</li>
+</ol>
+<p>当某个 Chunk 的 Replica 数量低于用户指定的阈值时，Master 就会对该 Chunk 进行重备份。这可能是由 Chunk Server 失效、Chunk Server 回报 Replica 数据损坏或是用户提高了 Replica 数量阈值所触发。</p>
+<p>需要进行重备份的chunk存在优先级，主要取决于：</p>
+<ul>
+<li>该chunk的Replica数据和用户指定的replica之间的差距有多大</li>
+<li>优先为未删除的数据进行备份</li>
+<li>提高正在阻塞用户操作的chunk的优先级</li>
+</ul>
+<p>master会周期性的检查每个chunk在集群中的分布情况，以进行迁移、重备份等操作</p>
+<h3 id="删除文件"><a href="#删除文件" class="headerlink" title="删除文件"></a>删除文件</h3><p>在文件被删除后，GFS不会立刻回收可用的物理存储空间。master仅在周期性执行懒式垃圾回收时回收物理存储空间，其中垃圾回收分为文件级垃圾回收和chunk级垃圾回收。</p>
+<p>在文件被删除时会将操作立即写入到日志当中，但是并不会对资源进行释放，而是将待删除的文件重命名为一个带有删除时间戳的隐藏文件名。当master周期性地扫描文件系统命名空间时，它会删除已经存在超过三天（用户可以配置这个间隔时间）的这种隐藏文件，从namespace中移除。</p>
+<p>Master 在元数据中有维持文件与 Chunk 之间的映射关系：当 Namespace 中的文件被移除后，对应 Chunk 的引用计数便自动减 1。</p>
+<h2 id="数据一致性"><a href="#数据一致性" class="headerlink" title="数据一致性"></a>数据一致性</h2><p>强一致性：对应分布式系统可认为为一个单体的服务器</p>
+<p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/image-20220730225111467.png" srcset="/img/loading.gif" lazyload alt="image-20220730225111467"></p>
+<p>单体服务器的可用性较差，一旦宕机则无法提供服务，因此便引入了多个分布式的Server，以上为一个设计的较为失败的案例：由于并未对C1和C2的写入顺序做约束，如果写入顺序按照C1在C2之前写S1,C2在C1之前写S2，最终导致了数据库的一致性出现问题，若想解决，则需要在主库和备库之间进行通信</p>
+<p>文件的数据修改则相对复杂。在讲述接下来的内容前，首先我们先明确，在文件的某一部分被修改后，它可能进入以下三种状态的其中之一：</p>
+<ul>
+<li>客户端读取不同的 Replica 时可能会读取到不同的内容，那这部分文件是<strong>不一致</strong>的（Inconsistent）</li>
+<li>所有客户端无论读取哪个 Replica 都会读取到相同的内容，那这部分文件就是<strong>一致</strong>的（Consistent）</li>
+<li>所有客户端都能看到上一次修改的所有完整内容，且这部分文件是一致的，那么我们说这部分文件是<strong>确定</strong>的（Defined）</li>
+</ul>
+<p>在修改后，一个文件的当前状态将取决于此次修改的类型以及修改是否成功。具体来说：</p>
+<ul>
+<li>如果一次写入操作成功且没有与其他并发的写入操作发生重叠，那这部分的文件是<strong>确定</strong>的（同时也是一致的）</li>
+<li>如果有若干个写入操作并发地执行成功，那么这部分文件会是<strong>一致</strong>的但会是<strong>不确定</strong>的：在这种情况下，客户端所能看到的数据通常不能直接体现出其中的任何一次修改</li>
+<li>失败的写入操作会让文件进入<strong>不一致</strong>的状态</li>
+</ul>
+<p>总结表格如下：</p>
+<p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/GFS.assets/v2-839bae1bb3874f5752fa8029c478cbf1_720w.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ul>
+<li>对于Write，在并发写入时所导致的相互覆盖，产生的数据碎片导致进入不确定状态</li>
+<li>而Record Append 保证了其为原子且at least once(至少一次)的</li>
+</ul>
+<p>GFS并非强一致性设计，如果想将GFS转换为强一致性，可以从以下几个角度考虑：</p>
+<ul>
+<li><p>primary检测重复的请求，像上述例子的冗余的第二个B到达时能够知晓，保证B不会冗余存储</p>
+</li>
+<li><p>secondary需要真正的去执行primary所委派的任务，而不是直接返回错误信息</p>
+</li>
+<li><p>对于出现严重错误的secondary节点，需要将其从中剔除</p>
+</li>
+<li><p>采用两阶段提交，只有primary确定了所有的secondary有了写入的能力之后再对secondary委派任务</p>
+</li>
+</ul>
+<h2 id="高可用机制"><a href="#高可用机制" class="headerlink" title="高可用机制"></a>高可用机制</h2><h3 id="Master"><a href="#Master" class="headerlink" title="Master"></a>Master</h3><p>Master通入写日志的形式对集群元数据进行持久化，并且日志达到一定大小后就创建检查点(checkpoint)，并删除checkpoint之前的日志，类似于Redis中的AOF重写(重新读取当前的状态，以达到合并命令语句的作用)</p>
+<p>相比于MapReduce的master失效后不再提供服务，GFS的master在失效后会被外部的监控系统侦测到，从而在其他地方重新启动maser进程</p>
+<p>此外，集群中还存在shadow master,提供只读服务，为master分担压力(MySQL的备库设置为只读的原理一致) Shadow Master 会通过读取 Master 操作日志的某个备份来让自己的状态与 Master 同步；</p>
+<h3 id="Chunk-Server"><a href="#Chunk-Server" class="headerlink" title="Chunk Server"></a>Chunk Server</h3><p>Chunk Server在宕机之后，如果客户端在宕机期间进行继续的读写，产生了新版本的chunk，那么如果Chunk Server在恢复后便会出现版本落后的问题，之前提及的版本号便是用于解决该问题，通过版本号即可确认哪些为陈旧的chunk, 如果 Master 发现某个 Replica 版本号过低，便会认为这个 Replica 不存在，如此一来这个过期的 Replica 便会在下一次的 Replica 回收过程中被移除。除外，Master 向客户端返回 Replica 位置信息时也会返回 Chunk 当前的版本号，如此一来客户端便不会读取到旧的数据。</p>
+<p><a target="_blank" rel="noopener" href="https://mrcroxx.github.io/posts/paper-reading/gfs-sosp2003/#41-%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E7%AE%A1%E7%90%86%E4%B8%8E%E9%94%81">《The Google File System》论文翻译（GFS-SOSP2003） - 叉鸽 MrCroxx 的博客</a></p>
+<p><a target="_blank" rel="noopener" href="https://mrcroxx.github.io/posts/paper-reading/gfs-sosp2003/#41-%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E7%AE%A1%E7%90%86%E4%B8%8E%E9%94%81">《The Google File System》论文翻译（GFS-SOSP2003） - 叉鸽 MrCroxx 的博客</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">#分布式系统</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>GFS</div>
+      <div>http://example.com/2022/08/08/GFS/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>August 8, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/08/MapReduce/" title="MapReduce">
+                        <span class="hidden-mobile">MapReduce</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

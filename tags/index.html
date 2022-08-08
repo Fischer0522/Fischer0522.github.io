@@ -4,11 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="MapReduce, Fischer">
-    <meta name="description" content="MapReduce概述MapReduce用于分布式系统的任务分发和并行化处理，主要分为三个部分，Map函数，shuffle，和Reduce函数
-
-Map函数接收一个K-V键值对，产生一个中间类型的K-V 
-shuffle为一个过程，将Map">
+    <meta name="keywords" content="标签, Fischer">
+    <meta name="description" content="Fischer">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -20,7 +17,7 @@ shuffle为一个过程，将Map">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>MapReduce | Fischer</title>
+    <title>标签 | Fischer</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -333,484 +330,143 @@ shuffle为一个过程，将Map">
 
 </header>
 
-    
-
-
-
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/14.jpg')">
-    <div class="container" style="right: 0px;left: 0px;">
-        <div class="row">
-            <div class="col s12 m12 l12">
-                <div class="brand">
-                    <h1 class="description center-align post-title">MapReduce</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-
-<main class="post-container content">
-
-    
+    <div class="bg-cover pd-header about-cover">
+    <div class="container">
     <div class="row">
-    <div id="main-content" class="col s12 m12 l9">
-        <!-- 文章内容详情 -->
-<div id="artDetail">
-    <div class="card">
-        <div class="card-content article-info">
-            <div class="row tag-cate">
-                <div class="col s7">
-                    
-                    <div class="article-tag">
-                        
-                            <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">
-                                <span class="chip bg-color">分布式系统</span>
-                            </a>
-                        
-                    </div>
-                    
-                </div>
-                <div class="col s5 right-align">
-                    
-                </div>
-            </div>
-
-            <div class="post-info">
+    <div class="col s10 offset-s1 m8 offset-m2 l8 offset-l2">
+        <div class="brand">
+            <div class="title center-align">
                 
-                <div class="post-date info-break-policy">
-                    <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-08-08
-                </div>
-                
-
-                
-
-                
-
-                
-
+                    subtitle
                 
             </div>
-        </div>
-        <hr class="clearfix">
 
-        
-
-        
-
-        <div class="card-content article-card-content">
-            <div id="articleContent">
-                <h1 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>MapReduce用于分布式系统的任务分发和并行化处理，主要分为三个部分，Map函数，shuffle，和Reduce函数</p>
-<ul>
-<li>Map函数接收一个K-V键值对，产生一个中间类型的K-V </li>
-<li>shuffle为一个过程，将Map的处理结果重新组织传给对应的worker</li>
-<li>Reduce函数对于Map传来的结果进行一个聚合，将同一个key对应的value形成一个集合(可以是一个List形式的集合，也可为计数等)</li>
-</ul>
-<h2 id="案例：单词统计"><a href="#案例：单词统计" class="headerlink" title="案例：单词统计"></a>案例：单词统计</h2><p>首先对于Map函数输入一个大型的文档，Map函数所接收的K为文档名，V为文档内容，之后Map函数在对输入的文档进行分割单词，统计在这一部分文档中该出现的次数，最后形成键值对，K为单词，V为该单词出现的次数</p>
-<p>之后便经过一个shuffle过程，对于不同worker上的相同的单词，传送到同一个worker上面，调用reduce函数，对各个Map的计数进行一个聚合，得到这个单子在整个文档中的出现次数</p>
-<ul>
-<li>值得注意的是，整个单词统计的大前提为分布式，即Map和Reduce都是运行在不同的worker上的，Map所统计的单词数量也仅仅只是分发给它的那一段中出现的次数，只有对所有的Map的结果进行聚合，得到的才是整个文档中的出现的次数</li>
-<li>Reduce的输出结果仍可以作为新的输入数据交给下层的Map函数，对其进行更为复杂的处理</li>
-</ul>
-<h3 id="其他案例"><a href="#其他案例" class="headerlink" title="其他案例"></a>其他案例</h3><ul>
-<li>计算URL的访问频率</li>
-<li>倒转网络连接图，Map对于源页面(source)中搜索所有的目标页面(target)，输出为(target,source),Reduce聚合为(target,List(source))</li>
-<li>倒排索引</li>
-</ul>
-<p>各种应用场景的共同点为对一个复杂庞大的任务进行拆分，并且该任务拆分的各个部分上并无时序上的要求，因此可以在同一时刻上分布在不同worker上面同时执行，即为”并行计算”，若各个任务之间需要相互等待，那么拆分也无什么意义</p>
-<h2 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h2><p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/MapReduce.assets/image-20220730010909522.png" alt="image-20220730010909522"></p>
-<ul>
-<li><p>程序副本：在机群中创建大量的程序副本，其中分为master和worker</p>
-<ul>
-<li>master负责任务的分发与分配，让worker去具体执行</li>
-<li>worker其中又分为执行Map函数和执行Reduce函数的</li>
-</ul>
-</li>
-<li><p>数据：</p>
-<ul>
-<li>输入数据：用户提交的原始数据，经过分割后发往不同的worker上用于执行Map函数，对应原始的文档</li>
-<li>中间数据：经过Map处理后但是尚未聚合的数据，对应单词统计中的局部文档的单词-出现次数键值对</li>
-<li>输出数据：Reduce处理后的最终结果，对应全局的单词-出现次数</li>
-</ul>
-</li>
-</ul>
-<h3 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h3><ol>
-<li>用户程序调度MapReduce库将输入文件分成M个数据篇，然后再机群创建大量程序副本(master-worker)</li>
-<li>被分配Map任务的worker,读取数据，解析成对应的K-V形式再穿给Map函数，Map处理后生成中间K-V,缓存在内存当中</li>
-<li>缓存中的K-V通过分区函数分成R个区域，周期性写入当磁盘，并且存储位置传给master，便于master后续调度reduce</li>
-<li>Reduce worker通过RPC从Map worker上读取数据，由于一个reduce函数并非处理一个key，会有多个key映射到同一个reduce任务上，因此需要对key进行<strong>排序</strong>，令相同的key聚合在一起</li>
-<li>遍历排序后的数据，将每一个唯一的key值，将其的K-V传给Reduce函数，Reduce函数将结果输出到对应的分区上</li>
-<li>Map和Reduce都执行完成后，master唤醒用户程序，继续执行</li>
-</ol>
-<p><strong>shuffle</strong></p>
-<ul>
-<li>将Map拆成M个片段，Reduce拆成R个片段，M个片段输入给Map worker，经Map处理后得到R个分片，由M至R的过程即为shuffle</li>
-</ul>
-<p><img src="https://github.com/Fischer0522/note/raw/master/CS%E5%9F%BA%E7%A1%80/DistrubutedSystem/MapReduce.assets/image-20220730015612077.png" alt="image-20220730015612077"></p>
-<p>图中横向分割为M行，纵向为R列，此外M和R数值的设置与运行Map和Reduce worker的数量并无直接必然联系，不存在一对一的关系，通常M和R的值要远远大于Map worker Reduce worker的数量</p>
-<h3 id="容错-Fault-Tolerance"><a href="#容错-Fault-Tolerance" class="headerlink" title="容错 Fault Tolerance"></a>容错 Fault Tolerance</h3><p><strong>worker故障</strong></p>
-<p>master会周期性的ping woker来确定worker是否在正确运行，若收不到回应则标记为失效</p>
-<ul>
-<li>任务未完成：已经分配给该worker 的任务重置，等待重新调度</li>
-<li>任务已完成：<ul>
-<li>Map的结果存储在本机上，因此Map worker宕机之后数据不可访问，一定要重新执行</li>
-<li>Reduce结果如果已经存储到了全局文件系统之上则无需重新执行，本机上同样不可访问需重新执行</li>
-</ul>
-</li>
-</ul>
-<p><strong>master故障</strong></p>
-<p>master失效之后直接终止程序，并无新的master节点的选举</p>
-
+            <div class="description center-align">
                 
-            </div>
-            <hr/>
-
-            
-
-    <div class="reprint" id="reprint-statement">
-        
-            <div class="reprint__author">
-                <span class="reprint-meta" style="font-weight: bold;">
-                    <i class="fas fa-user">
-                        文章作者:
-                    </i>
-                </span>
-                <span class="reprint-info">
-                    <a href="/about" rel="external nofollow noreferrer">Fischer</a>
-                </span>
-            </div>
-            <div class="reprint__type">
-                <span class="reprint-meta" style="font-weight: bold;">
-                    <i class="fas fa-link">
-                        文章链接:
-                    </i>
-                </span>
-                <span class="reprint-info">
-                    <a href="https://fischer0522.github.io/2022/08/08/MapReduce/">https://fischer0522.github.io/2022/08/08/MapReduce/</a>
-                </span>
-            </div>
-            <div class="reprint__notice">
-                <span class="reprint-meta" style="font-weight: bold;">
-                    <i class="fas fa-copyright">
-                        版权声明:
-                    </i>
-                </span>
-                <span class="reprint-info">
-                    本博客所有文章除特別声明外，均采用
-                    <a href="https://creativecommons.org/licenses/by/4.0/deed.zh" rel="external nofollow noreferrer" target="_blank">CC BY 4.0</a>
-                    许可协议。转载请注明来源
-                    <a href="/about" target="_blank">Fischer</a>
-                    !
-                </span>
-            </div>
-        
-    </div>
-
-    <script async defer>
-      document.addEventListener("copy", function (e) {
-        let toastHTML = '<span>复制成功，请遵循本文的转载规则</span><button class="btn-flat toast-action" onclick="navToReprintStatement()" style="font-size: smaller">查看</a>';
-        M.toast({html: toastHTML})
-      });
-
-      function navToReprintStatement() {
-        $("html, body").animate({scrollTop: $("#reprint-statement").offset().top - 80}, 800);
-      }
-    </script>
-
-
-
-            <div class="tag_share" style="display: block;">
-                <div class="post-meta__tag-list" style="display: inline-block;">
-                    
-                        <div class="article-tag">
+                <span id="subtitle"></span>
+                <script src="/libs/typed/typed.js"></script>
+                <script>
+                    var typed = new Typed("#subtitle", {
+                        strings: [ 
                             
-                                <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">
-                                    <span class="chip bg-color">分布式系统</span>
-                                </a>
+                                "我们已经走的太远，以至于我们忘记了为什么而出发",
                             
-                        </div>
-                    
-                </div>
-                <div class="post_share" style="zoom: 80%; width: fit-content; display: inline-block; float: right; margin: -0.15rem 0;">
-                    <link rel="stylesheet" type="text/css" href="/libs/share/css/share.min.css">
-<div id="article-share">
-
-    
-    <div class="social-share" data-sites="twitter,facebook,google,qq,qzone,wechat,weibo,douban,linkedin" data-wechat-qrcode-helper="<p>微信扫一扫即可分享！</p>"></div>
-    <script src="/libs/share/js/social-share.min.js"></script>
-    
-
-    
-
-</div>
-
-                </div>
-            </div>
-            
-                <div id="reward">
-    <a href="#rewardModal" class="reward-link modal-trigger btn-floating btn-medium waves-effect waves-light red">赏</a>
-
-    <!-- Modal Structure -->
-    <div id="rewardModal" class="modal">
-        <div class="modal-content">
-            <a class="close modal-close"><i class="fas fa-times"></i></a>
-            <h4 class="reward-title">你的赏识是我前进的动力</h4>
-            <div class="reward-content">
-                <div class="reward-tabs">
-                    <ul class="tabs row">
-                        <li class="tab col s6 alipay-tab waves-effect waves-light"><a href="#alipay">支付宝</a></li>
-                        <li class="tab col s6 wechat-tab waves-effect waves-light"><a href="#wechat">微 信</a></li>
-                    </ul>
-                    <div id="alipay">
-                        <img src="/medias/reward/alipay.jpg" class="reward-img" alt="支付宝打赏二维码">
-                    </div>
-                    <div id="wechat">
-                        <img src="/medias/reward/wechat.png" class="reward-img" alt="微信打赏二维码">
-                    </div>
-                </div>
+                                "We already walked too far, down to we had forgotten why embarked.",
+                            
+                        ],
+                        startDelay: 300,
+                        typeSpeed: 100,
+                        loop: true,
+                        backSpeed: 50,
+                        showCursor: true
+                    });
+                </script>
+                
             </div>
         </div>
     </div>
 </div>
+
 
 <script>
-    $(function () {
-        $('.tabs').tabs();
-    });
+    // 每天切换 banner 图.  Switch banner image every day.
+    var bannerUrl = "/medias/banner/" + new Date().getDay() + '.jpg';
+    $('.bg-cover').css('background-image', 'url(' + bannerUrl + ')');
 </script>
 
-            
-        </div>
+
     </div>
+</div>
+
+<main class="content">
 
     
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-<article id="prenext-posts" class="prev-next articles">
-    <div class="row article-row">
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
-            <div class="card">
-                <a href="/2022/08/08/GFS/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="GFS">
-                        
-                        <span class="card-title">GFS</span>
-                    </div>
+<div id="tags" class="container chip-container">
+    <div class="card">
+        <div class="card-content">
+            <div class="tag-title center-align">
+                <i class="fas fa-tags"></i>&nbsp;&nbsp;文章标签
+            </div>
+            <div class="tag-chips">
+                
+                
+                <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/" title="数据结构与算法: 4">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="数据结构与算法" style="background-color: #F9EBEA;">数据结构与算法
+                        <span class="tag-length">4</span>
+                    </span>
                 </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-08-08
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-user fa-fw"></i>
-                            Fischer
-                            
-                        </span>
-                    </div>
-                </div>
                 
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">
-                        <span class="chip bg-color">分布式系统</span>
-                    </a>
-                    
-                </div>
                 
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2022/08/08/Java%E5%9F%BA%E7%A1%80/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="Java基础">
-                        
-                        <span class="card-title">Java基础</span>
-                    </div>
+                <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" title="分布式系统: 2">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="分布式系统" style="background-color: #F5EEF8;">分布式系统
+                        <span class="tag-length">2</span>
+                    </span>
                 </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-08-08
-                            </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-user fa-fw"></i>
-                            Fischer
-                            
-                        </span>
-                    </div>
-                </div>
                 
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/Java/">
-                        <span class="chip bg-color">Java</span>
-                    </a>
-                    
-                </div>
+                
+                <a href="/tags/Java/" title="Java: 1">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="Java" style="background-color: #D5F5E3;">Java
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库: 5">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="数据库" style="background-color: #E8F8F5;">数据库
+                        <span class="tag-length">5</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/tags/CS%E5%9F%BA%E7%A1%80/" title="CS基础: 2">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="CS基础" style="background-color: #FEF9E7;">CS基础
+                        <span class="tag-length">2</span>
+                    </span>
+                </a>
                 
             </div>
         </div>
-        
-    </div>
-</article>
-
-</div>
-
-
-
-<!-- 代码块功能依赖 -->
-<script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
-
-
-
-<!-- 代码语言 -->
-
-<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
-
-
-<!-- 代码块复制 -->
-
-<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
-
-
-<!-- 代码块收缩 -->
-
-<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
-
-
-
-    </div>
-    <div id="toc-aside" class="expanded col l3 hide-on-med-and-down">
-        <div class="toc-widget card" style="background-color: white;">
-            <div class="toc-title"><i class="far fa-list-alt"></i>&nbsp;&nbsp;目录</div>
-            <div id="toc-content"></div>
-        </div>
     </div>
 </div>
 
-<!-- TOC 悬浮按钮. -->
+    
+    <link rel="stylesheet" type="text/css" href="/libs/jqcloud/jqcloud.css">
+<style type="text/css">
+    #tag-wordcloud {
+        width: 100%;
+        height: 300px;
+    }
+</style>
 
-<div id="floating-toc-btn" class="hide-on-med-and-down">
-    <a class="btn-floating btn-large bg-color">
-        <i class="fas fa-list-ul"></i>
-    </a>
+<div class="container" data-aos="fade-up">
+    <div class="card">
+        <div id="tag-wordcloud" class="card-content"></div>
+    </div>
 </div>
 
+<script type="text/javascript" src="/libs/jqcloud/jqcloud-1.0.4.min.js"></script>
+<script type="text/javascript">
+    
 
-<script src="/libs/tocbot/tocbot.min.js"></script>
-<script>
-    $(function () {
-        tocbot.init({
-            tocSelector: '#toc-content',
-            contentSelector: '#articleContent',
-            headingsOffset: -($(window).height() * 0.4 - 45),
-            collapseDepth: Number('0'),
-            headingSelector: 'h2, h3, h4'
-        });
-
-        // Set scroll toc fixed.
-        let tocHeight = parseInt($(window).height() * 0.4 - 64);
-        let $tocWidget = $('.toc-widget');
-        $(window).scroll(function () {
-            let scroll = $(window).scrollTop();
-            /* add post toc fixed. */
-            if (scroll > tocHeight) {
-                $tocWidget.addClass('toc-fixed');
-            } else {
-                $tocWidget.removeClass('toc-fixed');
-            }
-        });
-
-        
-        /* 修复文章卡片 div 的宽度. */
-        let fixPostCardWidth = function (srcId, targetId) {
-            let srcDiv = $('#' + srcId);
-            if (srcDiv.length === 0) {
-                return;
-            }
-
-            let w = srcDiv.width();
-            if (w >= 450) {
-                w = w + 21;
-            } else if (w >= 350 && w < 450) {
-                w = w + 18;
-            } else if (w >= 300 && w < 350) {
-                w = w + 16;
-            } else {
-                w = w + 14;
-            }
-            $('#' + targetId).width(w);
-        };
-
-        // 切换TOC目录展开收缩的相关操作.
-        const expandedClass = 'expanded';
-        let $tocAside = $('#toc-aside');
-        let $mainContent = $('#main-content');
-        $('#floating-toc-btn .btn-floating').click(function () {
-            if ($tocAside.hasClass(expandedClass)) {
-                $tocAside.removeClass(expandedClass).hide();
-                $mainContent.removeClass('l9');
-            } else {
-                $tocAside.addClass(expandedClass).show();
-                $mainContent.addClass('l9');
-            }
-            fixPostCardWidth('artDetail', 'prenext-posts');
-        });
-        
+    $('#tag-wordcloud').jQCloud([{"text":"数据结构与算法","weight":4,"link":"/tags/数据结构与算法/"},{"text":"分布式系统","weight":2,"link":"/tags/分布式系统/"},{"text":"Java","weight":1,"link":"/tags/Java/"},{"text":"数据库","weight":5,"link":"/tags/数据库/"},{"text":"CS基础","weight":2,"link":"/tags/CS基础/"}], {
+        autoResize: true
     });
 </script>
 
     
 
 </main>
-
-
 
 
     <footer class="page-footer bg-color">

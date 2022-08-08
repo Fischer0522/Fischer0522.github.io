@@ -223,6 +223,206 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2022/08/08/%E4%BA%8B%E5%8A%A1/" target="_self">
+          MySQL事务
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/%E4%BA%8B%E5%8A%A1/" target="_self">
+        <div>
+          事务四大特性：ACID（原子性、一致性、隔离性、持久性） 用于保证一组SQL语句执行的完整性并且执行期间不会受到其他不相关的SQL语句的影响 事务隔离事务的隔离级别：  读未提交：事务未提交时所做的变更就已经能被别的事务看到 读提交：事务提交后做的变更才能被别的事务看到，视图在每个SQL语句执行前创建 可重复读：事务在开始时会创建一个视图，在事务执行的整个过程中，事务看到的数据都以这个视图为准，整
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-08-08 15:03" pubdate>
+              2022-08-08
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/08/08/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F/" target="_self">
+          MySQL日志系统
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F/" target="_self">
+        <div>
+          日志系统概述在目前的MySQL当中，日志系统主要通过redo log和binlog相配合，redo log 由InnoDB引擎提供，而binlog为MySQL Server层中实现，redo log负责在崩溃时进行恢复工作，binlog负责进行归档，用于备份和主从数据一致 redo log主要功能redo log主要用于负责进行crash-safe功能，当MySQL崩溃时，便可以通过redo lo
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-08-08 15:01" pubdate>
+              2022-08-08
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/08/08/%E5%B9%B6%E5%8F%91%E4%B8%8E%E9%94%81/" target="_self">
+          并发与锁
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/%E5%B9%B6%E5%8F%91%E4%B8%8E%E9%94%81/" target="_self">
+        <div>
+          并发与锁概述设计用于控制并发问题，保证并发状态下的合理的控制资源的访问规则在粒度上，可以分为全局锁，表锁，行锁相关名词：  全局锁：锁住整个数据库 表锁：锁住表 行锁：锁索引 共享锁 排他锁 悲观锁（抽象） 乐观锁（抽象）  全局锁效果：锁住整个数据库，整个数据库都处于只读的状态，DDL和DML和更新类的事务提交语句都被阻塞命令：  推荐使用 Flush tables with read lock
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-08-08 14:56" pubdate>
+              2022-08-08
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/08/08/MySQL45%E8%AE%B2/" target="_self">
+          MySQL45讲
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/MySQL45%E8%AE%B2/" target="_self">
+        <div>
+          mysql45讲基础篇基础架构mysql基本架构示意图：  连接器 1mysql -h$ip -P$port -u$user -p   若不指定ip与端口，则默认为localhost的默认端口(3306) tcp握手后便进行身份验证，校验用户与密码 用户密码认证通过后，会从权限表中查询该连接对应的权限，并且，此次连接后，即使管理员修改了该用户的权限，此次连接的权限也不变，建立新的连接后才会使用新的
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-08-08 14:44" pubdate>
+              2022-08-08
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" target="_self">
+          Redis设计与实现
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" target="_self">
+        <div>
+          Redis设计与实现数据结构redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中 底层实现简单字符串SDS定义： 12345678struct sdshdr &amp;#123;    &#x2F;&#x2F; buf数组中已经使用的长度    int len
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-08-08 14:18" pubdate>
+              2022-08-08
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2022/08/08/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" target="_self">
           操作系统
         </a>
@@ -231,7 +431,7 @@
       
       <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" target="_self">
         <div>
-          
+          操作系统虚拟化进程进程：运行中的程序 进程的状态：(三状态模型)  运行 就绪 阻塞  上下文切换：当一个进程停止时，将其寄存器中的值保存到物理内存当中，通过恢复寄存器（将真实值从物理内存中放回寄存器当中），恢复运行该进程 进程控制块：PCB，储存进程的相关信息 受限直接执行 LDE CPU直接运行程序 操作系统掌控全局，对运行的程序加以限制  受保护的控制权转移:硬件分别提供不同的执行模式给操作
         </div>
       </a>
 
@@ -292,39 +492,6 @@
               <a href="/tags/CS%E5%9F%BA%E7%A1%80/">#CS基础</a>
             
           </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" target="_self">
-          
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" target="_self">
-        <div>
-          Redis设计与实现数据结构redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中 底层实现简单字符串SDS定义： 12345678struct sdshdr &amp;#123;    &#x2F;&#x2F; buf数组中已经使用的长度    int len
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2022-08-08 02:10" pubdate>
-              2022-08-08
-            </time>
-          </div>
-        
-        
         
       </div>
     </article>

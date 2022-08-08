@@ -591,7 +591,7 @@
 </li>
 </ul>
 <p><strong>UDP报文段结构</strong></p>
-<img src="https://user-images.githubusercontent.com/89784872/183347441-81d838f2-6f94-4ae8-8a4f-c61e77a6740c.png" srcset="/img/loading.gif" lazyload alt="image-20220801192825210" style="zoom: 67%;">
+<img src="https://user-images.githubusercontent.com/89784872/183347441-81d838f2-6f94-4ae8-8a4f-c61e77a6740c.png" srcset="/img/loading.gif" lazyload alt="image-20220801192825210" style="zoom: 67%;" />
 
 <p>其中，校验和为源端口号+目标端口号+长度的反码，因此源端口号+目标端口号+长度+校验和的结果各个位全为1，全为1则通过校验</p>
 <p>提供检验但是对擦错无恢复能力</p>
@@ -886,7 +886,7 @@
 <li>y将消息传递给z，z无需进行更新，进入静止状态</li>
 </ol>
 <p>但如果x z之间的开销为50：</p>
-<img src="https://user-images.githubusercontent.com/89784872/183347682-583751d9-85af-44f6-baaa-a5175ed88a83.png" srcset="/img/loading.gif" lazyload alt="image-20220803233933903" style="zoom:67%;">
+<img src="https://user-images.githubusercontent.com/89784872/183347682-583751d9-85af-44f6-baaa-a5175ed88a83.png" srcset="/img/loading.gif" lazyload alt="image-20220803233933903" style="zoom:67%;" />
 
 <ol>
 <li>y计算到x的开销：min(60,6) &#x3D; 6</li>
@@ -982,7 +982,7 @@
 <p>问题：但出现偶数位的错误时则校验不出</p>
 <p><strong>二维奇偶校验</strong></p>
 <p>同样也存在校验不出的情况，如下：</p>
-<img src="https://user-images.githubusercontent.com/89784872/183347720-8810b18b-04a2-4f63-aa44-b71174ee5ca0.png" srcset="/img/loading.gif" lazyload alt="image-20220806213011351" style="zoom:50%;">
+<img src="https://user-images.githubusercontent.com/89784872/183347720-8810b18b-04a2-4f63-aa44-b71174ee5ca0.png" srcset="/img/loading.gif" lazyload alt="image-20220806213011351" style="zoom:50%;" />
 
 <p>图中的四位一同发生错误，校验位的结果仍保持不变</p>
 <h4 id="校验和"><a href="#校验和" class="headerlink" title="校验和"></a>校验和</h4><p>和TCP&#x2F;UDP中的校验和checksum思路相同，将K位相加，将得到的和作为差错检测比特，在接收方与反码进行相加，检验结果是否为0</p>
@@ -1249,8 +1249,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" title="">
-                        <span class="hidden-mobile"></span>
+                      <a href="/2022/08/08/hello-world/" title="Hello World">
+                        <span class="hidden-mobile">Hello World</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

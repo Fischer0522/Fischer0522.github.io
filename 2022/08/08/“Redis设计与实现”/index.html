@@ -18,26 +18,27 @@
   
     <meta name="description" content="Redis设计与实现数据结构redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中 底层实现简单字符串SDS定义： 12345678struct sdshdr &amp;#123;    &#x2F;&#x2F; buf数组中已经使用的长度    int len">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="Redis设计与实现">
 <meta property="og:url" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Redis设计与实现数据结构redis中的数据结构主要分为两个层次，一是底层实现，为数据的真实存储方式，如链表，SDS，跳表等，二是对象系统，在底层数据结构之上进行创建，将底层数据结构作为对象的实现方式。对象系统作为Value存储在K-V数据库当中 底层实现简单字符串SDS定义： 12345678struct sdshdr &amp;#123;    &#x2F;&#x2F; buf数组中已经使用的长度    int len">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg">
-<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724163629597.png">
-<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724170955909.png">
-<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724171042314.png">
-<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png">
-<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png">
-<meta property="article:published_time" content="2022-08-07T18:10:24.862Z">
-<meta property="article:modified_time" content="2022-08-07T18:21:08.426Z">
+<meta property="og:image" content="http://example.com/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg">
+<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/“Redis设计与实现”.assets/image-20220724163629597.png">
+<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/“Redis设计与实现”.assets/image-20220724170955909.png">
+<meta property="og:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/“Redis设计与实现”.assets/image-20220724171042314.png">
+<meta property="og:image" content="http://example.com/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png">
+<meta property="og:image" content="http://example.com/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png">
+<meta property="article:published_time" content="2022-08-08T06:18:14.000Z">
+<meta property="article:modified_time" content="2022-08-08T06:33:14.429Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="数据库">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg">
+<meta name="twitter:image" content="http://example.com/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg">
   
   
   
-  <title>Hexo</title>
+  <title>Redis设计与实现 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -202,7 +203,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text=""></span>
+            <span id="subtitle" data-typed-text="Redis设计与实现"></span>
           
         </div>
 
@@ -213,8 +214,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-08-08 02:10" pubdate>
-          August 8, 2022 am
+        <time datetime="2022-08-08 14:18" pubdate>
+          August 8, 2022 pm
         </time>
       </span>
     
@@ -274,7 +275,7 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none"></h1>
+            <h1 style="display: none">Redis设计与实现</h1>
             
             
               <div class="markdown-body">
@@ -331,7 +332,7 @@
 <li>完成后rehashidx置为-1</li>
 </ol>
 <h4 id="跳表"><a href="#跳表" class="headerlink" title="跳表"></a>跳表</h4><p>有序数据结构，本质上为一个有序链表，核心设计思想为通过分层的思想，设计不同级别的索引，实现每次跳跃不同的距离，层数越高，对应的索引每次的跳跃幅度就越大，从而达到快速搜索的目的</p>
-<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><img src="/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/1eca7135d38de2yy16681c2bbc4f3fb4.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
 <p><strong>实现</strong></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistNode</span> &#123;</span><br>    <span class="hljs-comment">// 后退指针</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistNode</span> *<span class="hljs-title">backward</span>;</span><br>    <span class="hljs-comment">// 分值</span><br>    <span class="hljs-type">double</span> score;<br>    <span class="hljs-comment">// 成员对象</span><br>    robj *obj;<br>    <span class="hljs-comment">// 层</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistLevel</span> &#123;</span><br>        <span class="hljs-comment">// 前进指针</span><br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">zskiplistNode</span> *<span class="hljs-title">forward</span>;</span><br>        <span class="hljs-comment">// 跨度</span><br>        <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> span;<br>    &#125; level[];<br>    <br>&#125; zskiplistNode;<br></code></pre></td></tr></table></figure>
 
@@ -461,7 +462,7 @@
 <p>表明在seconds时间段内,如果修改了changes次，则触发自动写RDB</p>
 <p>serverCron函数每过100ms被调用一次，遍历saveparms判断条件是否满足</p>
 <h4 id="文件结构"><a href="#文件结构" class="headerlink" title="文件结构"></a>文件结构</h4><p>二进制文件，并非C字符串</p>
-<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724163629597.png" srcset="/img/loading.gif" lazyload alt="image-20220724163629597" style="zoom:67%;">
+<img src="“Redis设计与实现”.assets/image-20220724163629597.png" srcset="/img/loading.gif" lazyload alt="image-20220724163629597" style="zoom:67%;" />
 
 <ul>
 <li>REDIS为五个字符，用于辨别是否为RDB文件</li>
@@ -477,8 +478,8 @@
 <li>selectdb：标志下一位为一个数据库号码</li>
 <li>db_number：数据库号码</li>
 <li>key_value_pairs：键值对 type为对象类型或底层编码，EXPIRETIME_MS为标志下一位为过期时间<ul>
-<li>不带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724170955909.png" srcset="/img/loading.gif" lazyload alt="image-20220724170955909" style="zoom: 33%;"></li>
-<li>带过期时间：<img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220724171042314.png" srcset="/img/loading.gif" lazyload alt="image-20220724171042314" style="zoom:33%;"></li>
+<li>不带过期时间：<img src="“Redis设计与实现”.assets/image-20220724170955909.png" srcset="/img/loading.gif" lazyload alt="image-20220724170955909" style="zoom: 33%;" /></li>
+<li>带过期时间：<img src="“Redis设计与实现”.assets/image-20220724171042314.png" srcset="/img/loading.gif" lazyload alt="image-20220724171042314" style="zoom:33%;" /></li>
 </ul>
 </li>
 </ul>
@@ -555,10 +556,10 @@
 <li>argc 参数数量</li>
 </ul>
 <p>例：<code>SET KEY VALUE</code>解析成：</p>
-<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png" srcset="/img/loading.gif" lazyload alt="image-20220725210114777"></p>
+<p><img src="/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725210114777.png" srcset="/img/loading.gif" lazyload alt="image-20220725210114777"></p>
 </li>
 <li><p>命令实现函数：在命令解析完成后，通过argv[0],即具体的命令动作，区查询命令表，找到对应的实现函数，将其赋给cmd</p>
-<p><img src="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png" srcset="/img/loading.gif" lazyload alt="image-20220725211303884"></p>
+<p><img src="/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/image-20220725211303884.png" srcset="/img/loading.gif" lazyload alt="image-20220725211303884"></p>
 </li>
 <li><p>回复缓冲区：存储回复给客户端的命令，较短的使用固定长度的字节数组，REDIS_REPLY_CHUNK_BYTES默认大小为16*1024，即大小为16KB，当固定数组存慢了之后便改用可变长度，使用reply链表，串联起多个字符串对象</p>
 </li>
@@ -614,6 +615,13 @@
               <div class="post-metas my-3">
   
   
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+      
+    </div>
+  
 </div>
 
 
@@ -622,7 +630,7 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div></div>
+      <div>Redis设计与实现</div>
       <div>http://example.com/2022/08/08/“Redis设计与实现”/</div>
     </div>
     <div class="license-meta">
@@ -665,9 +673,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/08/08/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" title="计算机网络-自顶向下">
+                      <a href="/2022/08/08/MySQL45%E8%AE%B2/" title="MySQL45讲">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">计算机网络-自顶向下</span>
+                        <span class="hidden-mobile">MySQL45讲</span>
                         <span class="visible-mobile">Previous</span>
                       </a>
                     
@@ -675,8 +683,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/08/08/hello-world/" title="Hello World">
-                        <span class="hidden-mobile">Hello World</span>
+                      <a href="/2022/08/08/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统">
+                        <span class="hidden-mobile">操作系统</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

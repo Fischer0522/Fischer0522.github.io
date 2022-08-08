@@ -1,0 +1,1643 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="mysql45讲基础篇基础架构mysql基本架构示意图：  连接器 1mysql -h$ip -P$port -u$user -p   若不指定ip与端口，则默认为localhost的默认端口(3306) tcp握手后便进行身份验证，校验用户与密码 用户密码认证通过后，会从权限表中查询该连接对应的权限，并且，此次连接后，即使管理员修改了该用户的权限，此次连接的权限也不变，建立新的连接后才会使用新的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL45讲">
+<meta property="og:url" content="http://example.com/2022/08/08/MySQL45%E8%AE%B2/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="mysql45讲基础篇基础架构mysql基本架构示意图：  连接器 1mysql -h$ip -P$port -u$user -p   若不指定ip与端口，则默认为localhost的默认端口(3306) tcp握手后便进行身份验证，校验用户与密码 用户密码认证通过后，会从权限表中查询该连接对应的权限，并且，此次连接后，即使管理员修改了该用户的权限，此次连接的权限也不变，建立新的连接后才会使用新的">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/0d2070e8f84c4801adbfa03bda1f98d9.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/16a7950217b3f0f4ed02db5db59562a7.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/2e5bff4910ec189fe1ee6e2ecc7b4bbe.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/7dea45932a6b722eb069d2264d0066f8-16546557330432.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/d9c313809e5ac148fc39feff532f0fee.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/dcda101051f28502bd5c4402b292e38d.png?raw=true">
+<meta property="og:image" content="http://example.com/%E5%BC%80%E5%8F%91/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/44dab2bb11654529b81e1e81d7f2f540tplv-k3u1fbpfcp-zoom-in-crop-mark3024000.webp">
+<meta property="og:image" content="http://example.com/%E5%BC%80%E5%8F%91/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/791b82772bac4081ba1466cafe726efdtplv-k3u1fbpfcp-zoom-in-crop-mark3024000.webp">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/4d0eeec7b136371b79248a0aed005a52.jpg?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/68d08d277a6f7926a41cc5541d3dfced-16547818091355.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/882114aaf55861832b4270d44507695e.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/cda2a0d7decb61e59dddc83ac51efb6e.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/image-20220610002347123.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/image-20220610172752905.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/cc44c1d080141aa50df6a91067475374.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/8083f05a4a4c0372833a6e01d5a8e6ea.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/image-20220615210049646.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/3e30d9a5e67f711f5af2e2599e800286.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/dcea7845ff0bdbee2622bf3c67d31d92.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/e7f7ca0d3dab2f48c588d714ee3ac861.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/df37bf0bb9f85ea59f0540e24eb6bcbe.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/e7f7ca0d3dab2f48c588d714ee3ac861.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/465990fe8f6b418ca3f9992bd1bb5465.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/bcf75aa3b0f496699fd7885426bc6245.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/21f64a6799645b1410ed40d016139828.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/93a7294dd9ea8dc1016f69c0fd223f0387cf1067.jpg?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/b7f27917ceb0be90ef7b201f2794c817.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/f5712c56dc84d331990409a5c313ea9c.png?raw=true">
+<meta property="og:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/1788deca56cb83c114d8353c92e3bde3.jpg?raw=true">
+<meta property="article:published_time" content="2022-08-08T06:44:01.000Z">
+<meta property="article:modified_time" content="2022-08-08T06:54:52.535Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/0d2070e8f84c4801adbfa03bda1f98d9.png?raw=true">
+  
+  
+  
+  <title>MySQL45讲 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fischer</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MySQL45讲"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-08 14:44" pubdate>
+          August 8, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          27k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          225 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">MySQL45讲</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="mysql45讲"><a href="#mysql45讲" class="headerlink" title="mysql45讲"></a>mysql45讲</h1><h2 id="基础篇"><a href="#基础篇" class="headerlink" title="基础篇"></a>基础篇</h2><h3 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h3><p><strong>mysql基本架构示意图</strong>：</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/0d2070e8f84c4801adbfa03bda1f98d9.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>连接器</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mys">mysql -h$ip -P$port -u$user -p<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>若不指定ip与端口，则默认为localhost的默认端口(3306)</li>
+<li>tcp握手后便进行身份验证，校验用户与密码</li>
+<li>用户密码认证通过后，会从权限表中查询该连接对应的权限，并且，此次连接后，即使管理员修改了该用户的权限，此次连接的权限也不变，建立新的连接后才会使用新的权限设置</li>
+</ul>
+<p><strong>长连接&#x2F;短链接</strong></p>
+<p>长连接为连接成功，客户端持续请求都使用这一个连接</p>
+<p>短链接为执行很少几次的查询断开连接，下次查询重新建立连接</p>
+<p>建议使用长连接，但是长链接过多时会导致资源占用过多而不被释放，最后导致OOM重启</p>
+<p>解决方法：</p>
+<ul>
+<li>定期断开长连接</li>
+<li>mysql_reset_connection重新初始化连接资源(mysql 5.7及以上)</li>
+</ul>
+<p><strong>查询缓存</strong></p>
+<p>mysql将执行过的语句和查询的结果以key-value的形式存储</p>
+<ul>
+<li>查询后若缓存命中则直接返回结果</li>
+<li>每次数据更新导致缓存被清空，因此命中率较低</li>
+<li>适用于静态查询表</li>
+<li>mysql8.0缓存被删除</li>
+</ul>
+<p><strong>分析器</strong></p>
+<p>词法分析-&gt;语法分析：</p>
+<ul>
+<li>词法分析识别出其中的字符串是什么</li>
+<li>语法分析检验语法</li>
+</ul>
+<p><strong>优化器</strong></p>
+<ul>
+<li>多个索引的情况下选择索引的使用</li>
+<li>join的先后顺序</li>
+</ul>
+<p>经过优化器之后，便可以确定执行方案，交给执行器进行执行</p>
+<p><strong>执行器</strong></p>
+<p>首先判断权限，是否有查询该表的权限</p>
+<p>之后根据表的引擎定义，使用这个引擎对应的接口</p>
+<h3 id="日志系统"><a href="#日志系统" class="headerlink" title="日志系统"></a>日志系统</h3><p>与查询不同的是，更新语句还涉及日志模块，分别为redo log 和 bin log</p>
+<p><strong>redo log</strong></p>
+<p>MYSQL中的Write-Ahead Logging(WAL)技术：先写日志，再写磁盘</p>
+<p>更新是InnoDB先将记录写道rodo log中，再空闲时再从redo log中写入到硬盘之中</p>
+<p>与此类似，InnoDB 的 redo log 是固定大小的，比如可以配置为一组 4 个文件，每个文件的大小是 1GB，总共就可以记录 4GB 的操作。从头开始写，写到末尾就又回到开头循环写<strong>四个文件之间循环写入，但是单个文件为随机写入</strong></p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/16a7950217b3f0f4ed02db5db59562a7.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>write pos处写入，check point处擦除，当write pos追上check point时，即为已经写满，需要将一部分写入磁盘， 推进check point</p>
+<p>redo log 分为两部分，一部分为存储在内存中的redo buffer ，另一部分真正写入磁盘之中，如果发生断电，则redo buffer中的丢失，事务回滚</p>
+<p>有了 redo log，InnoDB 就可以保证即使数据库发生异常重启，之前提交的记录都不会丢失，这个能力称为 crash-safe。</p>
+<p><strong>bin log</strong></p>
+<p>最开始 MySQL 里并没有 InnoDB 引擎。MySQL 自带的引擎是 MyISAM，但是 MyISAM 没有 crash-safe 的能力，binlog 日志只能用于归档。</p>
+<p>binlog与redolog的不同：</p>
+<ul>
+<li>redolog InnoDB特有，binlog为mysql server层实现的 任何引擎都可以使用</li>
+<li>redolog为物理日志，记录在某个数据页上做了什么修改，binlog为逻辑日志，记录语句的原始逻辑 （statement格式记录sql语句，row格式记录行的内容）</li>
+<li>redo log循环写，空间大小固定会用完，binlog可切换新的文件进行追加</li>
+<li>备份时即为备份 binlog 用于归档</li>
+</ul>
+<p><strong>执行过程：两阶段提交</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">mysql&gt; update T set c=c+1 where ID=2;<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/2e5bff4910ec189fe1ee6e2ecc7b4bbe.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>通过两阶段提交，全部写入成功后再提交事务，保证两份日志的逻辑一致</p>
+<p>若不使用两阶段提交：</p>
+<ul>
+<li><p>先redo log后bin log：crash后redo log进行数据恢复，值被修改，但是备份中的值未被修改</p>
+</li>
+<li><p>先bin log后 redo log：crash后成功备份但是当前值为改变</p>
+</li>
+</ul>
+<h3 id="事务隔离"><a href="#事务隔离" class="headerlink" title="事务隔离"></a>事务隔离</h3><p>事务：ACID 原子性、一致性、隔离性、持久性</p>
+<p>隔离级别：</p>
+<ul>
+<li>读未提交：事务未提交时别的事务就可以看到</li>
+<li>读提交：该事务提交后所作的变更才能被别的事务看到</li>
+<li>可重复读：该事务执行过程中看到的数据一致（同一个视图内的数据一致）在事务启动后，对于其他事务进行的改动不承认，只会去找在事务启动时那一时刻的数据版本，但是，对于本事务的改动，依旧会承认(对于本事务进行的更新，存在当前读的情况，详情见后)</li>
+<li>串行化：对同一条记录进行上锁</li>
+</ul>
+<p>隔离性自上至下依次增强，并行性能依次减弱</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/7dea45932a6b722eb069d2264d0066f8-16546557330432.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>查询结果：</p>
+<ul>
+<li>读未提交：V1:2 V2: 2 V3 2</li>
+<li>读提交：V1:1 V2:2 V3:2</li>
+<li>可重复读：V1:1 V2:1 V3:2(事务A执行过程中读取的数据相同)</li>
+<li>串行化：V1:1 V2: 1 V3: 2(B修改时会被锁到A事务提交完)</li>
+</ul>
+<p><strong>视图</strong></p>
+<p>实现上数据库会创建一个视图，查询结果以视图为准，</p>
+<ul>
+<li><p>可重复读的隔离级别下，视图在事务启动时创建(事务在第一个select时启动，注意区分创建和启动的概念)，整个事务时期都使用这个视图。</p>
+</li>
+<li><p>读提交下，为在SQL语句开始执行时创建，每一条语句执行前都会重新计算出一个新的视图</p>
+</li>
+<li><p>读未提交下，在直接返回记录上的最新值，没有视图概念</p>
+</li>
+<li><p>串行化直接通过加锁的方式</p>
+</li>
+</ul>
+<p><strong>事务隔离的实现</strong></p>
+<p>MYSQL每次更新时同时记录一条回滚操作</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/d9c313809e5ac148fc39feff532f0fee.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>一个值顺序从 1被改成2、3、4，回滚段则为记录逆向操作</p>
+<blockquote>
+<p>在查询这条记录的时候，不同时刻启动的事务会有不同的 read-view。如图中看到的，在视图 A、B、C 里面，这一个记录的值分别是 1、2、4，同一条记录在系统中可以存在多个版本，就是数据库的多版本并发控制（MVCC）。对于 read-view A，要得到 1，就必须将当前值依次执行图中所有的回滚操作得到。</p>
+</blockquote>
+<p><strong>数据库中并不会记录1、2、3这几个值，只会保存回滚日志undo log，想要得到1，只能通过undo log进行一步步的计算得来</strong></p>
+<p>回滚日志的删除：</p>
+<p>​    当系统内没有比当前回滚日志更早的视图时，即为没有事务会再用到该回滚日志，就会删除该回滚日志</p>
+<p>​    如当事务A执行完，视图消失后，对应的回滚日志将2改成1也一并被删除</p>
+<p>尽量避免使用长事务：</p>
+<p>​    该事务被提交前，所有的回滚日志都会被保存，占用大量空间，拖垮数据库</p>
+<p><strong>事务启动方式</strong></p>
+<p>建议使用<code>set autocommit = 1</code>再通过显示语句<code>begin</code>或<code>start transaction</code>进行启动，避免<code>set autocommit = 0</code>长事务</p>
+<h3 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h3><p>作用：提高查询效率</p>
+<p>本质：B+树，每多添加一个索引就多一棵B+树（InnoDB中）</p>
+<p><strong>常见模型</strong></p>
+<ul>
+<li><p>哈希表：适合等值查询，由于其无序性，区间查询则需要整个进行遍历</p>
+</li>
+<li><p>有序数组：等值查询和范围查询都性能优秀，但是插入时移动数组性能损耗大，只适用于静态存储引擎</p>
+</li>
+<li><p>二叉搜索树：查询的时间复杂度为O(log(N))，为了保持树为平衡二叉树，更新复杂度也为O(log(N))</p>
+<ul>
+<li>存在的问题：树过高，在磁盘中一次读取一个子节点，内存与硬盘的交互过程中开销大</li>
+<li>解决方式：查询过程中尽可能少的访问数据块，使用N叉树：一次访问获取多个数据或多个后续节点</li>
+</ul>
+</li>
+</ul>
+<p><strong>InnoDB的索引模型</strong></p>
+<p>B+树，一个索引对应一个B+树</p>
+<p>​    B+树中只有叶子节点存放数据，并且不同叶子节点之间使用链表进行连    接，其他只存放索引</p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6929833495082565646">MySQL索引底层：B+树详解 - 掘金 (juejin.cn)</a></p>
+<p>设置主键为id，索引为k: </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs mysql">mysql&gt; create table T(<br>id int primary key, <br>k int not null, <br>name varchar(16),<br>index (k))engine=InnoDB;<br></code></pre></td></tr></table></figure>
+
+<p>对应的索引树如下</p>
+<ul>
+<li><p>主键索引中存放整行数据</p>
+</li>
+<li><p>非主键索引(二级索引)存放主键的值：查询时需要进行回表（先查询到主键，在通过主键索引进行查询）</p>
+</li>
+</ul>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/dcda101051f28502bd5c4402b292e38d.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>索引维护</strong></p>
+<ul>
+<li>追加插入：直接在叶子节点后进行追加</li>
+<li>中间插入：涉及到数组的移动</li>
+<li>数据页满：叶子的分裂(具体过程看B+树算法)，空间利用率降低50%</li>
+</ul>
+<p>自增主键在插入时直接追加，不涉及数组的移动，并且本身占空间小(int 4字节,bigint8字节), 在性能和存储空间上考虑，自增主键较为合理</p>
+<p>&#x3D;&#x3D;因此大多数情况推荐使用自增主键&#x3D;&#x3D;</p>
+<ol>
+<li><p><strong>覆盖索引</strong>：如果查询条件使用的是普通索引（或是联合索引的最左原则字段），查询结果是联合索引的字段或是主键，不用回表操作，直接返回结果，减少IO磁盘读写读取正行数据 </p>
+</li>
+<li><p><strong>最左前缀</strong>：联合索引的最左 N 个字段，也可以是字符串索引的最左 M 个字符 (通过like进行模糊匹配时) 当存在(a,b)这个索引时，一般不需要再建立单独a的索引         </p>
+</li>
+<li><p><strong>联合索引</strong>：根据创建联合索引的顺序，以最左原则进行where检索，比如（age，name）以age&#x3D;1 或 age&#x3D; 1 and name&#x3D;‘张三’可以使用索引，单以name&#x3D;‘张三’ 不会使用索引，考虑到存储空间的问题，还请根据业务需求，将查找频繁的数据进行靠左创建索引。 </p>
+</li>
+<li><p><strong>索引下推</strong>：like ‘hello%’and age &gt;10 检索，MySQL5.6版本之前，会对匹配的数据进行回表查询。5.6版本后，会先过滤掉age&lt;10的数据，再进行回表查询，减少回表率，提升检索速度</p>
+</li>
+</ol>
+<h3 id="全局锁和表锁"><a href="#全局锁和表锁" class="headerlink" title="全局锁和表锁"></a>全局锁和表锁</h3><p><strong>全局锁</strong></p>
+<p>MYSQL 使用 Flush tables with read lock(FTWRL) 让整个库处于只读的状态，通常用于做全库逻辑备份</p>
+<blockquote>
+<p>官方自带的逻辑备份工具是 mysqldump。当 mysqldump 使用参数–single-transaction 的时候，导数据之前就会启动一个事务，来确保拿到一致性视图。而由于 MVCC 的支持，这个过程中数据是可以正常更新的。对于 MyISAM 这种不支持事务的引擎，如果备份过程中有更新，总是只能取到最新的数据，那么就破坏了备份的一致性。这时，我们就需要使用 FTWRL 命令了。</p>
+</blockquote>
+<p>不建议使用<code>set global readonly = true</code>的方式令全库只读：</p>
+<p><strong>表级锁</strong>：表锁&#x2F;元数据锁</p>
+<p><strong>表锁</strong></p>
+<ul>
+<li>语法<code>lock tables ... read/write</code></li>
+<li>可以用unlock tables主动断开，也可在客户端断开时主动释放</li>
+<li>不仅会限制别的进程的读写，同时本进程的接下来的操作也受限定</li>
+</ul>
+<blockquote>
+<p>举个例子, 如果在某个线程 A 中执行 lock tables t1 read, t2 write; 这个语句，则其他线程写 t1、读写 t2 的语句都会被阻塞。同时，线程 A 在执行 unlock tables 之前，也只能执行读 t1、读写 t2 的操作。连写 t1 都不允许，自然也不能访问其他表。</p>
+</blockquote>
+<p><strong>元数据锁</strong></p>
+<ul>
+<li><p>不显式使用，访问表时会自动加上去</p>
+</li>
+<li><p>防止DDL和DML并发的冲突</p>
+<ul>
+<li>对一个表进行CRUD时，加读锁</li>
+<li>对表结构进行改变时，加写锁</li>
+</ul>
+</li>
+<li><p>事务提交时才会释放</p>
+</li>
+<li><p>分为读锁、写锁   读锁之间不互斥，读锁与写锁，写锁与写锁之间互斥</p>
+<p>故可以有多个线程对同一个表进行CRUD，但是在对表结构进行改变时，不允许别的线程对表结构进行改变以及CRUD</p>
+</li>
+</ul>
+<p>由于在事务提交时才会释放锁，因此要安全的插入字段则需要解决长时间不释放锁的问题：</p>
+<ul>
+<li>解决长事务，防止一直占用MDL锁</li>
+<li>在alter table语句中设置等待时间，过期超时，防止在请求量大的时候阻塞后面的业务语句</li>
+</ul>
+<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>&#x3D;&#x3D;存疑&#x3D;&#x3D;</p>
+<ul>
+<li>MySQL 5.7当中如何查看上的锁而非等待锁的事务</li>
+<li>查询字段对上锁是否有影响</li>
+</ul>
+<p>在引擎层由各个引擎负责实现，如MyISAM即不支持行锁，被InnoDB取代</p>
+<p>innodb加行锁的前提是：必须是通过索引条件来检索数据，否则会切换为表锁。行锁是加在索引上的，比如某个表中id字段是主键，如果给id&#x3D;2这条记录加锁，那这把锁是加在主键索引(聚簇索引)上的。如果为某个没有索引的字段加锁，最终会在主键索引上锁住所有的记录。</p>
+<p>两阶段锁协议：行锁在需要时加上，在事务提交时才释放，故在整个事务当中，应当把最可能引起冲突的锁尽可能的往后放，确保其尽快释放，占用时间较短，影响较小</p>
+<p><strong>加锁位置</strong></p>
+<p>&#x3D;&#x3D;有待深入学习&#x3D;&#x3D;</p>
+<p>只讨论最基础的等值条件存在的情况，并且均基于select *  for update的情况</p>
+<ul>
+<li><p>查询条件为主键索引时，在主键索引上进行锁</p>
+<p><img src="/../../../../%E5%BC%80%E5%8F%91/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/44dab2bb11654529b81e1e81d7f2f540tplv-k3u1fbpfcp-zoom-in-crop-mark3024000.webp" srcset="/img/loading.gif" lazyload alt="img"></p>
+</li>
+<li><p>查询条件为唯一索引时，在唯一索引和主键上进行加锁，防止其他事务通过其他索引找到这行进行数据修改，如<code>delete from t where name = &#39;john&#39;</code></p>
+<p><img src="/../../../../%E5%BC%80%E5%8F%91/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/791b82772bac4081ba1466cafe726efdtplv-k3u1fbpfcp-zoom-in-crop-mark3024000.webp" srcset="/img/loading.gif" lazyload alt="img"></p>
+</li>
+<li><p>查询条件为非唯一索引时，对非唯一索引加上next-key lock，在主键索引上加上记录锁</p>
+</li>
+<li><p>当查询条件为非索引时，无论是等值查询还是范围查询，无论是否存在查询结果，都会对表中所有的记录加邻键锁，也就是我们常说的“锁表”</p>
+</li>
+</ul>
+<p><strong>死锁和死锁检测</strong></p>
+<p>例：<img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/4d0eeec7b136371b79248a0aed005a52.jpg?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>其中事务A在等待事务B释放掉id&#x3D;2的行锁，事务B在等待事务A释放掉id&#x3D;1的行锁，故产生了死锁</p>
+<p>应对策略：</p>
+<ul>
+<li>设置超时时间innodb_lock_wait_timeout，默认时间为50s，手动设置时：<ul>
+<li>过短：误伤一般的锁</li>
+<li>过长：影响了等待时间过长无法接受，如默认的50s在生产环境中过于长</li>
+</ul>
+</li>
+<li>死锁检测：innode_deadlock_detece设置为on，默认情况死锁检测即为开启状态,通常也采用这种方式处理死锁<ul>
+<li>问题：检测本身消耗过大：每次新来的被堵住的线程都要检测会不会因为自己而产生了死锁，复杂度为O(n)</li>
+<li>优化：<ul>
+<li>当确定业务一定不会出现死锁时，手动关闭</li>
+<li>控制并发度，令新来的线程不需要进行大量检测排查</li>
+<li>将一行改成逻辑上的多行来减少冲突的情况（每行分别计算再进行汇总）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="视图、锁与多版本数据"><a href="#视图、锁与多版本数据" class="headerlink" title="视图、锁与多版本数据"></a>视图、锁与多版本数据</h3><p>事务的启动时机：</p>
+<ul>
+<li>使用begin&#x2F;start transaction时，在执行第一个操作innoDB的表时，事务才真正启动</li>
+<li>使用start tracnsaction with consistent snapshot时，执行命令时创建事务</li>
+<li>像update此类语句，本身就是一个事务，在执行时创建，语句完成后自动提交、</li>
+</ul>
+<p><strong>视图</strong>：</p>
+<p>MYSQL中有两个视图的概念</p>
+<ul>
+<li>一个时view，用查询结果定义的一个虚拟表，查询他的方法与查询表一致</li>
+<li>另一个时InnoDB在实现MVCC时使用的一致性视图(consistent read view)，用于支持 RC（Read Committed，读提交）和 RR（Repeatable Read，可重复读）隔离级别的实现。没有物理结构，作用是事务执行期间用来定义“我能看到什么数据”。</li>
+</ul>
+<p><strong>多版本数据</strong></p>
+<p>每行数据存在多个版本，每个事务在创建时，会获取一个自增的transaction id，用于表明事务的创建时间而在对行内数据进行更新时，会将该transaction id赋值给这个数据版本的事务id，记为row trx_id</p>
+<p>数据表中的一行记录，有多个版本，每个版本都用自己的row trx_id，并且可以通过回滚日志计算出上一个版本</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/68d08d277a6f7926a41cc5541d3dfced-16547818091355.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<blockquote>
+<p>在实现上， InnoDB 为每个事务构造了一个数组，用来保存这个事务启动瞬间，当前正在“活跃”的所有事务 ID。“活跃”指的就是，启动了但还没提交。该视图数组把所有的row trx_id分为了一下几种状态</p>
+<ol>
+<li>如果落在绿色部分，表示这个版本是已提交的事务或者是当前事务自己生成的，这个数据是可见的；</li>
+<li>如果落在红色部分，表示这个版本是由将来启动的事务生成的，是肯定不可见的；</li>
+<li>如果落在黄色部分，那就包括两种情况<ol>
+<li>a. 若 row trx_id 在数组中，表示这个版本是由还没提交的事务生成的，不可见；</li>
+<li>b. 若 row trx_id 不在数组中，表示这个版本是已经提交了的事务生成的，可见。</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/882114aaf55861832b4270d44507695e.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>说明：</p>
+<ol>
+<li>在活跃数组中数值最小的row trx_id称为低水位，最大的称为高水位，对于低水位高水位这种说法，只是其一个限定作用，用于确定已经完成的事务和还未开始的事务，而在低水位和高水位这个范围之内的row trx_id，只有真正存在于活跃数组中的才是未提交的事务</li>
+<li>水位只能表明未提交事务的范围，即低水位只能表明未提交事务中的最小值，比低水位大但是为一个短事务，在低水位之前进行提交，那么他便不存在与活跃数组当中</li>
+<li>对于已经提交的事务，自然能够获取到他的值，同样未开始的事务无法获取，如果当前的版本的row trx_id的只位于红色区域，则需要通过undo log寻找到一个小于高水位并且不存在于活跃数组中的row trx_id，此时才为能够获取到的真正的值</li>
+<li>对于在未提交事务中的修改，只有当前线程进行了写操作后（在未提交事务的版本后进行追加，否则未提交事务的版本就会丢失），再次进行读取才能获取到基于未提交事务的值（获取的为当前线程的数据版本），即更新数据时都先读后写，读当前最新版本值，这种特性称之为<strong>当前读</strong></li>
+</ol>
+<blockquote>
+<p>一个数据版本，对于一个事务视图来说，除了自己的更新总是可见以外，有三种情况：</p>
+<ol>
+<li>版本未提交，不可见；</li>
+<li>版本已提交，但是是在视图创建后提交的，不可见；</li>
+<li>版本已提交，而且是在视图创建前提交的，可见。</li>
+</ol>
+</blockquote>
+<p><strong>两阶段锁协议</strong></p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/cda2a0d7decb61e59dddc83ac51efb6e.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>事务B的更新数据(当前读)操作在C’之前受到阻塞，需要等待事务C的提交释放掉占用的行锁</p>
+<blockquote>
+<p>可重复读的核心就是一致性读（consistent read）；而事务更新数据的时候，只能用当前读。如果当前的记录的行锁被其他事务占用的话，就需要进入锁等待。</p>
+</blockquote>
+<p><strong>共享锁&#x2F;排他锁</strong></p>
+<p>加上共享锁和排他锁之后，单独的select也可以变成当前读的状态，从而获取到最新的数据</p>
+<h2 id="实践篇"><a href="#实践篇" class="headerlink" title="实践篇"></a>实践篇</h2><h3 id="普通索引与唯一索引"><a href="#普通索引与唯一索引" class="headerlink" title="普通索引与唯一索引"></a>普通索引与唯一索引</h3><p>在查询过程当中，唯一索引遇到条件满足时则立即停止搜索，而普通索引需要寻找到第一个不满足条件的数据，在查询性能上几乎没有差距</p>
+<p><strong>change buffer</strong></p>
+<p>作用：无change buffer 时，要进行数据的修改需要将对应的数据页读到内存当中，修改后再重新写回内存，加入change buffer后避免了这个过程，减少了磁盘的随机访问，提高执行速度</p>
+<p>在更新数据页时，如果该数据页位于内存当中，则直接进行更新，如果该数据页不存在与内存中，则先写入change buffer，等待下一次查询将数据页调入到内存当中时，再将操作应用到数据页中，这个过程称为merge</p>
+<p>触发merge：</p>
+<ul>
+<li>访问数据页将数据页调入到内存当中</li>
+<li>系统后台线程定期merge</li>
+<li>数据库正常关闭(shutdown)</li>
+</ul>
+<p>merge的具体流程：</p>
+<ol>
+<li>将数据页从磁盘中读入到内存当中</li>
+<li>从change buffer中找到这个数据页对应的记录，应用得到新的数据页</li>
+<li>将数据变更和change buffer变更(删除记录)的过程写入到redo log当中</li>
+<li>修改数据后的脏页写会到内存当中(另外一个故事，flush)</li>
+</ol>
+<p>作用范围：只有在普通索引(二级索引)时才能使用(唯一索引在插入时需要重复性判断，必须将数据页调入到内存当中)</p>
+<p>当要更新的记录不存在与内存当中：</p>
+<ul>
+<li>唯一索引：将存放索引的数据页(索引的B+树)调入到内存中，判断是否存在冲突，进行插入，结束</li>
+<li>普通索引：将更新记录写入到change buffer中，结束</li>
+</ul>
+<p>使用场景：写多读少的业务，便于多次写入change buffer后再进行一次merge，与磁盘访问次数少</p>
+<p>存储位置：change buffer是可以持久化的数据。在内存中有拷贝，也会被写入到磁盘上，在磁盘上占据了系统表空间ibdata</p>
+<p>update语句需要根据条件更新，具体执行流程如下：</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/image-20220610002347123.png?raw=true" srcset="/img/loading.gif" lazyload alt="image-20220610002347123"></p>
+<p><strong>change buffer&#x2F;redo log</strong></p>
+<ul>
+<li><p>对于一条更新数据，数据页存在于内存当中直接写入，若不在则写入change buffer</p>
+</li>
+<li><p>而redo log 对于上述两种动作进行记录，再根据这些记录，对磁盘进行更新，即redolog有两种，一种记录普通数据页的改动，一种记录changebuffer的改动</p>
+</li>
+<li><p>真正对磁盘数据页的修改是通过将内存里脏页的数据刷回磁盘来完成的，而不是根据redolog 真正刷新磁盘的工作为innodb中的存储引擎中的线程去做</p>
+</li>
+<li><p>change buffer 和redo log 二者的作用目标不同，关注的为两个事情</p>
+<ul>
+<li>redo log作为一个日志系统，最大的作用为再数据库宕机后的恢复工作</li>
+<li>change buffer 的目的是为了减少磁盘IO开销</li>
+</ul>
+</li>
+</ul>
+<h3 id="优化器索引选择"><a href="#优化器索引选择" class="headerlink" title="优化器索引选择"></a>优化器索引选择</h3><p><strong>优化器的逻辑</strong></p>
+<p>索引的选择为优化器的工作，在绝大多数情况下，优化器都能够正确选择索引</p>
+<p>判断标准：扫描的行数，使用临时表，是否排序，同时还有回表所带来的代价</p>
+<p>扫描行数：通过基数进行估算</p>
+<p><strong>基数</strong></p>
+<ul>
+<li>概念：一个索引上不同的值的个数</li>
+<li>基数越大，索引的区分度越好</li>
+<li>计算方式：抽样统计，选取N个数据页，统计页面上的不同值，最后平均，当变更的行数超过了1&#x2F;M后，会重新进行一次统计<ul>
+<li>统计方式：通过设置参数 innodb_stats_persistent 的值来选择<ul>
+<li>设置为 on 的时候，表示统计信息会持久化存储。这时，默认的 N 是 20，M 是 10。</li>
+<li>设置为 off 的时候，表示统计信息只存储在内存中。这时，默认的 N 是 8，M 是 16。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>对于以下语句：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">explain select * from t where (a between 1 and 1000) and (b between 50000 and 100000) order by b limit 1;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>扫描a索引需要1000行然后再进行回表</p>
+</li>
+<li><p>扫描b索引需要50000行然后再进行回表</p>
+</li>
+</ul>
+<p>然而最后优化器依然选择了b索引</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/image-20220610172752905.png?raw=true" srcset="/img/loading.gif" lazyload alt="image-20220610172752905"></p>
+<p>解决方案：</p>
+<ul>
+<li>force index强制选用a索引</li>
+<li>优化器之所以选择b索引是因为b索引本身有序，如果使用b则可以避免排序的过程，因此，可以修改sql语句去引导优化器：把“order by b limit 1” 改成 “order by b,a limit 1，逻辑上一致</li>
+</ul>
+<h3 id="字符串字段索引"><a href="#字符串字段索引" class="headerlink" title="字符串字段索引"></a>字符串字段索引</h3><p>由于MYSQL支持前缀索引，故可以选择字符串的一部分来创建索引</p>
+<ul>
+<li>优点：索引占用的空间更小</li>
+<li>缺点：<ul>
+<li>增加匹配次数（前缀部分相同，需要到主键索引上获取完整信息，多次比较）</li>
+<li>无法使用索引覆盖</li>
+</ul>
+</li>
+</ul>
+<p>使用前缀索引时应关注区分度，确定一个可以接受的损失比例，适当截取</p>
+<p><strong>其他处理方式</strong></p>
+<ul>
+<li><p>如身份证，学号等前几位高度重合的字段，可以选择使用倒叙存储，则查询时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">mysql&gt; select field_list from t where id_card = reverse(&#x27;input_id_card_string&#x27;);<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>hash字段：在表上再创建一个整数字段，来保存身份证的校验码，同时在这个字段上创建索引。此时只需要四个字节</p>
+</li>
+<li><p>数字型</p>
+</li>
+</ul>
+<h3 id="脏页回写"><a href="#脏页回写" class="headerlink" title="脏页回写"></a>脏页回写</h3><p>当数据页在内存中经过修改，和硬盘中数据不一样时，称为脏页，需要将脏页会写回硬盘当中，这个过程称为刷脏页(flush)</p>
+<p>引发刷脏页的时机：</p>
+<ul>
+<li>redo log写满，需要推进checkpoint，将写在redo log中的操作应用到硬盘之上，将推进部分对应的所有脏页刷到磁盘上</li>
+<li>系统内存不足，进行淘汰页时，如果淘汰的为脏页，则进行flush，但是该过程中不会删除redo log中的记录，redo log在向硬盘中写入时，如果一个数据页被刷过了，则直接跳过<ul>
+<li>保证了数据页只有两种情况，如果存在于内存之中，那么内存之中的即为正确数据，如果不存在于内存当中，从硬盘中读取的数据页也为正确数据，均可以直接返回，无需再重新应用redo log中记录的操作</li>
+<li>如果不是在淘汰脏页时就进行flush，而是选择直接覆盖的话，那么还需要将redo log中记录的操作重新应用于内存中的数据页才能保证数据的正确性，多此一举，不如淘汰时直接进行flush</li>
+</ul>
+</li>
+<li>MYSQL认为系统空闲时</li>
+<li>MYSQL关闭时</li>
+</ul>
+<p>明显影响性能：</p>
+<ul>
+<li>redo log被写满时，整个系统的更新被阻塞</li>
+<li>一次查询涉及要淘汰的脏页数量过多，查询时间变慢</li>
+</ul>
+<p><strong>刷脏页控制策略</strong></p>
+<p>通过设置innodb_io_capacity的值，告诉innodb的磁盘读写能力，从而合理设置速度</p>
+<p>刷脏页速度的参考因素：</p>
+<ul>
+<li>脏页比例通过公式计算得来F1</li>
+<li>redo log写盘速度 计算得来F2</li>
+</ul>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/cc44c1d080141aa50df6a91067475374.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<blockquote>
+<p>一旦一个查询请求需要在执行过程中先 flush 掉一个脏页时，这个查询就可能要比平时慢了。而 MySQL 中的一个机制，可能让你的查询会更慢：在准备刷一个脏页的时候，如果这个数据页旁边的数据页刚好是脏页，就会把这个“邻居”也带着一起刷掉；而且这个把“邻居”拖下水的逻辑还可以继续蔓延，也就是对于每个邻居数据页，如果跟它相邻的数据页也还是脏页的话，也会被放到一起刷。</p>
+<p>在 InnoDB 中，innodb_flush_neighbors 参数就是用来控制这个行为的，值为 1 的时候会有上述的“连坐”机制，值为 0 时表示不找邻居，自己刷自己的。</p>
+<p>使用SSD时建议设置为0关闭连坐机制</p>
+</blockquote>
+<h3 id="数据库表空间"><a href="#数据库表空间" class="headerlink" title="数据库表空间"></a>数据库表空间</h3><p>表数据可以放在共享表空间，也可每一个表单独一个文件，通过innodb_file_per_table进行设置，MYSQL 5.6 之后，默认为单独存储(on) </p>
+<p>在删除一个数据&#x2F;数据页时，只是将该处标记为可复用，而不是将空间进行回收，因此即使删除了数据，所占的空间也不会变小</p>
+<p>而对于插入&#x2F;更新的操作，由于B+树算法所涉及的叶子的分裂的问题，原本叶数据页满时，插入会分类成两个新的叶子节点，但每个叶子节点所占的空间仍为整个数据页的大小，末尾存在未分配的空间，更新操作视为先删除后插入</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/8083f05a4a4c0372833a6e01d5a8e6ea.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>重建表</strong></p>
+<p>为了进行空间收缩，只能选择去进行重建表，B作为临时表，从A中按照主键顺序一条条读取数据插入到B中，再使用B替换A，此时原本未分配的空间便不在存在</p>
+<ul>
+<li>问题：在A向B中复制数据的过程中，A不能有新的数据插入</li>
+<li>解决方式：引入online DDL</li>
+</ul>
+<p><strong>online DDL</strong></p>
+<ul>
+<li>将A中的记录生成为B+树，保存到临时文件之中</li>
+<li>在复制期间的对A的操作保存到一个日志文件之中，临时文件生成之后再将日志应用到临时文件之中</li>
+<li>alter语句启动时会获取MDL(元数据锁)写锁,但是在此拷贝数据前会退化成读锁：<ul>
+<li>读锁不会阻塞CRUD，因此保证了Online</li>
+<li>读写锁之间会相互阻塞，别的线程想要DDL时获取写锁被阻塞，防止了别的线程对该DDL</li>
+</ul>
+</li>
+</ul>
+<p><strong>online&#x2F;inplace</strong></p>
+<ul>
+<li><p>在非online 重建表时是在server层创建了一个<strong>临时表</strong>，将A中的数据一条条的插入其中</p>
+</li>
+<li><p>而online DDL时，在innoDB内部创建一个<strong>临时文件</strong>，整个过程发生在innoDB内部，在innodb内部，表A对应的文件进行了替换而已，在server层看来，并不存在一个创建临时表的过程，始终都只有A这一张表像是一个”原地”的操作 ，称为inplace</p>
+</li>
+<li><p>online的一定是inplace的，但inplace的操作并非全为online的</p>
+</li>
+</ul>
+<h3 id="count"><a href="#count" class="headerlink" title="count"></a>count</h3><ul>
+<li><p>innoDB之中，每次使用count是都需要遍历统计数量，因此在记录多时速度会变慢</p>
+</li>
+<li><p>MyISAM会统计行的总数，但也只针对一无条件的统计时才能快速获取结果，对于附带过滤条件的情况，依旧需要遍历，并且不支持事务</p>
+</li>
+<li><p>show table statues返回结果很快，但获取的数据存在误差，无法替代count</p>
+</li>
+</ul>
+<p><strong>改进方案</strong></p>
+<ul>
+<li>引入缓存，通过redis对其进行计数<ul>
+<li>问题：<ul>
+<li>redis异常重启时丢失更新</li>
+<li>计数和添加数据无法保证原子性，查询可能位于二者之间</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>单独添加一张计数表：由于innodb中的事务隔离的特性，还未提交的事务对其不可见</li>
+</ul>
+<p><strong>各类count</strong></p>
+<ul>
+<li>count(主键id) 遍历整张表取出id返回给server层，判断不能为空之后，按行累加</li>
+<li>count(字段),取出字段，判断是否为null，若不为null，则累加</li>
+<li>count(1)，遍历不取值，server 层对于返回的每一行，放一个数字“1”进去，判断是不可能为空的，按行累加。</li>
+<li>count(*) 由于 count(*)一定不为null 对其进行了专门优化，只统计按行取值，并不将值取出</li>
+</ul>
+<p>按照效率排序的话，count(字段)&lt;count(主键 id)&lt;count(1)≈count(*),建议使用count(*)</p>
+<h3 id="order-by"><a href="#order-by" class="headerlink" title="order by"></a>order by</h3><p>sort_buffer：mysql为每个线程分配一块内存用于进行排序，存储排序的字段等</p>
+<p><strong>全字段排序</strong></p>
+<p>将要查询的所有字段放入到sort_buffer之中，排序后将结果返回给客户端</p>
+<p>如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select city,name,age from t where city=&#x27;杭州&#x27; order by name limit 1000  ;<br></code></pre></td></tr></table></figure>
+
+<p>通过city的索引找到所有满足city等于’杭州’的行，将行上的city name age字段放入的sort_buffer之中，进行快排</p>
+<blockquote>
+<p>sort_buffer_size，就是 MySQL 为排序开辟的内存（sort_buffer）的大小。如果要排序的数据量小于 sort_buffer_size，排序就在内存中完成。但如果排序数据量太大，内存放不下，则不得不利用磁盘临时文件辅助排序。</p>
+<p>number_of_tmp_files 表示的是，排序过程中使用的临时文件数，通过对多个文件进行排序，再讲多个有序文件合并成一个文件(归并？)</p>
+</blockquote>
+<p><strong>rowid排序</strong></p>
+<p>由于全字段排序需要将多个字段放入到sorr_buffer当中,如果要查询的字段较多开销太大，因此提出了rowid排序方式</p>
+<ul>
+<li>只将要排序的那一个字段和主键id放入到sort_buffer当中</li>
+<li>排序后再通过回表的方式获取到完整数据</li>
+<li>max_length_for_sort_data：如果单行的长度超过这个值，MySQL 就认为单行太大，开始使用rowid排序</li>
+</ul>
+<p><strong>总结比较</strong></p>
+<p>全字段排序和rowid排序的选择取决于内存的大小</p>
+<p>mysql的理念是如果内存够用就尽量使用内存，减少磁盘的访问，从而提高效率</p>
+<p>如果排序字段为索引，由于索引本身有序，则无需排序直接返回给客户端，可以看到无use fliesort，只剩use index</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/image-20220615210049646.png?raw=true" srcset="/img/loading.gif" lazyload alt="image-20220615210049646"></p>
+<p>rowid在排序时相比于全字段排序多了一次回表获取完整信息的过程，属于是以时间换空间</p>
+<p>对于 InnoDB 表来说，rowid 排序会要求回表多造成磁盘读，因此不会被优先选择。</p>
+<h3 id="显示随机消息"><a href="#显示随机消息" class="headerlink" title="显示随机消息"></a>显示随机消息</h3><p>在数据表中获取随机的行：order by rand() limit </p>
+<p>oreder by rand()大致流程：</p>
+<ol>
+<li>创建一张内存临时表，表的字段为要查询的字段和一个0到1的随机小数R(用于随机获取)，扫描填充内存临时表(该内存临时表无索引)</li>
+<li>初始化sort_buffer 字段为一个double类型用于存放R进行排序，另外一个为一个整形(存放位置信息)</li>
+<li>将内存临时表中的R和<strong>位置信息</strong>放入到sort_buffer当中</li>
+<li>在sort_buffer中对R进行排序</li>
+<li>取出前三个去临时数据表当中获取要查询的所有字段，返回给客户端</li>
+</ol>
+<p><strong>位置信息</strong></p>
+<p>表明一行数据的位置的信息</p>
+<p>一个表在没有主键时，innoDB会自动创建一个rowid作为主键，故对于位置信息：</p>
+<ul>
+<li>在有主键时，位置信息即为主键</li>
+<li>无主键时，即为系统生成的rowid</li>
+</ul>
+<p><strong>磁盘临时表</strong></p>
+<p>在临时表过大时，使用磁盘临时表而不是内存临时表，由于获取随机数时，大多数情况只需要几个元素，故对所有元素全部进行排序便造成了浪费，因此mysql5.6之后，对于磁盘临时表的情况，采用了优先队列排序(堆排序)</p>
+<p>如果超出了sort_buffer_size大小之后，仍会选择临时文件+归并排序的方法</p>
+<h3 id="索引未被使用"><a href="#索引未被使用" class="headerlink" title="索引未被使用"></a>索引未被使用</h3><p><strong>对索引字段使用了函数</strong></p>
+<p>如果对于在进行条件筛选时，对索引字段进行了函数统计，则用不上索引了，索引能够快速查询时依托于索引的搜索树结构，而如果使用了函数，对索引本身的值进行了改变，破坏了索引的有序性，因此无法在通过搜索树快速定位，只能遍历该索引</p>
+<p>注：索引未被只用指的是索引的搜索树为生效，只能通过遍历的方式确定位置</p>
+<p>例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">mysql&gt; select count(*) from tradelog where month(t_modified)=7;<br></code></pre></td></tr></table></figure>
+
+<p>取月份之后传入一个7无法在搜索树内判断大小</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/3e30d9a5e67f711f5af2e2599e800286.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>隐式转换类型</strong></p>
+<p>如果索引字段的数据类型和条件不同时，会触发隐式条件转换，</p>
+<p>在mysql中，字符串和数字做比较的话，是将字符串转换成数字：</p>
+<ul>
+<li><p>索引为字符串，条件为整形，将索引转换为字符串，使用了函数，故不走搜索树</p>
+</li>
+<li><p>索引为整形，而判断条件为字符串，此时对判断条件进行类型转换，索引不受影响，继续走搜索树</p>
+</li>
+</ul>
+<p><strong>隐式字符编码转换</strong></p>
+<p>字符编码不同时，会转换成超集的编码，如utf-8和utf8bm4之间，会转换成utf8mb4</p>
+<p>在两个表使用的字符集不同时，如果索引字段为utf-8而条件为utf8bm4，则会触发转换，使用函数</p>
+<p>在无法对表结构进行修改时，可以主动对条件进行转换，转换成u8和索引一致，就避免了索引进行转换的情况</p>
+<p><strong>隐式类型转换和字符编码转换本质上都是因为触发使用了函数</strong></p>
+<h3 id="查询等待"><a href="#查询等待" class="headerlink" title="查询等待"></a>查询等待</h3><p><strong>查询阻塞</strong></p>
+<ul>
+<li>等待MDL锁：查询时需获取读锁，MDL读写锁之间冲突</li>
+<li>等flush：进行flush脏页回写时，需要关闭当前表，而如果当前表有一个很慢的事务未提交，则被阻塞</li>
+<li>等行锁：<code>select * from t where id = 1 lock in share mode</code>读取时需要加行锁，需其他线程的读锁冲突，等待其他线程</li>
+</ul>
+<p><strong>查询慢</strong></p>
+<ul>
+<li>查询多行但是不走索引</li>
+<li>事务A查询<code>select * from t where id =1</code>，只查询一行，在事务开始到最后查询之间，其他线程在不断对该行进行修改，如果事务A使用的为可重复读，则需要根据undo log去不断向前计算出在事务启动时那一时刻的值，耗时巨大，相反的，如果A使用了当前读<code>select * from t where id = lock in share mode</code>读取当前值，则没有回退计算的过程，查询效率反而高（在使用共享锁之后select会采用当前读的模式）</li>
+</ul>
+<h3 id="幻读"><a href="#幻读" class="headerlink" title="幻读"></a>幻读</h3><blockquote>
+<p>也就是说，幻读指的是一个事务在前后两次查询同一个范围的时候，后一次查询看到了前一次查询没有看到的行</p>
+</blockquote>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/dcea7845ff0bdbee2622bf3c67d31d92.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ul>
+<li>在上图中，由于<code>for update</code>将其加上了排他锁，采用的为当前读，因此会将insert的新值读出，称为当前读</li>
+<li>幻读只会在当前读下才会出现(无当前读由于存在事务隔离因此不会读取到最新的值)</li>
+<li>幻读专指新插入的行</li>
+</ul>
+<p><strong>幻读产生的问题</strong></p>
+<ul>
+<li><p>锁结果被破坏</p>
+<p>如果只对访问的数据进行加锁，如在上面的表上，由于只有id&#x3D;5着一行的d&#x3D;5，因此只锁上了这一行，但是在C插入数据之后，d&#x3D;5的行就不止id&#x3D;5这一行，“锁住d&#x3D;5的所有行”这个锁的结构就被破坏</p>
+</li>
+<li><p>数据库中的数据与日志中的数据产生不一致的问题</p>
+<ul>
+<li>在数据库中按照时间的发生顺序执行，只有一行当前状态下d&#x3D;5的会被修改为100</li>
+<li>在日志中，按照事务的提交顺序进行记录，事务C的插入在A的更新之前，导致A把C新插入的数据也一并修改，导致了数据不一致的问题</li>
+</ul>
+<p>数据不一致的问题无论是锁满足条件的行还是锁住所有行均无法解决，究其本质时因为新插入的数据无法锁上，从而引出的间隙锁的概念</p>
+</li>
+</ul>
+<p><strong>间隙锁</strong></p>
+<p>只在可重复读的隔离条件下产生          </p>
+<p>通过间隙锁，保证新记录的插入被阻塞，在此区间内插入数据均会被阻塞</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/e7f7ca0d3dab2f48c588d714ee3ac861.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>间隙锁与间隙锁之间不存在冲突问题，不同的线程可以同时对同一个间隙进行加锁操作，只有加间隙锁和想间隙中插入数据这两个操作之间存在冲突，插入数据的过程会被阻塞</p>
+<blockquote>
+<p>间隙锁和行锁合称 <strong>next-key lock</strong>，每个 next-key lock 区间为<strong>左开右闭</strong>。也就是说，我们的表 t 初始化以后，如果用 select * from t for update 要把整个表所有记录锁起来，就形成了 7 个 next-key lock，分别是 (-∞,0]、(0,5]、(5,10]、(10,15]、(15,20]、(20, 25]、(25, +supremum]。</p>
+</blockquote>
+<p><strong>间隙锁和next-key lock存在的问题</strong></p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/df37bf0bb9f85ea59f0540e24eb6bcbe.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>A和B在扫描到id &#x3D; 9时发现不存在，均加上了间隙锁，此时AB的间隙锁互相阻止对方插入，两阶段锁协议又导致事务不提交锁不释放，死锁产生</p>
+<h3 id="行锁与间隙锁加锁规则"><a href="#行锁与间隙锁加锁规则" class="headerlink" title="行锁与间隙锁加锁规则"></a>行锁与间隙锁加锁规则</h3><p>间隙锁并非行锁，只是对于某一个索引的排序规则下的间隙进行上锁，况且，由于不同索引的排序也不同，因此也无法笼统的将两行之间进行上锁，只能基于某一个索引的排序规则。因此在对一个索引上了间隙锁之后，对于另外一个索引的操作并不受影响。</p>
+<p><strong>两个原则、两个优化、一个bug</strong></p>
+<blockquote>
+<p>原则 1：加锁的基本单位是 next-key lock。next-key lock 是前开后闭区间。</p>
+<p>原则 2：查找过程中访问到的对象才会加锁。</p>
+<p>优化 1：索引上的等值查询，给唯一索引加锁的时候，next-key lock 退化为行锁。</p>
+<p>优化 2：索引上的等值查询，向右遍历时且最后一个值不满足等值条件的时候，next-key lock 退化为间隙锁。</p>
+<p>一个 bug：唯一索引上的范围查询会访问到不满足条件的第一个值为止。</p>
+</blockquote>
+<p><strong>解释</strong></p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/e7f7ca0d3dab2f48c588d714ee3ac861.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>对于原则二，假设表中c为普通索引，在执行<code>select c from t where c =15</code>：</p>
+<ul>
+<li>访问到了c&#x3D;15，加上next-key lock,区间为(10,15]</li>
+<li>并且由于c为普通索引，因此会继续遍历直至第一个不满足条件的值，因此找到了(15,20],又因为为最后一个不满足条件的值，此时退化成(15,20)的间隙锁</li>
+<li><strong>只有访问到的对象才会加锁</strong>查询的字段只有C，因此存在覆盖索引，无需访问主键索引，因此在主键索引上就不存在锁</li>
+</ul>
+<p>bug问题，对于一个范围查询<code>select * from where id&gt;10 and id&lt;=15 for update</code>：</p>
+<ul>
+<li>由于是范围查询，因此在最后一个不满足条件的20并不会退化为间隙锁，导致对于20的修改也无法进行，但是对20修改并不会产生什么负面影响</li>
+</ul>
+<p>limit加锁问题：</p>
+<p>​    通过limit，可以提前终止遍历过程，无需遇到第一个不满足条件的值，因此可以少加一个next-key lock，增加并发度</p>
+<p>两阶段加锁：</p>
+<p>​    next-key lock的加锁过程分为间隙锁和行锁两阶段来执行</p>
+<p><strong>共享锁&#x2F;排他锁</strong></p>
+<p>共享锁和排他锁的逻辑关系与表锁中的读写锁一致，只不过粒度不同，为行锁</p>
+<p>读写，写写之间存在冲突，多个共享锁之间不存在冲突</p>
+<p>MySQL InnoDB引擎默认的update，delete，insert语句会自动给涉及到的数据加上排他锁，select语句默认不会加任何锁。加排他锁可以使用select …for update语句，加共享锁可以使用select … lock in share mode语句。</p>
+<ul>
+<li>共享锁：<ul>
+<li>又称为读锁，多个事务可以对于同一事务共享一把锁，进行数据访问，只能读不能修改</li>
+<li>使用方式 <code>slect * from t lock in share mode</code></li>
+</ul>
+</li>
+<li>排他锁：<ul>
+<li>称为写锁，保证对数据的独占性，加上排他锁之后其他事务无法进行读和写的操作</li>
+<li>使用方式 <code>select * from for update</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>案例分析</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs mysql">CREATE TABLE `t` (<br>  `id` int(11) NOT NULL,<br>  `c` int(11) DEFAULT NULL,<br>  `d` int(11) DEFAULT NULL,<br>  PRIMARY KEY (`id`),<br>  KEY `c` (`c`)<br>) ENGINE=InnoDB;<br><br>insert into t values(0,0,0),(5,5,5),<br>(10,10,10),(15,15,15),(20,20,20),(25,25,25);<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/465990fe8f6b418ca3f9992bd1bb5465.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ol>
+<li>事务A查询id，直接使用C覆盖索引，因此并未对主键进行加锁的操作</li>
+<li>事务B通过主键索引进行更新，发现没有锁，更新成功</li>
+</ol>
+<p>若A的查询语句为<code>select * from t where c=5 lock in share mode</code>：</p>
+<ol>
+<li>因为涉及回表操作，故同样对主键索引加上了锁</li>
+<li>此时事务B再进行根据主键索引进行更新时，则会被阻塞</li>
+</ol>
+<p>若A的查询语句为<code>select * from t where c=5 for update</code>：</p>
+<p>​    系统会认为你接下来要更新数据，因此会顺便给主键索引上满足条件的行加上行锁，此时事务B也同样会被阻塞</p>
+<h3 id="日志流程"><a href="#日志流程" class="headerlink" title="日志流程"></a>日志流程</h3><p><strong>binlog写入流程</strong></p>
+<p> binlog首先写入binlog cache，每个线程独有一个binlog cache，所有线程共享一份binlog文件</p>
+<p>写入binlog文件的过程分为write和fsync，write只写入到page cache(binlog files)中，fsync才是真正对数据进行持久化，可以通过sync_binlog来指定积累几个事务再进行一次持久化(page cache为页缓存，存在于内存当中,具体知识见操作系统)</p>
+<p>在主机发生异常重启时，未fsync持久化的binlog会丢失，mysql重启时则不会</p>
+<p><strong>redo log 写入机制</strong></p>
+<p>redo log也存在redo log buffer,page cache ,和真正持久化这三种状态，可通过innodb_flush_log_at_trx_commit来控制是留在redo log buffer内还是直接持久化还是写入到page buffer当中去</p>
+<blockquote>
+<p>事务执行中间过程的 redo log 也是直接写在 redo log buffer 中的，这些 redo log 也会被后台线程一起持久化到磁盘。也就是说，一个没有提交的事务的 redo log，也是可能已经持久化到磁盘的。</p>
+</blockquote>
+<p>redo log共有三种方式将redo log buffer中的日志信息(包含未提交事务)写到磁盘当中</p>
+<ul>
+<li>redo log buffer后台有一个线程，每一秒将redo log buffer 中的信息write后fsync</li>
+<li>redo log buffer 占用的空间即将达到 innodb_log_buffer_size 一半的时候，后台线程会主动写盘</li>
+<li>并行的事务提交的时候，顺带将这个事务的 redo log buffer 持久化到磁盘，事务A执行了一半写到buffer中的redo log会随着事务B的提交一并写到磁盘当中(innodb_flush_log_at_trx_commit 设置为1)</li>
+</ul>
+<blockquote>
+<p>每秒一次后台轮询刷盘，再加上崩溃恢复这个逻辑，InnoDB 就认为 redo log 在 commit 的时候就不需要 fsync 了，只会 write 到文件系统的 page cache 中就够了。</p>
+<p>redo log 状态改为commit的时候不会进行fsync，因为只要binlog 写磁盘成功，就算redo log 的状态还是prepare也没有关系会被认为事务已经执行成功，所以只需要write 到page cache就ok了，没必要再浪费io主动去进行一次fsync。通过后台线程进行fsync即可</p>
+</blockquote>
+<p><strong>组提交</strong></p>
+<p>LSN：日志逻辑序列号，单调递增，每次写入新的长为lentgh的redo log 都会加length</p>
+<p>第一个到达的会作为这组的leader，后续还有其他事务到达时，它的LSN会递增当它进行提交时，会将所有LSN小于等于leaderLSN的redo log一同持久化到磁盘，以组的形式进行提交</p>
+<h3 id="主备一致"><a href="#主备一致" class="headerlink" title="主备一致"></a>主备一致</h3><p>MySQL通过binlog的归档功能完成了主库从库的一致性</p>
+<p>分为MS和双M两种模式</p>
+<p>在MS(master-slave)模式下，A为M，B为S，则B获取A的binlog进行备份</p>
+<p>备库B建议设为只读状态，防止误操作和双写时导致的数据不一致问题，用于AB之间同步更新的线程拥有超级权限，不受其影响</p>
+<p><strong>binlog的三种格式</strong></p>
+<ul>
+<li>statement<ul>
+<li>binlog中记录的为sql语句</li>
+<li>主从可能存在不一致的情况(如使用limit时优化器索引选择的不一致)</li>
+</ul>
+</li>
+<li>row<ul>
+<li>记录的为事件(Delete_rows event，用于定义删除的行为)</li>
+<li>删除时记录的为真实删除行的主键id，因此不存在数据不一致的情况</li>
+<li>相比于statement形式下，占用的空间较大</li>
+</ul>
+</li>
+<li>mixed<ul>
+<li>由mysql自己判断是否存在主从不一致的情况，从而选择row还是statement</li>
+</ul>
+</li>
+</ul>
+<p><strong>数据恢复</strong></p>
+<p>使用row格式的binlog完成数据恢复，由于row格式会完整的保存信息，对于一条delete，只需要将delete重新变为insert即可将信息恢复，(update可前后对调，insert变为delete)</p>
+<p><strong>循环复制问题</strong></p>
+<p>在使用双M模式时，存在循环复制问题，即B获取了A的新生成的binlog执行，A又会获取B执行了binlog后的binlog重新执行一遍，导致了循环复制</p>
+<p>解决规则：</p>
+<blockquote>
+<ol>
+<li>规定两个库的 server id 必须不同，如果相同，则它们之间不能设定为主备关系；</li>
+<li>一个备库接到 binlog 并在重放的过程中，生成与原 binlog 的 server id 相同的新的 binlog；</li>
+<li>每个库在收到从自己的主库发过来的日志后，先判断 server id，如果跟自己的相同，表示这个日志是自己生成的，就直接丢弃这个日志。</li>
+</ol>
+</blockquote>
+<h3 id="备库并行复制"><a href="#备库并行复制" class="headerlink" title="备库并行复制"></a>备库并行复制</h3><p>为了保证备库能对主库的数据进行快速备份，因此在MySQL5.6之后，支持多线程复制，通过多线程的方式将主库的日志在备库上执行</p>
+<p>原本的sql_thread变为coordinator，只负责读取中转日志和分发事务，事务的具体执行由worker来负责</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/bcf75aa3b0f496699fd7885426bc6245.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>规则：</p>
+<ul>
+<li>更新同一行的两个事务，必须分发给同一个worker，防止执行次序问题导致覆盖</li>
+<li>一个事务不可拆分，必须放到同一个worker当中</li>
+</ul>
+<p><strong>MySQL5.6的并行策略</strong></p>
+<p>MySQL5.6的并行复制的粒度为按库并行，即以库为单位分发给worker，通过key-value的标记当前这个worker中事务所涉及的库，key为库名，value为涉及的库的数量</p>
+<p>但如果主库中的表都放在同一个库内，这个策略则失效，重新变为单线程模式，或者不同库的热点不同，一个为业务逻辑库，一个为配置库，则只有业务逻辑库存在较大的并发，重回单线程</p>
+<h3 id="误删数据"><a href="#误删数据" class="headerlink" title="误删数据"></a>误删数据</h3><p><strong>误删行</strong></p>
+<p>在binlog为row形式时，可以直接将操作进行逆向运行，delete变insert，各个事务之间按时间逆序执行，即可恢复</p>
+<p>建议在临时库上进行操作，然后再将恢复后确认过的数据再从临时库恢复回主库</p>
+<p><strong>误删库&#x2F;表</strong></p>
+<p>通过备份+binlog的方式</p>
+<p>需要借助binlog的全盘备份，进行恢复，要求线上有定期的全量备份，并实时备份binlog</p>
+<p>先将上一次全量备份的日志应用于临时库，再将上一次全量备份到当前的实时备份的除去误删除操作的语句，全部应用到临时库上，之后再将临时库的数据恢复到主库当中去</p>
+<p>​    <strong>延迟复制备库</strong></p>
+<p>如如果复制备库和主库之间延迟一个小时，则如果主库出现了误删的情况，只需要通过备库再追加一个小时即可恢复数据</p>
+<h3 id="kill进程"><a href="#kill进程" class="headerlink" title="kill进程"></a>kill进程</h3><p>在执行了 kill query thread_id_B时，进行如下处理</p>
+<ul>
+<li><p>将进程B的运行状态改为THD::KILL_QUERY</p>
+</li>
+<li><p>向事务B的执行进程发送一个信号，用于告知进程的状态发生了变化，让其来处理THD::KILL_QUERY</p>
+</li>
+</ul>
+<ol>
+<li><p>一个进程的执行过程中存在埋点，只有在埋点才会判断线程的状态</p>
+</li>
+<li><p>只有能够被唤醒的等待最后才能执行到埋点出，如处于wait状态的线程便是可以唤醒的，但是处于IO等待或者达到InnoDB并发上限，未被执行在等待的线程均为不可唤醒的</p>
+</li>
+<li><p>语句从进入终止逻辑，到最后终止逻辑完成，存在一个过程</p>
+</li>
+</ol>
+<p>对于达到InnoDB并发线程上限后还未执行的线程，只有在被选中执行后，才能检查线程的状态，发现了KILL_QUERY 或者KILL_CONNECTION后，才会进入终止逻辑</p>
+<h3 id="查询结果的处理逻辑"><a href="#查询结果的处理逻辑" class="headerlink" title="查询结果的处理逻辑"></a>查询结果的处理逻辑</h3><p><strong>server层</strong></p>
+<p>查询结果返回给客户端的过程是边读边发的</p>
+<ol>
+<li>对于查询的结果，像将其写入到net_buffer当中，直至net_buffer写满</li>
+<li>调用网络接口发出去，发送给客户端</li>
+<li>发送成功则清空net_buffer，继续读取</li>
+<li>如果发送函数返回 EAGAIN 或 WSAEWOULDBLOCK，就表示本地网络栈（socket send buffer）写满了，进入等待。直到网络栈重新可写，再继续发送。</li>
+</ol>
+<p>sending to client表示net_buffer已经写满</p>
+<p>只有当查询结果不能够全部放入到net_buffer当中时，需要等待net_buffer清空后再执行时，才显示sending to client，只要查询结果能全部放入到net_buffer当中，执行器就可认为执行结束，与net_buffer是否能放入到socket send buffer这个过程无关，而socket send buffer不仅只有MySQL在使用</p>
+<p><strong>InnoDB</strong></p>
+<p>内存的数据页在Buffer Pool中管理，借助于内存，减少磁盘IO，从而加速查询</p>
+<p>InnoDB的内存管理采用的为改进LRU算法，即按照 5:3 的比例把整个 LRU 链表分成了 young 区域和 old 区域用于解决全盘扫描导致的内存页淘汰从而命中率急剧下降的问题</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/21f64a6799645b1410ed40d016139828.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ul>
+<li>新加入的数据页，放在old区，便于如全盘扫描等情况下对其进行快速淘汰</li>
+<li>处于old区的数据页，如果在链表中存在超出的一定时间，则移动到链表的头部去，默认为1000ms，由innode_old_blocks_time控制，与操作系统当中的多级反馈队列调度方式的设计思想由相似之处</li>
+</ul>
+<h3 id="Join执行过程"><a href="#Join执行过程" class="headerlink" title="Join执行过程"></a>Join执行过程</h3><p>执行Join时，主要可以根据是否使用索引分为两种情况，对应不同的算法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs mysql">CREATE TABLE `t2` (<br>  `id` int(11) NOT NULL,<br>  `a` int(11) DEFAULT NULL,<br>  `b` int(11) DEFAULT NULL,<br>  PRIMARY KEY (`id`),<br>  KEY `a` (`a`)<br>) ENGINE=InnoDB;<br><br>drop procedure idata;<br>delimiter ;;<br>create procedure idata()<br>begin<br>  declare i int;<br>  set i=1;<br>  while(i&lt;=1000)do<br>    insert into t2 values(i, i, i);<br>    set i=i+1;<br>  end while;<br>end;;<br>delimiter ;<br>call idata();<br><br>create table t1 like t2;<br>insert into t1 (select * from t2 where id&lt;=100)<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用索引：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select * from t1 straight_join t2 on (t1.a=t2.a);<br></code></pre></td></tr></table></figure>
+
+<p>对应的算法为Index Nested-Loop Join</p>
+<p>执行过程：</p>
+<ol>
+<li><p>从t1中取出一条数据</p>
+</li>
+<li><p>根据t1.a去t2中查询</p>
+</li>
+<li><p>取出t2中满足条件的行，和t1的查询结果组成一个字段，作为结果集</p>
+</li>
+<li><p>重复上述结果查询出所有</p>
+</li>
+</ol>
+<p>如果不使用join,则需要先从t1中查询出所有结果，再遍历t1的结果去t2中查询，总共执行了101条语句，比直接使用Join多了100次交互（扫描的行数的查询的次数相同，但是多了执行sql的开销，如优化器和执行器部分），因此不如直接使用Join语句</p>
+<p>​    <strong>驱动表的选择</strong></p>
+<p>对于驱动表，需要进行全表扫描获得所有行，而对于被驱动表，只需根据条件走索引查询即可，综合复杂度为:N + N<em>2</em>log2(M)。(N为驱动，M被驱动)，因此选取小表作为驱动表的复杂度较低</p>
+<p><strong>不使用索引：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select * from t1 straight_join t2 on (t1.a=t2.b);<br></code></pre></td></tr></table></figure>
+
+<p>对应的算法为Block Nested-Loop Join</p>
+<ol>
+<li>把t1的所有的数据读入到线程内存join_buffer当中，由于为select *,因此放入所有的字段，</li>
+<li>扫描表t2，取出t2的每一行，在于join_buffer中的数据进行对比</li>
+</ol>
+<p>扫描次数为M*N次，但是为内存级，比不使用join_Buffer直接访问磁盘性能要好</p>
+<p>两个表都做一次全表扫描，所以总的扫描行数是 M+N；内存中的判断次数是 M*N。</p>
+<p>如果join_buffer无法放下t1的所有行，则分段进行，先放入一部分，然后查询t2，之后清空join_buffer再继续放入,判断的总行数不变，但是由于t2表涉及多次与join_buffer进行比较，因此扫描的行数为N+K*M,K为分段数</p>
+<p><strong>选择</strong></p>
+<ul>
+<li>如果是 Index Nested-Loop Join 算法，应该选择小表做驱动表；</li>
+<li>如果是 Block Nested-Loop Join 算法：<ul>
+<li>在 join_buffer_size 足够大的时候，是一样的；</li>
+<li>在 join_buffer_size 不够大的时候（这种情况更常见），应该选择小表做驱动表。</li>
+</ul>
+</li>
+</ul>
+<p>小表：查询出的字段较少，行较少的表，总数据量为字段*行数，总数量较小的为小表</p>
+<p><strong>left join&#x2F;where</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> a <span class="hljs-keyword">left</span> <span class="hljs-keyword">join</span> b <span class="hljs-keyword">on</span>(a.f1<span class="hljs-operator">=</span>b.f1) <span class="hljs-keyword">and</span> (a.f2<span class="hljs-operator">=</span>b.f2); <span class="hljs-comment">/*Q1*/</span><br><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> a <span class="hljs-keyword">left</span> <span class="hljs-keyword">join</span> b <span class="hljs-keyword">on</span>(a.f1<span class="hljs-operator">=</span>b.f1) <span class="hljs-keyword">where</span> (a.f2<span class="hljs-operator">=</span>b.f2);<span class="hljs-comment">/*Q2*/</span><br></code></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/93a7294dd9ea8dc1016f69c0fd223f0387cf1067.jpg?raw=true" srcset="/img/loading.gif" lazyload alt="2022-07-17-20-03-55-8966773b5370b0c514d019c9dcc4898.jpg"> </p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/b7f27917ceb0be90ef7b201f2794c817.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>在条件全部写在join 的on内时，先将驱动表的全部数据导入join_buffer再通过on 进行匹配，如果匹配成功则填入数值，如果无匹配结果则通过null填充</p>
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/f5712c56dc84d331990409a5c313ea9c.png?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>使用 NLJ算法，将b中的值对应到表a中查询，匹配到记录后在判断where的条件，如果不满则则被过滤掉，因此不会存在null的情况</p>
+<p>由于where的语义为匹配成功就放弃，与join 的语义一致，因此优化器会将left join优化为join,因此，left join的左边不一定为驱动表</p>
+<h3 id="Join优化"><a href="#Join优化" class="headerlink" title="Join优化"></a>Join优化</h3><p><strong>Multi-Range Read</strong></p>
+<p>主要思想为将随机读盘优化为顺序读盘</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select * from t1 where a&gt;=1 and a&lt;=100;<br></code></pre></td></tr></table></figure>
+
+<p>其中，a为唯一索引，当a的顺序与主键索引不一致时，则回表的查询过程为随机访问，开销较大，优化思路为将其优化成顺序读盘</p>
+<p>具体过程：</p>
+<ol>
+<li>根据索引a，定位到满足条件的行，将id放入read_rnd_buffer</li>
+<li>将read_rnd_buffer中的id进行递增排序</li>
+<li>在根据有序的id去回表查询，此时随机访问变为顺序访问，减小开销</li>
+</ol>
+<p><strong>Batched Key Access</strong></p>
+<p>在Join时，为一行行的从t1中获取数据再到t2中比对，此时便无法再使用MRR进行优化</p>
+<p>解决方案为将t1中的数据查询先放到一个临时内存(Join_buffer)当中，之后便可以使用MRR进行优化</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select * from t1 join t2 on (t1.b=t2.b) where t2.b&gt;=1 and t2.b&lt;=2000;<br></code></pre></td></tr></table></figure>
+
+<ol>
+<li><p>将t2中满足条件的行放入到临时表当中tmp_t</p>
+</li>
+<li><p>为使用BKA，给临时表的b加上索引(B+树搜索，join时无需遍历)</p>
+</li>
+<li><p>t1和tmp_t进行join</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">create</span> temporary <span class="hljs-keyword">table</span> temp_t(id <span class="hljs-type">int</span> <span class="hljs-keyword">primary</span> key, a <span class="hljs-type">int</span>, b <span class="hljs-type">int</span>, index(b))engine<span class="hljs-operator">=</span>innodb;<br><span class="hljs-keyword">insert</span> <span class="hljs-keyword">into</span> temp_t <span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> t2 <span class="hljs-keyword">where</span> b<span class="hljs-operator">&gt;=</span><span class="hljs-number">1</span> <span class="hljs-keyword">and</span> b<span class="hljs-operator">&lt;=</span><span class="hljs-number">2000</span>;<br><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> t1 <span class="hljs-keyword">join</span> temp_t <span class="hljs-keyword">on</span> (t1.b<span class="hljs-operator">=</span>temp_t.b);<br></code></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="临时表"><a href="#临时表" class="headerlink" title="临时表"></a>临时表</h3><p><strong>内存表&#x2F;临时表</strong></p>
+<p>内存表指的是使用Memory引擎的表，数据保存在内存当中，而临时表只是表明表为临时的，存储的位置根据使用的引擎而定，二者之间并无直接的联系</p>
+<p>特性：</p>
+<ul>
+<li>建表语句：create temporary table</li>
+<li>之对于创建他的线程可见，其他线程不可见</li>
+<li>可以与普通表同名(存储时通过线程创建前缀)</li>
+<li>与同名的普通表存在时，CRUD访问的是临时表</li>
+<li>show tables 不显示临时表</li>
+<li>发生异常断开或者正常关闭时会自动清理临时表</li>
+</ul>
+<p><strong>临时表存储</strong></p>
+<p>MySQL通过frm文件来保存表结构的定义，同时还有对应的保存表数据，因此这个 frm 文件放在临时文件目录下，文件名的后缀是.frm，前缀是“#sql{进程 id}_{线程 id}_ 序列号”,通过前缀即可与普通表区分出，因此可以与普通表重名</p>
+<ul>
+<li>在 5.6 以及之前的版本里，MySQL 会在临时文件目录下创建一个相同前缀、以.ibd 为后缀的文件，用来存放数据文件；</li>
+<li>而从 5.7 版本开始，MySQL 引入了一个临时文件表空间，专门用来存放临时文件的数据。因此，我们就不需要再创建 ibd 文件了。</li>
+</ul>
+<p><strong>主备复制</strong></p>
+<p>当binlog为row形式时，不存储临时表有关的操作，需要在statement&#x2F;mix形式时，按照sql语句进行存储，才会记录有关临时表的相关操作</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mysql">insert into temp_t values(1,1);/*Q3*/<br>insert into t_normal select * from temp_t;/*Q4*/<br></code></pre></td></tr></table></figure>
+
+<p>Q3Q4对应的row形式为write_row event里面记录的逻辑时插入一行数据(1,1)，未体现出临时表</p>
+<p>由于备库上执行日志为单线程，因此记录binlog时，会将主库中的线程一并写入到binlog当中，进行区分不同线程的临时表</p>
+<p><strong>使用场景</strong></p>
+<p>使用时机：处理复杂的逻辑计算，对查询结果先进行处理再返回给客户端，如group by，union等</p>
+<p>​    <strong>union</strong></p>
+<p>union为两个查询的并集，因此使用临时表，对其进行一个取并集的操作，即先将第一个子查询的存入临时表，再将另外一个子查询的结果判重后插入到其中</p>
+<p>​    <strong>group by</strong></p>
+<p>创建临时表和对应的字段，将查询到的结果放入到临时表中对应的分组下</p>
+<p>例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select id%10 as m, count(*) as c from t1 group by m <br></code></pre></td></tr></table></figure>
+
+<p>group by 默认进行排序，如果想乱序，则<code>order by null</code></p>
+<p>​    <strong>group by 优化</strong></p>
+<p>索引：</p>
+<p>group by是统计不同的值出现的个数。但是，由于每一行的 id%10 的结果是无序的，所以我们就需要有一个临时表，来记录并统计结果。因此优化的方向便是令id%10处于一种有序的结果，共有两种思路：一是创建索引，二是通过SQL_BIG_RESULT指定进行filesort</p>
+<blockquote>
+<p>在 MySQL 5.7 版本支持了 generated column 机制，用来实现列数据的关联更新。你可以用下面的方法创建一个列 z，然后在 z 列上创建一个索引（如果是 MySQL 5.6 及之前的版本，你也可以创建普通列和索引，来解决这个问题）。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs mysql">alter table t1 add column z int generated always as(id % 100), add index(z);<br><br>select z, count(*) as c from t1 group by z;<br></code></pre></td></tr></table></figure>
+</blockquote>
+<p>直接排序：</p>
+<p>直接使用sort buffer进行排序，不再使用临时表，便按照sort_buffer的排序原则，使用filesort算法进行排序</p>
+<blockquote>
+<p>在 group by 语句中加入 SQL_BIG_RESULT 这个提示（hint），就可以告诉优化器：这个语句涉及的数据量很大。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">select SQL_BIG_RESULT id%100 as m, count(*) as c from t1 group by m;<br></code></pre></td></tr></table></figure>
+
+<p>扫描表 t1 的索引 a，依次取出里面的 id 值, 将 id%100 的值存入 sort_buffer 中,排序后即可得到一个有序<strong>数组</strong></p>
+</blockquote>
+<h3 id="Memory引擎"><a href="#Memory引擎" class="headerlink" title="Memory引擎"></a>Memory引擎</h3><p>Memory引擎对应的表为内存表</p>
+<p><strong>特点</strong>：</p>
+<ul>
+<li>组织方式：(堆组织表)数据和索引分开，数据以数组的形式存放，按照插入的顺序，删除之后会留下空位，后续新插入的可以利用之前的空位，索引通过哈希表的方式组织，InnoDB数据放在主键索引上的组织方式称为索引组织表</li>
+<li>索引：通过哈希表的形式组织，并且所有索引的地位都相同，不存在回表的过程，数据<strong>位置</strong>发生变化是，所有的索引都需要进行修改</li>
+<li>数据：内存表不支持 Blob 和 Text 字段，并且即使定义了 varchar(N)，实际也当作 char(N)，也就是固定长度字符串来存储，因此内存表的每行数据长度相同。</li>
+</ul>
+<p>Memory引擎可以手动指定索引为btree,与MySQL情况相同</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">alter table t1 add index a_btree_index using btree (id);<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/1788deca56cb83c114d8353c92e3bde3.jpg?raw=true" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>锁</strong></p>
+<p>只支持表级锁，较为影响并发度</p>
+<p><strong>数据持久性</strong></p>
+<p>重启后会表会被清空，主要在主库和备库之间的同步存在一定的问题</p>
+<ul>
+<li>MS架构下，如果备库重启了，主库再操作内存表，则会在备库上找不到对应的表</li>
+<li>MM架构下，备库重启，会向备库的binlog写入一条<code>delete from t</code>,如果再发生主备切换，主库再将备库的binlog拿出来执行，此时导致主库上面还存在的内存表再切换时被清空</li>
+</ul>
+<p>建议除了在数据量可控，不会耗费过多内存的情况下，考虑使用内存表。其他时候全部使用InnoDB,由于InnoDB的buffer pool,因此性能也不会过差，并且InnoDB 在并发度上的支持度更好</p>
+<h3 id="自增主键"><a href="#自增主键" class="headerlink" title="自增主键"></a>自增主键</h3><p>使用InnoDB引擎时，自增值保存在内存当中，并未持久化，每次重启后都寻找自增值的最大值，将最大值+1作为当前的自增值，8.0版本之后，自增值保存在redolog当中，有了持久化的能力</p>
+<p><strong>自增修改机制</strong>：</p>
+<ul>
+<li>id为0，null时，AUTO_INCREMENT填到当前字段当中</li>
+<li>如果指定则使用指定值<ul>
+<li>如果指定值比AUTO_INCREMENT大，则对AUTO_INCREMENT进行更新</li>
+</ul>
+</li>
+<li>新自增值生成算法：auto_increment_offset 开始，每次叠加auto_increment_increment，直至大于表前的最大值，这两个值的默认值均为1</li>
+</ul>
+<p><strong>修改时机</strong></p>
+<p>在真正数据插入之前，先对AUTO_INCREMENT进行修改，基本插入失败，修改的AUTO_INCREMENT值也不会再回滚</p>
+<p>如果进行回滚，则会导致冲突问题，如果当前为2，事务A插入数据改为3,事务A由于唯一键冲突进行回滚，在AUTO_INCREMENT改回2之前事务B插入一条id为3的数据，此时AUTO_INCREMENT的值为2，再重新插入自增数据则导致duplicate key</p>
+<p><strong>自增锁</strong></p>
+<p>语句级别，需要等待该条获取锁的语句执行结束后再释放锁</p>
+<p>innodb_autoinc_lock_mode:</p>
+<ul>
+<li>0：语句结束后才释放锁</li>
+<li>1：<ul>
+<li>普通insert：锁申请之后立马释放</li>
+<li>批量插入数据：语句执行结束后再释放(防止其他线程中途插入值，导致binlog在statement的形式下的数据不一致问题) <ul>
+<li>解决思路1：语句结束后再释放锁</li>
+<li>解决思路2：binlog设置为row形式，innodb_autoinc_lock_mode设置为2,解决数据不一致问题，并且提高并发度</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>2：所有的情况均为申请后立刻释放锁</li>
+</ul>
+<p>批量插入数据，包含的语句类型是 insert … select、replace … select 和 load data 语句。innodb_autoinc_lock_mode 设置为 1时，每次申请的id为上一次申请的id的2倍，从而导致了浪费和不连续的问题</p>
+<p><strong>备库自增主键</strong></p>
+<p>由于binlog写入的顺序取决于事务的提交顺序，与真实的执行顺序不一致，因为为了防止由于执行顺序导致的自增主键的值不一样的问题,binlog中在写入插入语句之间回添加一条set INSER_ID &#x3D; ***,保证不受顺序的影响</p>
+<p><strong>id不连续的原因</strong></p>
+<ol>
+<li>数据插入失败时AUTO_INCREMENT不会回退</li>
+<li>事务回滚AUTO_INCRMENT不会回退</li>
+<li>innodb_autoinc_lock_mode为1时批量申请</li>
+</ol>
+<h3 id="赋权"><a href="#赋权" class="headerlink" title="赋权"></a>赋权</h3><p>grant用于给用户进行赋权，通常无需像部分文档说的那样在后面补充上一个flush privileges,将内存中的改变给flush到硬盘之中</p>
+<p><strong>全局权限</strong></p>
+<p>对于该用户在mysql全局有效，信息保存在mysql的user表当中，通过grant对其进行赋权,给予all privileges最高权限</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">grant</span> <span class="hljs-keyword">all</span> privileges <span class="hljs-keyword">on</span> <span class="hljs-operator">*</span>.<span class="hljs-operator">*</span> <span class="hljs-keyword">to</span> <span class="hljs-string">&#x27;ua&#x27;</span>@<span class="hljs-string">&#x27;%&#x27;</span> <span class="hljs-keyword">with</span> <span class="hljs-keyword">grant</span> option;<br></code></pre></td></tr></table></figure>
+
+<ol>
+<li><p>磁盘上将mysql.user表里，用户的所有的对应的权限全改为Y</p>
+</li>
+<li><p>内存中，从数组acl_users 中找到这个用户对应的对象，将access(权限位)修改为1</p>
+</li>
+</ol>
+<p>通过新的客户端登录该用户时，MySQL创建一个新的连接维护线程对象,通过acl_user进行权限的确认，然后保存到该线程<strong>内部</strong>的权限位，因此该用户已经登录之后，全局权限不受grant的影响</p>
+<p>revoke用于撤销权限，作用效果和所作的工作与grant完全相反</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">revoke</span> <span class="hljs-keyword">all</span> privileges <span class="hljs-keyword">on</span> <span class="hljs-operator">*</span>.<span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;ua&#x27;</span>@<span class="hljs-string">&#x27;%&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<p><strong>数据库权限</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">grant</span> <span class="hljs-keyword">all</span> privileges <span class="hljs-keyword">on</span> db1.<span class="hljs-operator">*</span> <span class="hljs-keyword">to</span> <span class="hljs-string">&#x27;ua&#x27;</span>@<span class="hljs-string">&#x27;%&#x27;</span> <span class="hljs-keyword">with</span> <span class="hljs-keyword">grant</span> option;<br></code></pre></td></tr></table></figure>
+
+<p>对内存和磁盘同时生效：</p>
+<ol>
+<li><p>磁盘上 向mysql.db表中插入一条记录,所有的权限字段全部设置为Y</p>
+</li>
+<li><p>内存中 增加一个对象到数组acl_dbs中，access权限位全为1</p>
+</li>
+</ol>
+<p>在此之后的权限判断借助于acl_dbs这个全局数组，yinci对应已经登录的用户,grant和revoke都会影响当前的权限状态</p>
+<p><strong>表&#x2F;列权限</strong></p>
+<blockquote>
+<p>除了 db 级别的权限外，MySQL 支持更细粒度的表权限和列权限。其中，表权限定义存放在表 mysql.tables_priv 中，列权限定义存放在表 mysql.columns_priv 中。这两类权限，组合起来存放在内存的 hash 结构 column_priv_hash 中。</p>
+<p>跟 db 权限类似，这两个权限每次 grant 的时候都会修改数据表，也会同步修改内存中的 hash 结构。因此，对这两类权限的操作，也会马上影响到已经存在的连接。</p>
+</blockquote>
+<p><strong>flush privileges使用场景</strong></p>
+<p>flush privileges为清空 当前内存中的全局数组(acl_users,acl_dbs),从硬盘的表中重新加载一遍数据，此后再从内存的数组中读取数据时便可读取到最新的权限，达到内存与硬盘的数据一致，但是并不会去更新线程对象中维护的权限，因此对全局权限仍无影响。</p>
+<p>在通常情况下，使用grant和revoke可以保证内存和硬盘中的权限对应一致，无需再语句后面跟随flush privileges。</p>
+<p>在直接通过删除表中数据的方式进行权限的修改会导致内存中的数据未被更新，此时需要flush privileges来进行硬盘和内存的数据同步</p>
+<h3 id="自增id上界"><a href="#自增id上界" class="headerlink" title="自增id上界"></a>自增id上界</h3><p><strong>表中的自增的AUTO_INCREMENT</strong></p>
+<ul>
+<li>上限根据字段的数据类型而定，像int 即为2^32^-1</li>
+<li>达到上限后值将不再变化，如果为唯一值则会存在冲突</li>
+</ul>
+<p><strong>InnoDB系统自增的row_id</strong></p>
+<ul>
+<li>用于进行提供位置信息(无主键时会生成一个row_id)</li>
+<li>整个InnoDB系统共享这一个row_id</li>
+<li>冲突之后则会从0开始，row_id相同的行新数据会把旧数据给覆盖掉</li>
+<li>上限为2^48^-1</li>
+</ul>
+<p><strong>Xid</strong></p>
+<ul>
+<li>对应事务，用于进行redolog 和binlog之间的统一，同一个事务写入binlog和redolog时会使用同一个Xid,从而关联起来</li>
+<li>MySQL内部维护了global_query_id，执行语句时复制给Query_id,事务的第一条语句会将该语句的query_id赋值给事务的Xid</li>
+<li>global_query_id为纯内存变量，随着重启清零，但是重启后会生成新的binlog文件，因此在同一个binlog中不存在Xid冲突的问题</li>
+<li>上限为2^64^-1</li>
+<li>理论上存在冲突，实际上难以达到，冲突后从0开始</li>
+</ul>
+<p><strong>InnoDB trx_id</strong></p>
+<ul>
+<li>用于判断事务的可见性，通过低水位和高水位来生成活跃数组</li>
+<li>InnoDB内部维护max_trx_id,赋值给新的trx_id</li>
+<li>由于只读事务不影响事务可见性，因此对于只读事务不分配trx_id<ul>
+<li>减少申请trx_id的并发度，减小锁冲突</li>
+<li>减少活跃事务数组的大小</li>
+</ul>
+</li>
+<li>在未分配事务时，trx_id为把当前事务的 trx 变量的指针地址转成整数，再加上 2^48^，<ul>
+<li>指针地址保证了不会重复，</li>
+<li>2^48^将其与正常对可见性有影响的trx_id区分开</li>
+</ul>
+</li>
+<li>trx_id有时不是按照+1来递增：<ol>
+<li>update delete涉及到标记删除旧数据，也就是要把数据放到 purge 队列里等待后续物理删除，这个操作也会把 max_trx_id+1， 因此在一个事务中至少加 2；</li>
+<li>后台操作启动内部事务</li>
+</ol>
+</li>
+<li>max_trx_id持久化存储，重启不会清零，达到上限后清零,清零后导致新的事务可能会到达低水位以下，从而变为可见的事务</li>
+<li>上限为2^48^-1</li>
+<li>理论上存在脏读问题，但是达到上限的时间过长</li>
+</ul>
+<p><strong>thread_id</strong></p>
+<ul>
+<li>维护了全局变量thread_id_counter</li>
+<li>上限2^32^-1,到达上限后重置为0</li>
+<li>存在一个算法来保证不冲突的情况</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">do</span> &#123;<br>  new_id= thread_id_counter++;<br>&#125; <span class="hljs-keyword">while</span> (!thread_ids.insert_unique(new_id).second);    <br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>MySQL45讲</div>
+      <div>http://example.com/2022/08/08/MySQL45讲/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>August 8, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/08/%E5%B9%B6%E5%8F%91%E4%B8%8E%E9%94%81/" title="并发与锁">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">并发与锁</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" title="Redis设计与实现">
+                        <span class="hidden-mobile">Redis设计与实现</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

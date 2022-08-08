@@ -16,16 +16,38 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta property="og:type" content="article">
+    <meta name="description" content="操作系统虚拟化进程进程：运行中的程序 进程的状态：(三状态模型)  运行 就绪 阻塞  上下文切换：当一个进程停止时，将其寄存器中的值保存到物理内存当中，通过恢复寄存器（将真实值从物理内存中放回寄存器当中），恢复运行该进程 进程控制块：PCB，储存进程的相关信息 受限直接执行 LDE CPU直接运行程序 操作系统掌控全局，对运行的程序加以限制  受保护的控制权转移:硬件分别提供不同的执行模式给操作">
+<meta property="og:type" content="article">
 <meta property="og:title" content="操作系统">
 <meta property="og:url" content="http://example.com/2022/08/08/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="操作系统虚拟化进程进程：运行中的程序 进程的状态：(三状态模型)  运行 就绪 阻塞  上下文切换：当一个进程停止时，将其寄存器中的值保存到物理内存当中，通过恢复寄存器（将真实值从物理内存中放回寄存器当中），恢复运行该进程 进程控制块：PCB，储存进程的相关信息 受限直接执行 LDE CPU直接运行程序 操作系统掌控全局，对运行的程序加以限制  受保护的控制权转移:硬件分别提供不同的执行模式给操作">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352676-d887cd20-3f1b-439b-9e6b-becea9283700.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352683-04830c1c-4720-4c32-ae5a-c7d821d5e517.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352684-9ff1e57b-34f8-40a6-937e-c5cdc1575376.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352688-596338c1-19ab-4000-affe-5e5fa93958aa.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352735-3cc066ae-c963-4ad5-851e-9cef75e4d9d4.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352745-a0eeabd9-7c02-4695-853f-31d40aadd435.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352741-22005bd1-84ab-4ac0-9c7c-6c3d9cf31697.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352747-2c48eb8f-252c-4389-be8f-d07117c1dd73.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352750-312dd606-4f3c-4f3c-ab04-ddefd2dcb4d4.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352802-c9601408-e5d4-40b6-b8f1-6108e485f816.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352809-e1ad1631-19ea-4167-b649-5c5e8cb1c2c8.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352815-f400c9ae-9d11-4ad1-9a28-a86c7a97b6e9.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352816-0d2eb231-c6d6-456a-8b39-0c94440500b4.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352821-2c24778d-c1a4-46b1-8762-bdbb59d53652.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352823-fa2d315b-6c0c-4d58-a841-fe5f8d64bf5d.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352824-922efa79-551a-40fd-8b4c-16e3b7715e9c.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352830-9ed8725f-5601-4272-b2ff-93a4de2ad42c.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352834-3c5d2de5-b5da-4bab-bde9-e421bd080398.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/89784872/183352835-46813084-89a1-4d13-b751-16b2e4756d9b.png">
 <meta property="article:published_time" content="2022-08-08T06:18:14.000Z">
-<meta property="article:modified_time" content="2022-08-08T06:18:53.553Z">
+<meta property="article:modified_time" content="2022-08-08T06:30:58.177Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="CS基础">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/89784872/183352676-d887cd20-3f1b-439b-9e6b-becea9283700.png">
   
   
   
@@ -217,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 words
+          13k words
         
       </span>
     
@@ -228,7 +250,7 @@
         
         
         
-          1 mins
+          108 mins
         
       </span>
     
@@ -271,7 +293,485 @@
             
               <div class="markdown-body">
                 
-                
+                <h1 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h1><h2 id="虚拟化"><a href="#虚拟化" class="headerlink" title="虚拟化"></a>虚拟化</h2><h3 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h3><p>进程：运行中的程序</p>
+<p>进程的状态：(三状态模型)</p>
+<ul>
+<li>运行</li>
+<li>就绪</li>
+<li>阻塞</li>
+</ul>
+<p>上下文切换：当一个进程停止时，将其寄存器中的值保存到物理内存当中，通过恢复寄存器（将真实值从物理内存中放回寄存器当中），恢复运行该进程</p>
+<p>进程控制块：PCB，储存进程的相关信息</p>
+<h3 id="受限直接执行-LDE"><a href="#受限直接执行-LDE" class="headerlink" title="受限直接执行 LDE"></a>受限直接执行 LDE</h3><ol>
+<li>CPU直接运行程序</li>
+<li>操作系统掌控全局，对运行的程序加以限制</li>
+</ol>
+<p>受保护的控制权转移:硬件分别提供不同的执行模式给操作系统</p>
+<ul>
+<li>用户模式：在用户模式下，运行的代码会受限制，如果进行如IO等特权操作，操作系统会抛出异常，从而终止进程</li>
+<li>内核模式：该模式下代码可以做任何想做的事，包括受限命令</li>
+</ul>
+<p>通过陷入跳入内核并且将特权级别提升到内核模式，以及从陷阱返回来回到用户模式</p>
+<p>内核通过设置陷阱表来告诉陷阱该跳转到的地址和要执行的代码，操作系统会告诉硬件陷阱表的位置。设置陷阱表本身也是一个特权指令</p>
+<p><strong>进程之间的切换</strong></p>
+<p>如果一个进程正在运行，那么操作系统则未在运行，操作系统对全局的掌控失效</p>
+<ul>
+<li><p>协作方式：操作系统被动调用，相信进程，对于运行时间过长的进程会定期放弃CPU，操作系统接管</p>
+</li>
+<li><p>非协作方式：借助硬件，设置时钟中断，因此每过一段时间操作系统便可重新接管CPU</p>
+</li>
+</ul>
+<p><strong>恢复和上下文切换</strong></p>
+<p>A-&gt;B</p>
+<ol>
+<li>时钟中断</li>
+<li>将A的寄存器保存至内核栈（A）</li>
+<li>切换至内核模式<ul>
+<li>将A的寄存器保存至A的进程结构当中</li>
+<li>将B的寄存器从B的进程结构中恢复</li>
+<li>从陷阱返回</li>
+</ul>
+</li>
+<li>从B的内核栈之中恢复B的寄存器</li>
+<li>转向用户模式</li>
+</ol>
+<h3 id="进程调度"><a href="#进程调度" class="headerlink" title="进程调度"></a>进程调度</h3><p><strong>调度指标：</strong></p>
+<p>周转时间：$T_{完成时间}-T_{到达时间}$ </p>
+<p>带权周转时间：$T_{周转时间}&#x2F;T_{占用CPU时间}$</p>
+<p>响应时间：$T_{首次运行}-T_{到达时间}$</p>
+<p><strong>FIFO</strong></p>
+<p>先进先出，不多解释</p>
+<p><strong>SJF</strong></p>
+<p>短任务优先</p>
+<p>当一个进程结束后，在已经到达的进程中挑选运行时间最短的执行</p>
+<p>非抢占式</p>
+<p><strong>STCF</strong></p>
+<p>无需等一个进程结束，直接判断已经到达的中的最短的进程</p>
+<p>抢占式</p>
+<p><strong>RR</strong></p>
+<p>轮转</p>
+<p>切成一个个时间片，时间片必须为中断周期的倍数</p>
+<p>每个进程运行一个时间片</p>
+<p>需要设置合理的时间片长度，果断频繁上下文切换的开销过大，过长，失去轮转的意义</p>
+<h3 id="多级反馈队列"><a href="#多级反馈队列" class="headerlink" title="多级反馈队列"></a>多级反馈队列</h3><p>MLFQ 中拥有许多个独立的队列，每个队列的优先级不同，先执行优先级较高的队列中的任务，对应优先级相同的任务采用轮转运行</p>
+<p><strong>初步制定规则</strong>：</p>
+<ul>
+<li><p>1 A的优先级＞B的优先级，执行A</p>
+</li>
+<li><p>2 AB优先级相同，采用轮转的方式进行执行</p>
+</li>
+<li><p>3 工作进入系统时先放在最高优先级上</p>
+</li>
+<li><p>4a 执行完一个时间片，优先级降低，移入下一个队列</p>
+</li>
+<li><p>4b 如果进程主动放弃CPU，则不降低其优先级</p>
+</li>
+</ul>
+<p>对应长进程，会慢慢降低其优先级，将CPU有限给其他进程使用，防止长期占用</p>
+<p>对于IO密集型进程，IO交互时会主动放弃CPU，因此一直保持较高的优先级</p>
+<p>缺点：</p>
+<ul>
+<li>太多交互型的进程会导致其他进程处于饥饿状态</li>
+<li>如果程序中设计进程一直主动进行放弃CPU，那么则可以欺骗操作系统，一直占有CPU</li>
+</ul>
+<p><strong>改进1</strong></p>
+<p>规则5：经过一段S时间，就把所有的进程全部加入最高优先级</p>
+<p>S如果太高，则长进程饥饿，太短，对IO型进程不友好</p>
+<p><strong>改进2</strong></p>
+<p>重写规则4，如果一个进程完成了一定的时间配额，无论中途是否放弃过CPU，均降低其优先级</p>
+<p>因此最后的规则为：</p>
+<ul>
+<li><p>1 A的优先级＞B的优先级，执行A</p>
+</li>
+<li><p>2 AB优先级相同，采用轮转的方式进行执行</p>
+</li>
+<li><p>3 工作进入系统时先放在最高优先级上</p>
+</li>
+<li><p>4 如果一个进程完成了一定的时间配额，无论中途是否放弃过CPU，均降低其优先级</p>
+</li>
+<li><p>5 经过一段S时间，就把所有的进程全部加入最高优先级</p>
+</li>
+</ul>
+<p>同时，对于不同队列分配不同长度的时间片，高优先级拥有较短的时间片</p>
+<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><h3 id="抽象：地址空间"><a href="#抽象：地址空间" class="headerlink" title="抽象：地址空间"></a>抽象：地址空间</h3><p>操作系统为程序提供一个物理内存的抽象，叫做<strong>地址空间</strong>，运行的程序感受不到这个虚拟化的过程，作为程序员，我们所操作和感知到的内存也并非真实的物理内存，因此程序的地址总是从0开始</p>
+<p>一个地址空间包含一个程序需要的所有的内存状态，主要包括以下三个区域：</p>
+<ul>
+<li><p>代码区：存储程序运行的代码</p>
+</li>
+<li><p>堆区：动态分配的内存，由用户手动管理，如malloc或者new分配的内存</p>
+</li>
+<li><p>栈区：保存函数的调用信息，分配空间给局部变量，函数返回值等，由操作系统自动管理</p>
+</li>
+</ul>
+<p>在地址空间中，程序代码和堆位于地址的低位，并且分配时由低位向高位进行分配，栈位于地址的高位，分配时从高位向低位分配，中间的为未分配区域，留给栈和堆进行增长</p>
+<p>在由地址空间向物理地址的映射过程当中，主要解决的就是如何合理分配空间，使中间的未分配的区域尽可能小的占用实际物理内存</p>
+<h3 id="机制：地址转换"><a href="#机制：地址转换" class="headerlink" title="机制：地址转换"></a>机制：地址转换</h3><p>将指令中的虚拟地址转换到数据实际存储的地址，有点类似内存的寻址过程</p>
+<p><strong>动态重定位(基于硬件)</strong> </p>
+<p>实现重定位CPU需要两个寄存器，基址寄存器和限制寄存器</p>
+<p>基址寄存器用于存放起始位置，虚拟地址的位置加上基址寄存器中的值即可得到真实的物理地址</p>
+<p>界限寄存器确保这个地址在进程地址的空间范围内，在虚拟地址与基址寄存器求和前就进行检查，如果超过了这个界限，或者为负数时，则会引发异常</p>
+<ol>
+<li>创建进程时，操作系统在物理内存空间中找到一个能够容纳当前位置，并且将其标记为已用</li>
+<li>进程终止时，对当前进程所占用的内存空间进行释放，归还为空闲列表，清除当前区域的相关数据结构，比如说一个记录着当前空间大小和下一个空间位置的结构体</li>
+<li>上下文切换时，由于CPU只有一个基址寄存器和界限寄存器，因此对于不同进程之间的切换，应当保存当前寄存器中的内容到每个进程都有的结构当中，如PCB等，供上一个进程以后使用，并且将当前进程的值加载进寄存器当中。在移动地址空间时，操作系统会把新的地址空间重新更新到寄存器当中</li>
+</ol>
+<h3 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h3><p>分段主要用于解决的就是栈和堆之间的一大块空域区域的问题。</p>
+<p>在代码块，栈，堆这种模型下，将其分为三个段，每个段设置一对基址寄存器和界限寄存器，在进行地址映射时，分别将这三个段映射到物理地址当中</p>
+<p>在进行映射的过程当中，由于段在虚拟地址中的起始位置不再是0，因此在进行地址映射时，应当考虑虚拟地址中段本身的偏移量，比如：</p>
+<p>一个数据在虚拟地址中的地址为4200，而段的起始地址为4096，因此考虑段在虚拟地址中的偏移量，真正进行映射的地址(转换为段起始从0开始的地址)即为4200-4096&#x3D;104，将104加上基址寄存器中的值得到的才为真正的物理地址，如果不考虑段的偏移量&#x2F;起始地址，那么则与为分段无异，失去分段的意义</p>
+<p><strong>段的引用</strong></p>
+<p>用前几位表示段号，后几位为段内的偏移量，类似于cache的块号和块内寻址，在界限检查时，只需要将段内偏移量与界限寄存器进行比较即可</p>
+<p>如一个14位的地址，前两位的表示段号，那么则为00-03四个段，后12位为段内偏移量</p>
+<p><strong>栈的反向增长</strong></p>
+<p>为了解决栈的反向增长，在段寄存器中新加一位是否进行反向增长用于区分，反向增长则为反向偏移</p>
+<p><strong>共享</strong></p>
+<p>部分内存可以共享给不同进程使用，但是为了防止不同进程之间的相互影响，在段寄存器当中对段加上保护位，来标识读写权限，代码段的权限位可读可执行那么则可映射到多个虚拟空间，供多个进程使用，但是每个进程又认为自己独占了这个内存</p>
+<p><strong>外部碎片</strong></p>
+<p>不同的段的大小不同，对物理内存空间进行划分切割，导致一些小的空间无法放下任何的段，成为外部碎片</p>
+<p>解决方法</p>
+<ul>
+<li>重新分配，紧凑内存，但是成本很高</li>
+<li>内存分配算法，成本低，但是无法完全解决问题，总会留下碎片</li>
+</ul>
+<h3 id="空闲空间管理"><a href="#空闲空间管理" class="headerlink" title="空闲空间管理"></a>空闲空间管理</h3><p>主要解决分配过程中的外部碎片的问题</p>
+<p><strong>底层机制</strong></p>
+<p>堆上管理空闲空间的数据结构为空闲链表</p>
+<p>分配空间时找到一个合适大小的空间进行分割，一部分分配，剩余的部分保持未分配的空闲状态，同时碎片也就是这么得来的</p>
+<p>释放时一是对当前内存空间进行回收，然后对相邻的空间空间进行合并，恢复成大的空间</p>
+<p><strong>实际于内存中</strong></p>
+<p>当将地址分配给用户时，会同时分配一个头块，存储一定的信息，如当前段的大小和一个进行完整性检查的幻数，在对空余块进行分配时，同样会分配一个头块，其中包含着用于标识剩余空间大小的size和下一个段的位置next</p>
+<p>分配和释放时，需要对next进行修改，指向新的下一个内存块</p>
+<p><strong>算法策略</strong></p>
+<ul>
+<li>最优匹配：遍历空间链表，寻找大小最合适的区域，尽可能小，但是问题时遍历性能损耗高，并且会产生小的碎片</li>
+<li>最差匹配：遍历，寻找尽可能大的，会产生过量的碎片，实际表现确实是差</li>
+<li>首次匹配：找到第一个就进行分配，有速度优势</li>
+<li>下次匹配：相比首次匹配多维护一个指针，每次从上一次分配的结果出继续寻找空间进行分配</li>
+<li>伙伴系统：分配时对空间不断进行二分，一分为二得到的两个空间称为<strong>伙伴</strong>直至获得一个能够分配的最小空间，释放时检查该空间的伙伴是否为空闲，如果为空闲则将二者合并，获得一个更大的空间，这个过程一直不断向上回溯合并到不能合并为止</li>
+</ul>
+<h3 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h3><p>将空间分为大小相同的的区间，每一个区间称为一个页</p>
+<p>与段相同，采用页号加页内偏移的方式</p>
+<p>定义：</p>
+<ul>
+<li>页表：实现虚拟页和实际物理页之间进行地址转换的数据结构，每个进程一个</li>
+<li>VPN：虚拟页面号</li>
+<li>PFN：物理页号</li>
+<li>PTE：页表格条目(页表项)，用于保存物理地址转换和任何其他有用的信息，存储在页表当中，每一对虚拟和物理地址之间的映射即每一页均需要一个页表项。PTE其中可以存储有效位、保护位、存在位、参考位（追踪页是否被访问）等信息</li>
+<li>TLB：地址转换旁路缓冲存储器，教材上叫做快表，类似于CPU中cache的硬件缓存</li>
+<li>页目录：管理页表中的页，内部的元素成为页目录项（与页表和页表项相对应）</li>
+<li>PDE：页目录项，至少含有PFN和有效位</li>
+</ul>
+<p><strong>寻址过程：</strong></p>
+<p>​	已知虚拟地址，通过前几位获得VPN，通过VPN在进程中的页表中去提取适当的页表项，执行转换，得到PFN，PFN在进行左移和偏移量进行拼接得到真实的物理地址</p>
+<h4 id="TLB"><a href="#TLB" class="headerlink" title="TLB"></a>TLB</h4><p><strong>TLB算法流程</strong></p>
+<p>如果在虚拟地址中提取页号，检查TLB中是否有地址映射，命中那么则直接从TLB中提取PFN，与偏移量组合得到实际的物理地址，于是可以访问内存。如果未命中则将该页从页表中提取到TLB中，避免下次访问该页的其他地址时未命中（通常系统会访问连续的地址空间）</p>
+<p><strong>TLB未命中时的处理</strong></p>
+<p>复杂指令集时期的计算机由硬件全权负责，未命中时硬件遍历页表，寻找正确的页表项，更新TLB</p>
+<p>较为现代的操作系统当中通过软件处理，未命中时，硬件系统抛出一个一场，此时操作系统提升至内核模式，执行陷阱处理程序（处理TLB未命中的程序），通过特权指令修改更新TLB，从陷阱返回，此时硬件再次访问则会命中</p>
+<p><strong>TLB中的内容</strong></p>
+<p>VPN | PFN | 其他位</p>
+<p>其他位包括 有效位，保护位，脏位等</p>
+<p><strong>上下文切换时的TLB</strong></p>
+<p>一个TLB需要针对多个进程，因此在上下文切换时，上一个进程的相关信息则没有任何意义，一共有两种处理方式：</p>
+<ul>
+<li>上下文切换时清空TLB，但是频繁进行上下文切换时开销很高</li>
+<li>跨上下文切换的TLB共享，添加地址空间标识符，用于区别不同的进程</li>
+</ul>
+<p><strong>替换策略</strong></p>
+<p>与CPU的cache相似，采用（最近最少使用）LRU和随机替换</p>
+<h4 id="解决页表项过多的问题"><a href="#解决页表项过多的问题" class="headerlink" title="解决页表项过多的问题"></a>解决页表项过多的问题</h4><p>正如上面所述，每一个页均需要一个页表项来进行地址映射，因此如果VPN为20位，那么则需要$2^{20}$个页表项，虽然这些页表项并不会全部有效可能为分配，但是仍存在于页表中，因此页表则会有$2^{20}$ 个项，对应的空间消耗极大。为了减少空间消耗，主要有以下几种方案：</p>
+<ul>
+<li>更大的页</li>
+<li>段页混合方法</li>
+<li>多级页表</li>
+</ul>
+<p><strong>更大的页</strong></p>
+<p>使用更大的页可以减少PTE的数量，但随之每页会产生浪费，造成较大的内部碎片</p>
+<p><strong>段页混合</strong></p>
+<p>不在位整个进程空间提供页表，而是为每个逻辑段提供页表，如果按照代码区、堆、栈分段的话那么我们有三个页表，混合方式中我们依旧使用段中的基址寄存器和界限寄存器</p>
+<p>在这个例子当中，段页混合之后，此时我们的虚拟地址前两位用于确定地址引用哪个段，后面剩余的分别为VPN和偏移量</p>
+<p>分段之后，只针对段内的地址进行页表项的分配，堆和栈之间未使用的部分不再设置页表项，从而有效地节省了页表项，减少内存消耗</p>
+<p>缺点：</p>
+<p>分段并不像分页那么灵活，如果有一个大而稀疏的堆，我们需要对堆所在的整个段进行页表项的分配，依旧会产生较大的页表浪费</p>
+<p><strong>多级页表</strong></p>
+<p>基本思想：将页表分为多个页大小的单元，如果该页中的页表项全为无效，那么就完全不分配该页的页表。使用新的数据结构<strong>页目录</strong>来管理页表的页</p>
+<p>页目录和页目录项对应着页表和页表项，页表和页目录用于管理具体的地址映射，页目录和页目录项用于管理页表，如果PDE有效，那么PDE指向中的页页表其中至少有一页是有效的，即该PDE指向的页中，至少有一个有效的PTE</p>
+<p>不使用多级页表是，需要在内存找找到一个连续的空间，令页表连续的驻留在物理内存中，但是使用了多级页表之后，只需要保证能找到一段连续空间来存储页目录即可（比页表要小得多），页表的页通过页目录的指向则可以放在内存中的任意位置</p>
+<p>缺点：</p>
+<p>时间换空间，多页页表的查找显然要比线性页表查找复杂得多，同时TLB处理未命中时，也需要从内存中加载两次（一次页目录，一次PTE）</p>
+<p>  TLB：如果TLB命中时则与之前线性页表一致，从TLB中获取即可，只有未命中时，才需要进行完整的多级页表查找</p>
+<h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><h4 id="机制"><a href="#机制" class="headerlink" title="机制"></a>机制</h4><p>在磁盘上开辟一块空间用于物理内存的移入和移除，通常以页大小为单元</p>
+<p><strong>存在位</strong>:表示该页是否存在于物理内存当中</p>
+<p><strong>页错误：</strong>访问该页但是该页不存在于物理内存当中，通常由操作系统软件全权负责</p>
+<p>页错误处理流程：</p>
+<ul>
+<li><p>硬件在地址转换中的工作</p>
+<ul>
+<li>TLB命中，直接从从TLB中获取</li>
+<li>TLB未命中，但是该页存在且有效，那么直接从PTE中获取对应的PFN,换入TLB中，再次重试则TLB命中</li>
+<li>TLB未命中，且该页不在物理内存当中，执行页错误处理程序，将该页换到物理内存当中去，按照在物理内存中的处理方法继续执行</li>
+<li>TLB未命中，且该页无效，硬件捕获这个非法访问，操作系统调用陷阱程序，可能会结束这个非法进程</li>
+</ul>
+</li>
+<li><p>操作系统在页错误时所作的工作：</p>
+<p>首先操作系统为将要换入的页找到一个物理空间，如果没有则执行交换算法踢出一些页，获得物理帧之后重新请求从交换空间读取页，操作系统更新页表重试指令，此时TLB会未命中，交换到TLB当中去，再次重试则TLB命中</p>
+</li>
+</ul>
+<h4 id="策略"><a href="#策略" class="headerlink" title="策略"></a>策略</h4><p>如果将物理内存视为cache，硬盘视为内存，那么则可以按照cache命中的那一套思路去思考</p>
+<p>因此，我们目前最应当关系的为命中率和平均访问时间</p>
+<p><strong>最优替换策略</strong></p>
+<p>替换内存中在最远的将来才被访问的页，可以达到缓存未命中率最低</p>
+<p>但是未来的访问无法得知，因此无法为操作系统实现最优策略，只能用于评估算法时作为其他算法的参考</p>
+<p><strong>FIFO</strong></p>
+<p>先进先出，无法确定页的重要性，导致命中率很低，甚至比随机替换的效果还差</p>
+<p><strong>随机</strong></p>
+<p>不解释</p>
+<p><strong>LRU</strong></p>
+<p>最少最近使用，由于访问的**近期性(时间局部性)**，利用历史数据，替换最近最少使用的页面</p>
+<p>相比于FIFO和随机，能够更好的保持热门页，取得较好的效果</p>
+<p>为了实现LRU，需要对每次内存引用进行记录，再删除时还需遍历所有页，寻找近期最少使用的页来进行替换，导致了巨大的时间开销，因此引出的近似LRU算法</p>
+<p><strong>近似LRU</strong></p>
+<p>周期性的清楚使用位，然后通过使用位的0和1来区分近期是否被使用过，来判断使用哪个页</p>
+<p>比较有代表性的为时钟算法(CC)&#x2F;NRU：</p>
+<p>所有页放在一个循环列表当中，开始时指针指向一个页，如果该页为1那么则为近期使用过，不进行替换，往后遍历直至寻找到第一个不是1的页，将其进行替换，遍历过的位置均设置为0</p>
+<p><strong>考虑脏页</strong></p>
+<p>脏页代表从进行过修改的页，如果此时再写回硬盘中，那么则会带来额外的硬盘开销，因此替换时不应当有限考虑脏页，通过增加一个修改位，达到区分脏页的目的</p>
+<h2 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p><strong>进程&amp;线程</strong></p>
+<p>进程：一个运行着的程序，非共享地址空间，之间的通信只能通过内核来实现</p>
+<p>线程：类似于一个独立的进程，但是供养地址空间，上下文切换消耗小，地址空间保持不变</p>
+<p>传统进程（单线程）只有一个栈，位于地址空间的底部，多线程中多个线程独立运行，均拥有自己的栈</p>
+<p>不同线程之间对于共享资源的操作可能会处于竞争状态（互相中断），如同时进行++操作，最后得到的结果非我们所想的那样。</p>
+<p>整个并发这一章都是为了解决如何高效且不存在错误的进行并发操作，解决竞争时的冲突问题。我们期望能原子性的执行某些操作</p>
+<p><strong>概念陈述：</strong></p>
+<ul>
+<li>临界区：共享资源的一段代码，可以被多个线程操作，通常为一个变量或者数据结构</li>
+<li>竟态条件： 多个线程大致同时进入临界区，试图更新数据结构</li>
+<li>不确定性：由于并发进行操作或修改而导致的结果的不确定性</li>
+<li>互斥：只有一个线程能进入临界区</li>
+</ul>
+<h3 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h3><p>在这一节对于锁的内部进行探究，实现一个真正有实用价值且高效的锁，在这一节之后，不在关注锁的内部，直接调用API进行锁的获取和归还</p>
+<p>锁本质就是一个变量，用来保存这一时刻的信息，如是否有线程持有锁，可用还是已上锁，使用锁来保证在这一时刻，只能有一个线程对临界区进行操作</p>
+<h4 id="实现一个锁"><a href="#实现一个锁" class="headerlink" title="实现一个锁"></a>实现一个锁</h4><p><strong>评价标准：</strong></p>
+<ul>
+<li>提供互斥，维护临界区</li>
+<li>公平性：保证每个线程都能公平的抢到锁</li>
+<li>性能：上锁与解锁的时间开销</li>
+</ul>
+<p><strong>初步尝试：控制中断</strong></p>
+<p>在访问临界区是关闭中断，该线程不会被其他线程中断，则可以安全操作临界区</p>
+<p>通过lock()进行关中断，unlock()进行开中断</p>
+<p>缺点：</p>
+<ul>
+<li>必须信任一个程序，如果一个恶意程序上来就lock()，直接关中断，导致操作系统所依赖的时钟中断也无法生效，从而操作系统失去了对计算机的控制，只能重启</li>
+<li>不支持多处理器，该处理器关中断仍可以在其他处理器上运行</li>
+<li>关中断导致中断丢失</li>
+</ul>
+<p><strong>方案一：test-and-set</strong></p>
+<p>对变量进行检测，如果不是1，则设置为1，表示持有锁，否则自旋等待</p>
+<p>代码如下：</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352676-d887cd20-3f1b-439b-9e6b-becea9283700.png" srcset="/img/loading.gif" lazyload alt="image-20220422220224937"></p>
+<p>存在的问题：该指令本身并不是原子性的，依然可以被中断，下面这种情况导致了flag被设置了两次1</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352683-04830c1c-4720-4c32-ae5a-c7d821d5e517.png" srcset="/img/loading.gif" lazyload alt="image-20220422220204428"></p>
+<p>解决方案：借助硬件，将整个TestAndSet变为一个原子性的操作,测试旧值的同时设置新值</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> <span class="hljs-title function_">TestAndSet</span><span class="hljs-params">(<span class="hljs-type">int</span> * old_ptr,<span class="hljs-type">int</span> new)</span>&#123;<br>    <span class="hljs-type">int</span> old=*old_ptr;<br>    *old_ptr=new;<br>    <span class="hljs-keyword">return</span> old;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时在对锁的进行修改，flag的判断变为调用TestAndSet</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352684-9ff1e57b-34f8-40a6-937e-c5cdc1575376.png" srcset="/img/loading.gif" lazyload alt="image-20220422220144279"></p>
+<p><strong>评价自旋锁：</strong></p>
+<ul>
+<li>功能：自旋锁可以保证互斥</li>
+<li>公平性：自旋锁在自旋等待的过程中，锁被释放时可以有新的线程试图申请，从而导致原本的线程继续自旋，产生饥饿的情况</li>
+<li>性能：在线程归还锁之前，其他的线程都在进行自旋，性能开销相当大，浪费CPU周期</li>
+</ul>
+<p><strong>方案二：比较与交换</strong></p>
+<p>检测ptr指向的值是否与预期值相等，如果是，则更新为新值，获取锁，与TestAndSet相比只是多了一个比较的过程，思路基本一致</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352688-596338c1-19ab-4000-affe-5e5fa93958aa.png" srcset="/img/loading.gif" lazyload alt="image-20220422220026687"></p>
+<p><strong>方案三(改进1)：获取并增加</strong></p>
+<p>原子地返回特定地址的旧值，并且让该值自增1，通过fetch-and-add可以实现一个ticket锁</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352735-3cc066ae-c963-4ad5-851e-9cef75e4d9d4.png" srcset="/img/loading.gif" lazyload alt="image-20220422221511100"></p>
+<p>使用ticket与turn进行构建锁</p>
+<ul>
+<li>ticket(全局)：相当于按照顺序对锁进行一个申请，没申请一次，无论成功与否，都进行一次++</li>
+<li>turn(全局)：表示在对临界的操作当中，全局中进行了几次操作</li>
+<li>myturn(线程)：表示该线程在对临界区的访问当中处于顺位</li>
+</ul>
+<p>操作流程：</p>
+<ul>
+<li>首先对一个ticket执行FetchAndAdd，令ticket++，并且给myturn赋值0</li>
+<li>turn与myturn进行比较，判断是否获取锁</li>
+<li>归还锁事，对turn执行FetchAndAdd，令turn++，与其他的myturn进行比较</li>
+</ul>
+<p>实例：</p>
+<p>假设我们有三个线程，T1，T2，T3同时对一个临界区进行访问与操作，执行流程和各变量的如下</p>
+<table>
+<thead>
+<tr>
+<th align="center">时刻</th>
+<th align="center">线程&amp;操作</th>
+<th align="center">全局ticket</th>
+<th align="center">全局turn</th>
+<th align="center">线程myturn</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0时刻</td>
+<td align="center">T1申请访问</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">0（T1）</td>
+</tr>
+<tr>
+<td align="center">1时刻</td>
+<td align="center">T2申请访问</td>
+<td align="center">2</td>
+<td align="center">0</td>
+<td align="center">1（T2）</td>
+</tr>
+<tr>
+<td align="center">2时刻</td>
+<td align="center">T3申请访问</td>
+<td align="center">3</td>
+<td align="center">0</td>
+<td align="center">2（T3）</td>
+</tr>
+<tr>
+<td align="center">3时刻</td>
+<td align="center">T1归还锁</td>
+<td align="center">3</td>
+<td align="center">1</td>
+<td align="center">XXX</td>
+</tr>
+</tbody></table>
+<p>分析：</p>
+<ol>
+<li><p>申请过程：随着线程的不断申请ticket不断自增，并且将自增前的旧值赋给对应线程的myturn，从而不同的线程获得到了他的顺位</p>
+</li>
+<li><p>归还过程：T1完成了对临界区的访问，如今归还锁，对全局turn执行FetchAndAdd，全局turn变为1</p>
+</li>
+<li><p>竞争过程：T1归还锁之后，T2，T3同时对锁进行申请，但是由于顺位的差异，T2的myturn与全局turn一致，因此T2，申请到了锁，实现了一个按序访问的状态</p>
+</li>
+</ol>
+<p>评价：</p>
+<ul>
+<li>功能性：实现了互斥</li>
+<li>公平性：通过turn与myturn的协作，实现了按序访问，防止了后来者居上，前者饿死的情况，保证了公平性</li>
+<li>性能：其中涉及自旋，仍然有性能的问题</li>
+</ul>
+<p>至此我们通过了三种方案实现了一个锁，ticket在功能性和公平性都有了保证，剩下的则是对性能进行优化</p>
+<h4 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h4><p><strong>痛点</strong></p>
+<p>在单处理器上，线程0获取到锁，线程1在获取锁失败之后，线程1便进入了自旋等待的状态，他会一直自旋，直至时钟中断，再次期间，线程0也无法执行，只有时钟中断时，线程0重新运行，最后释放锁，线程1结束自旋，获取锁</p>
+<p>过多的自旋导致了时间片被浪费，甚至获取锁的线程也无法继续执行，需要等待一个时钟中断，造成了巨大的时间开销</p>
+<p><strong>改进方式</strong></p>
+<ul>
+<li>让出CPU</li>
+</ul>
+<p>在要自旋的时候，让出CPU，通过一个yeild原语，让运行态转变为就绪态，在线程少的时候，较为有效，但是在多线程的情况下，反复让出带来的上下文切换，也造成了很大的浪费，同时还存在一个线程反复让出，最后导致饿死的情况</p>
+<ul>
+<li>使用休眠代替自旋</li>
+</ul>
+<p>没抢到锁的进入休眠，通过一个队列保存等待锁的队列，park()进行休眠,unpark(thread)唤醒对应的线程</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352745-a0eeabd9-7c02-4695-853f-31d40aadd435.png" srcset="/img/loading.gif" lazyload alt="image-20220422233247586"></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352741-22005bd1-84ab-4ac0-9c7c-6c3d9cf31697.png" srcset="/img/loading.gif" lazyload alt="image-20220422233223623"></p>
+<p>分析：</p>
+<p>获取锁：初始时guard，flag为0，TestAndSet之后guard变为1，获取到锁之后guard重新设置为1，flag为1，此时其他进行再想尝试获取锁时不会在while进行自旋，而是执行else部分，将自己加入到队列当中，调用park进行休眠</p>
+<p>归还锁：队伍为空只需要将flag设置为0，用于下一次申请锁，如果队列不为空，则唤醒其中的元素，guard设置为0，跳过申请锁时的循环</p>
+<p>在正常操作时，开锁和上锁的while循环都会被跳过，不起任何作用，只有在申请或归还锁的时候被中断时，为了保证上锁的原子性，令其他线程进行自旋，等待上锁完成，虽然依旧存在自旋现象，不存在大量线程自旋等待的现象（均跳过循环加入到了队列当中去），只有在中断的时候才会用于保证一下上锁开锁的完整执行过程。</p>
+<p>在唤醒队列中的线程时，并未将flag设置为0从而去走原本的锁申请过程。设置为0则会让新的线程也参与到竞争当中去，导致老线程的饥饿情况，当一个锁被唤醒时，相当于从park的调用返回，guard为0，flag为1，新的线程会被直接加入到队列当中并休眠，相当于把原本的线程直接转移给了刚被唤醒的线程</p>
+<p>问题：</p>
+<p>如果当前线程刚加入到队列当中还未park，此时被中断，旧的线程执行完成归还锁，当前线程被从队列中移除，此时在park()，则unpark时无法从队列中找到对应的线程，从而导致一直休眠下去</p>
+<p>改进措施：</p>
+<p>通过setpark，一个线程表面自己马上要park，此时另一个线程中断并调用unpark，后续的park会直接返回，不在继续睡眠</p>
+<p>对lock进行修改：</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352747-2c48eb8f-252c-4389-be8f-d07117c1dd73.png" srcset="/img/loading.gif" lazyload alt="image-20220423000108121"></p>
+<p>至此，锁的功能性，公平性，性能均得到了实现和保障，之后涉及锁的部分只需要调用API实现即可，不再探究其内部</p>
+<h3 id="基于锁的并发数据结构"><a href="#基于锁的并发数据结构" class="headerlink" title="基于锁的并发数据结构"></a>基于锁的并发数据结构</h3><p><strong>并发计数器</strong></p>
+<p>在修改数的操作前后加上一把锁，解决了冲突的问题但是性能并不理想</p>
+<p><strong>可拓展计数</strong></p>
+<p>设计了懒惰计数器，分为多个局部计数器和一个全局计数器，每个局部计数器一把锁，全局计数器一把锁，这样保证了可以同时进行多次计数，不在全部都去竞争一把锁，一段时间后，局部计数器的数值再加到全局计数器之上</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352750-312dd606-4f3c-4f3c-ab04-ddefd2dcb4d4.png" srcset="/img/loading.gif" lazyload alt="image-20220423001450990"></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352802-c9601408-e5d4-40b6-b8f1-6108e485f816.png" srcset="/img/loading.gif" lazyload alt="image-20220423001508151"></p>
+<p>阈值S的选取决定了计数器是更高效还是延迟更短</p>
+<p><strong>并发链表</strong></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352809-e1ad1631-19ea-4167-b649-5c5e8cb1c2c8.png" srcset="/img/loading.gif" lazyload alt="image-20220423001822387"></p>
+<p>malloc线程安全，因此只对插入操作加上锁</p>
+<p><strong>并发队列</strong></p>
+<p>使用两个锁，一个负责队列头，一个负责队列尾，使插入和删除可以同时进行</p>
+<p><strong>并发散列表</strong></p>
+<p>散列表的每个桶通过并发链表进行组织，即为每个桶加上一个锁，各个桶之间可以进行并发操作</p>
+<h3 id="条件变量"><a href="#条件变量" class="headerlink" title="条件变量"></a>条件变量</h3><p>线程通过条件变量去等待一个条件变为真，条件变量本身为一个队列，不满足将自身加入队列，进行wait，满足时再重新唤醒。</p>
+<p>wait()休眠，同时释放锁，signal()唤醒</p>
+<p>通过join()函数进行休眠，exit() 函数自身退出，唤醒别的线程</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352815-f400c9ae-9d11-4ad1-9a28-a86c7a97b6e9.png" srcset="/img/loading.gif" lazyload alt="image-20220423005012646"></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352816-0d2eb231-c6d6-456a-8b39-0c94440500b4.png" srcset="/img/loading.gif" lazyload alt="image-20220423005036271"></p>
+<p><strong>特别注意：</strong></p>
+<p>条件变量和锁必须配合使用，即在调用wait和signal的时候都必须持有锁</p>
+<ul>
+<li><p>wait的定义要求他在调用时必须持有锁，</p>
+</li>
+<li><p>signal在调用时如果未持有锁，可能出现问题，但也可能没有问题，为了避免，应在使用signal时持有锁，</p>
+</li>
+<li><p>以下的例子可以说明wait释放锁的设计的合理性</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/madbunny/article/details/51267984">(77条消息) 使用条件变量时为啥一定要指定一个锁？_madbunny的博客-CSDN博客</a></p>
+</li>
+</ul>
+<p>条件变量必须配合锁来使用，来避免如下的竞争条件：一个线程准备在条件变量上等待，但是进入等待之前另一个线程唤醒了条件变量。</p>
+<p>也就是说，没有锁进行同步的情况下，一个线程在wait操作中被挂起，并没有完成wait，这时另一个线程触发了signal操作进行唤醒，然后第一个线程才完成wait操作，那第一个线程就收不到第一个线程的signal操作。</p>
+<p>所以，根据上边的解释，通过锁使wait和signal操作进行线程同步，通过锁使wait和signal都是原子操作。</p>
+<p><strong>生产者和消费者的问题</strong></p>
+<p>一个或多个生产者和一个或多个消费者，共用一个缓冲区，缓冲区非满时生产，缓冲区非空时消费</p>
+<p><strong>首次尝试</strong></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352821-2c24778d-c1a4-46b1-8762-bdbb59d53652.png" srcset="/img/loading.gif" lazyload alt="image-20220423005439216"></p>
+<p>可以保证缓冲区非满时生产，缓冲区非空时消费，解决了生产者和消费者之间竞争缓冲区的问题，问题：</p>
+<ul>
+<li>由于只存在一个队列，唤醒时无法区分生产者和消费者，生产者可能在满的时候唤醒的是生产者</li>
+<li>锁只能控制申请的过程，对于已经申请结束进入睡眠的并发无法解决，如果唤醒一个消费者的但是还未执行该消费者，此时另外一个消费者抢先执行，最后导致get两次</li>
+</ul>
+<p>改进：</p>
+<p>将if改为while，唤醒之后再次进行判断，使用empty和fill两个条件变量来区分生产者与消费者，得到最终的解决方案</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352823-fa2d315b-6c0c-4d58-a841-fe5f8d64bf5d.png" srcset="/img/loading.gif" lazyload alt="image-20220423012354760"></p>
+<p><strong>Java中生产者消费者的具体实现</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.fischer;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@description</span>: 参考了 https://www.jianshu.com/p/da312eee4ac4</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span>: fischer</span><br><span class="hljs-comment"> **/</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Test</span> &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Object</span> <span class="hljs-variable">lock</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Object</span>();<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> <span class="hljs-variable">product</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>;<br>    <span class="hljs-comment">//如果没有产品,在lock对象上等待唤醒,如果有产品,消费.</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">Runnable</span> <span class="hljs-variable">consumer</span> <span class="hljs-operator">=</span> () -&gt; &#123;<br>        System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; prepare consume&quot;</span>);<br>        <span class="hljs-keyword">synchronized</span> (lock) &#123;<br>            i (product &lt;= <span class="hljs-number">0</span>) &#123;<span class="hljs-comment">//替换为while解决线程虚假唤醒问题</span><br>                <span class="hljs-keyword">try</span> &#123;<br>                    System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; wait&quot;</span>);<br>                    lock.wait();<br>                &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>                    e.printStackTrace();<br>                &#125;<br>                System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; wakeup&quot;</span>);<br>            &#125;<br>            product--;<br>            System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; consumed product:&quot;</span> + product);<br>            <span class="hljs-keyword">if</span> (product &lt; <span class="hljs-number">0</span>) &#123;<br>                System.err.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; spurious lock happend, product: &quot;</span> + product);<br>            &#125;<br>        &#125;<br>    &#125;;<br>    <span class="hljs-comment">//生产一个产品然后唤醒一个在lock对象上等待的consumer</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">Runnable</span> <span class="hljs-variable">producer</span> <span class="hljs-operator">=</span> () -&gt; &#123;<br>        System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; prepare produce&quot;</span>);<br>        <span class="hljs-keyword">synchronized</span> (lock) &#123;<br>            product += <span class="hljs-number">1</span>;<br>            System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot;produced product: &quot;</span> + product);<br>            lock.notify();<br>        &#125;<br>    &#125;;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">producerAndConsumer</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-comment">// 启动2个consumer,1个producer</span><br>        <span class="hljs-type">Thread</span> <span class="hljs-variable">c1</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Thread</span>(consumer);<br>        <span class="hljs-type">Thread</span> <span class="hljs-variable">c2</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Thread</span>(consumer);<br>        <span class="hljs-type">Thread</span> <span class="hljs-variable">p</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Thread</span>(producer);<br>        c1.start();<br>        c2.start();<br>        p.start();<br><br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>        <span class="hljs-comment">//运行100次,以便触发异常现象</span><br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100</span>; i++) &#123;<br>            <span class="hljs-keyword">new</span> <span class="hljs-title class_">Test</span>().producerAndConsumer();<br>        &#125;<br><br>        <span class="hljs-keyword">try</span> &#123;<br>            Thread.sleep(<span class="hljs-number">5000</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>        System.exit(<span class="hljs-number">0</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://user-images.githubusercontent.com/89784872/183352824-922efa79-551a-40fd-8b4c-16e3b7715e9c.png" srcset="/img/loading.gif" lazyload alt="image-20220423012409010"></p>
+<p><strong>if与while的问题&#x2F;虚假唤醒：</strong></p>
+<p>while可以保证问题的解决，if可能对，取决于发信号的语义？？？</p>
+<p>while可以避免假唤醒的问题，如果一个signal唤醒多个线程，或者线程因为其他原因被莫名唤醒，第一个线程操作之后后面的线程可能不满足条件变量，从而导致错误操作，因此应当总使用while</p>
+<p>由于唤醒-获取锁的过程非原子性，线程被唤醒，此时条件被改变，如果使用if，已经不满足运行要求，但是依旧获取到了锁，因此需要使用while在唤醒使再次进行条件判断</p>
+<p>虚假唤醒为操作系统本身的问题，只能在写代码时使用while来进行避免</p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6903789756954443784">Java多线程中的虚假唤醒和如何避免 - 掘金 (juejin.cn)</a></p>
+<h3 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h3><p><strong>定义</strong></p>
+<p>一个整数值的对象，在POSIX中通过sem_wait()[自减]和sem_post()[自增]进行操作</p>
+<p>sem_wait()在信号量&gt;&#x3D;1是直接返回，否则将该线程挂起，等待一个sem_post()将其恢复</p>
+<p>信号量为负时，这个值就是等待线程的个数</p>
+<p><strong>信号量作为锁</strong></p>
+<p>用sem_post和sem_wait将临界区环绕起来，通过信号量来判断当前进程是等待还是运行，初始化为1，只允许一个线程进入临界区</p>
+<p><strong>信号量解决生产者与消费者的问题</strong></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352830-9ed8725f-5601-4272-b2ff-93a4de2ad42c.png" srcset="/img/loading.gif" lazyload alt="image-20220423013749909"></p>
+<ul>
+<li>mutex保证始终只有一个人在互斥操作缓冲区</li>
+<li>empty&#x2F;fill用于互相控制对方的休眠与唤醒</li>
+<li>mutex信号量在full&#x2F;empty信号量之内，避免了死锁，如果在外面，会导致缓冲区为空时，消费者申请到了mutex，但是被full卡住，无法退出，同时生产者又申请不到mutex，二者均被卡住，形成了死锁</li>
+</ul>
+<p><strong>读者写者问题</strong></p>
+<p>要求：</p>
+<ul>
+<li><p>读时不可写，写时不可读</p>
+</li>
+<li><p>某一时刻只能有一个写者在写</p>
+</li>
+</ul>
+<p>双方操作时均需要判断对方的状态</p>
+<p>为了防止写者的饥饿问题，采用写者优先的策略，二者共同竞争一个信号量S，如果写者竞争到了S，那么读者则被封锁，直至写完</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352834-3c5d2de5-b5da-4bab-bde9-e421bd080398.png" srcset="/img/loading.gif" lazyload alt="image-20220423015228999"></p>
+<p><strong>哲学家就餐问题</strong></p>
+<p>五个人五个餐叉，拿到两个才能就餐</p>
+<p>解决方法：</p>
+<ul>
+<li>其中一个人的获取方式与其他人不同，其他人优先获取左手边的，他优先获取右手边的，那么他或者他左右的两个人一定会有一个人拿到两个餐叉</li>
+<li>限制最多只能由四个人同时吃面</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/89784872/183352835-46813084-89a1-4d13-b751-16b2e4756d9b.png" srcset="/img/loading.gif" lazyload alt="image-20220423015521205"></p>
+
                 
               </div>
             
@@ -337,6 +837,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" title="Redis设计与实现">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Redis设计与实现</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

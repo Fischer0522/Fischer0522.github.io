@@ -16,21 +16,25 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+    <meta name="description" content="事务四大特性：ACID（原子性、一致性、隔离性、持久性） 用于保证一组SQL语句执行的完整性并且执行期间不会受到其他不相关的SQL语句的影响 事务隔离事务的隔离级别：  读未提交：事务未提交时所做的变更就已经能被别的事务看到 读提交：事务提交后做的变更才能被别的事务看到，视图在每个SQL语句执行前创建 可重复读：事务在开始时会创建一个视图，在事务执行的整个过程中，事务看到的数据都以这个视图为准，整">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://example.com/2022/08/08/hello-world/index.html">
+<meta property="og:title" content="MySQL事务">
+<meta property="og:url" content="http://example.com/2022/08/08/%E4%BA%8B%E5%8A%A1/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="事务四大特性：ACID（原子性、一致性、隔离性、持久性） 用于保证一组SQL语句执行的完整性并且执行期间不会受到其他不相关的SQL语句的影响 事务隔离事务的隔离级别：  读未提交：事务未提交时所做的变更就已经能被别的事务看到 读提交：事务提交后做的变更才能被别的事务看到，视图在每个SQL语句执行前创建 可重复读：事务在开始时会创建一个视图，在事务执行的整个过程中，事务看到的数据都以这个视图为准，整">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2022-08-07T17:37:26.684Z">
-<meta property="article:modified_time" content="2022-08-07T17:37:26.684Z">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/d9c313809e5ac148fc39feff532f0fee.png">
+<meta property="og:image" content="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/68d08d277a6f7926a41cc5541d3dfced.png">
+<meta property="article:published_time" content="2022-08-08T07:03:18.000Z">
+<meta property="article:modified_time" content="2022-08-08T07:04:22.432Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="数据库">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/d9c313809e5ac148fc39feff532f0fee.png">
   
   
   
-  <title>Hello World - Hexo</title>
+  <title>MySQL事务 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -195,7 +199,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Hello World"></span>
+            <span id="subtitle" data-typed-text="MySQL事务"></span>
           
         </div>
 
@@ -206,8 +210,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-08-08 01:37" pubdate>
-          August 8, 2022 am
+        <time datetime="2022-08-08 15:03" pubdate>
+          August 8, 2022 pm
         </time>
       </span>
     
@@ -218,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          367 words
+          1.9k words
         
       </span>
     
@@ -229,7 +233,7 @@
         
         
         
-          4 mins
+          17 mins
         
       </span>
     
@@ -267,24 +271,78 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Hello World</h1>
+            <h1 style="display: none">MySQL事务</h1>
             
             
               <div class="markdown-body">
                 
-                <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+                <h1 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h1><p>四大特性：ACID（原子性、一致性、隔离性、持久性）</p>
+<p>用于保证一组SQL语句执行的完整性并且执行期间不会受到其他不相关的SQL语句的影响</p>
+<h2 id="事务隔离"><a href="#事务隔离" class="headerlink" title="事务隔离"></a>事务隔离</h2><p>事务的隔离级别：</p>
+<ul>
+<li>读未提交：事务未提交时所做的变更就已经能被别的事务看到</li>
+<li>读提交：事务提交后做的变更才能被别的事务看到，视图在每个SQL语句执行前创建</li>
+<li>可重复读：事务在开始时会创建一个视图，在事务执行的整个过程中，事务看到的数据都以这个视图为准，整个过程中数据一致，只有自己的事务所进行的修改才为可见</li>
+<li>串行化：对于同一行一句，读加读锁，写加写锁，读写冲突时后面的事务需要等待前面的事务提交</li>
+</ul>
+<p>四种隔离级别自上而下，随着隔离级别的提高，并发性能依次下降，InnoDB默认的隔离级别为可重复读。</p>
+<p><strong>事务启动方式</strong></p>
+<p><code>set autocommit = 1</code>，再通过显示的方法启动事务，手动begin commit</p>
+<p>可以使用<code>commit work and chain</code>,可以提交当前事务并开启下一个事务，减少一次交互，在频繁使用事务的业务中使用</p>
+<p><strong>事务的启动时机</strong></p>
+<ul>
+<li>对于bein&#x2F;start transsaction，在执行到第一个操作InnoDB表的语句时，才最终启动事务</li>
+<li>start transaction with consistent snapshot 立即启动事务，创建一致性视图</li>
+</ul>
+<p><strong>视图</strong></p>
+<p>分为两种：</p>
+<ul>
+<li>一种为view，通过查询结果而创建，为一个虚拟表，可以当作一个表来进行查询，为真实的物理结构</li>
+<li>另一种为consistent read view,为一致性读视图，用于实现MVCC,在读提交和一致性读的隔离级别下存在，不存在真实的物理结构，只是定义的概念</li>
+</ul>
+<h2 id="回滚日志"><a href="#回滚日志" class="headerlink" title="回滚日志"></a>回滚日志</h2><p>可重复读需要保证在整个事务的执行过程当中的数据的一致性，在此期间，如果有别的事务对数据进行的修改，则需要通过回滚日志 undolog找到视图创建时的版本</p>
+<p>值得注意的是，对于回滚日志，回滚日志中记录的是每一步的操作，想要得到前几步的结果需要通过当前数据加计算得到，因此长事务的回滚，性能开销也较大，会导致慢sql的问题</p>
+<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/d9c313809e5ac148fc39feff532f0fee.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>回滚日志的删除</strong></p>
+<p>当没有事务需要这个回滚日志时，即与该回滚日志相关的事务均已提交，该日志则会被删除</p>
+<h2 id="版本快照"><a href="#版本快照" class="headerlink" title="版本快照"></a>版本快照</h2><p><strong>transaction id</strong></p>
+<p>在事务开始时，InnoDB会向事务分配一个transaction id，按照严格递增的顺序</p>
+<p><strong>trx_id</strong></p>
+<p>数据库中的每一行都有自己的版本，版本号即为trx_id</p>
+<p>数据由事务产生，在事务更新数据时,将transaction id赋值给该行的trx_id,借此，便将事务和数据关联起来。</p>
+<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/68d08d277a6f7926a41cc5541d3dfced.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<h3 id="活跃数组"><a href="#活跃数组" class="headerlink" title="活跃数组"></a>活跃数组</h3><p>由于trx_id是由transaction id生成的，因此二者之间便存在统一性，对于事务A，如果事务B是在事务A之后创建的，那么B的transaction id即大于A，同样trx_id也大于A，便可以借此将B操作产生的数据给”屏蔽掉”</p>
+<p>实现上，InnoDB为<strong>每个事务</strong>，用于保存这个事务启动瞬间时所有事务的状态，为一个静态数组，可认为拍了一张快照保存状态</p>
+<ul>
+<li>活跃指的是启动了但还未提交的事务,以最小的transaction id作为低水位，以最大的作为高水位</li>
+<li>低水位之下的为已提交的事务</li>
+<li>高水位之上的为目前还未开始的事务</li>
+</ul>
+<p><strong>数据的可见性</strong></p>
+<ul>
+<li>如果trx_id小于低水位，那么数据为当前事务开始前产生的，可见</li>
+<li>trx_id大于高水位,数据为当前事务开始之后其他事务做出的更新，不可见</li>
+<li>trx_id位于高低水位之间，则：<ul>
+<li>如果trx_id存在于活跃数组当中，则表明该数据由未提交的事务产生，不可见</li>
+<li>不存在于活跃数组当中，则表明该事务已经提交，数据可见</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>对于高低水位，只能表明出一个范围，但是在此范围之间的可见性还要根据活跃数组来判断。</p>
+<p>例如，低水位对应的事务为一个长事务，事务B为一个短事务，事务B在低水位事务开始后开始，transaction id大于低水位事务，但是B为短事务，在事务A开始时事务B已经提交，那么事务B则不存在于事务A的活跃数组当中，因此事务B更新的行对于A为可见的</p>
+</blockquote>
+<p>在可重复读的隔离级别下，通过回滚日志undolog，找到对自己可见的trx_id的数据即可</p>
+<h3 id="当前读"><a href="#当前读" class="headerlink" title="当前读"></a>当前读</h3><p>在进行更新操作时，可重复的理念与并发更新存在冲突，并发更新在当前的最新值基础上进行更新，而可重复读又恰好看不到当前的最新值，有点类似于操作系统中其他线程产生的最新值还在寄存器当中，而该线程的更新无法读取到寄存器当中的值。</p>
+<p>因此，为了解决这种情况，存在这样一条规则</p>
+<p>更新数据都是先读后写的，而这个读，只能读当前的值，称为“当前读”（current read）。</p>
+<p>先读出最新的版本号的数据，在此之上进行更新</p>
+<p>当前读的语句：</p>
+<ul>
+<li>update</li>
+<li>select 加锁时的情况：<code>for update / lock in share mode</code></li>
+</ul>
+<p>由于读写锁之间的冲突，只有等待事务提交之后，select 语句才能读到update所作出的变更</p>
 
                 
               </div>
@@ -294,6 +352,13 @@
               <div class="post-metas my-3">
   
   
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+      
+    </div>
+  
 </div>
 
 
@@ -302,8 +367,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Hello World</div>
-      <div>http://example.com/2022/08/08/hello-world/</div>
+      <div>MySQL事务</div>
+      <div>http://example.com/2022/08/08/事务/</div>
     </div>
     <div class="license-meta">
       
@@ -345,15 +410,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/08/08/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" title="计算机网络-自顶向下">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">计算机网络-自顶向下</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2022/08/08/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F/" title="MySQL日志系统">
+                        <span class="hidden-mobile">MySQL日志系统</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>

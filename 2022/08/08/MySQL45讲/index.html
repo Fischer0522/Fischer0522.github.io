@@ -8,11 +8,11 @@
     <meta name="description" content="mysql45讲基础篇基础架构mysql基本架构示意图：
 
 连接器
-1mysql -h$ip -P$port -u$user -p
+mysql -h$ip -P$port -u$user -p
 
 
 若不指定ip与端口，则默认为localhost的默认端口(3306)
-tcp握手后便进行身份验证，校验用">
+tcp握手后便进行身份验证，校验用户">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -404,14 +404,14 @@ tcp握手后便进行身份验证，校验用">
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    18.1k
+                    18.2k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    65 分
+                    66 分
                 </div>
                 
 
@@ -426,6 +426,9 @@ tcp握手后便进行身份验证，校验用">
         <hr class="clearfix">
 
         
+        <!-- 是否加载使用自带的 prismjs. -->
+        <link rel="stylesheet" href="/libs/prism/prism.min.css">
+        
 
         
 
@@ -434,7 +437,7 @@ tcp握手后便进行身份验证，校验用">
                 <h1 id="mysql45讲"><a href="#mysql45讲" class="headerlink" title="mysql45讲"></a>mysql45讲</h1><h2 id="基础篇"><a href="#基础篇" class="headerlink" title="基础篇"></a>基础篇</h2><h3 id="基础架构"><a href="#基础架构" class="headerlink" title="基础架构"></a>基础架构</h3><p><strong>mysql基本架构示意图</strong>：</p>
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/0d2070e8f84c4801adbfa03bda1f98d9.png?raw=true" alt="img"></p>
 <p><strong>连接器</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -h$ip -P$port -u$user -p</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mys" data-language="mys"><code class="language-mys">mysql -h$ip -P$port -u$user -p<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <ul>
 <li>若不指定ip与端口，则默认为localhost的默认端口(3306)</li>
@@ -492,7 +495,7 @@ tcp握手后便进行身份验证，校验用">
 <li>备份时即为备份 binlog 用于归档</li>
 </ul>
 <p><strong>执行过程：两阶段提交</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; update T set c=c+1 where ID=2;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">mysql&gt; update T set c&#x3D;c+1 where ID&#x3D;2;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/2e5bff4910ec189fe1ee6e2ecc7b4bbe.png?raw=true" alt="img"></p>
 <p>通过两阶段提交，全部写入成功后再提交事务，保证两份日志的逻辑一致</p>
@@ -567,7 +570,11 @@ tcp握手后便进行身份验证，校验用">
 <p>​    B+树中只有叶子节点存放数据，并且不同叶子节点之间使用链表进行连    接，其他只存放索引</p>
 <p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6929833495082565646">MySQL索引底层：B+树详解 - 掘金 (juejin.cn)</a></p>
 <p>设置主键为id，索引为k: </p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; create table T(</span><br><span class="line">id int primary key, </span><br><span class="line">k int not null, </span><br><span class="line">name varchar(16),</span><br><span class="line">index (k))engine=InnoDB;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">mysql&gt; create table T(
+id int primary key, 
+k int not null, 
+name varchar(16),
+index (k))engine&#x3D;InnoDB;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
 <p>对应的索引树如下</p>
 <ul>
@@ -788,7 +795,7 @@ tcp握手后便进行身份验证，校验用">
 </li>
 </ul>
 <p>对于以下语句：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">explain select * from t where (a between 1 and 1000) and (b between 50000 and 100000) order by b limit 1;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">explain select * from t where (a between 1 and 1000) and (b between 50000 and 100000) order by b limit 1;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <ul>
 <li><p>扫描a索引需要1000行然后再进行回表</p>
@@ -816,7 +823,7 @@ tcp握手后便进行身份验证，校验用">
 <p><strong>其他处理方式</strong></p>
 <ul>
 <li><p>如身份证，学号等前几位高度重合的字段，可以选择使用倒叙存储，则查询时：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select field_list from t where id_card = reverse(&#x27;input_id_card_string&#x27;);</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">mysql&gt; select field_list from t where id_card &#x3D; reverse(&#39;input_id_card_string&#39;);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 </li>
 <li><p>hash字段：在表上再创建一个整数字段，来保存身份证的校验码，同时在这个字段上创建索引。此时只需要四个字节</p>
 </li>
@@ -914,7 +921,7 @@ tcp握手后便进行身份验证，校验用">
 <p><strong>全字段排序</strong></p>
 <p>将要查询的所有字段放入到sort_buffer之中，排序后将结果返回给客户端</p>
 <p>如:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select city,name,age from t where city=&#x27;杭州&#x27; order by name limit 1000  ;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select city,name,age from t where city&#x3D;&#39;杭州&#39; order by name limit 1000  ;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>通过city的索引找到所有满足city等于’杭州’的行，将行上的city name age字段放入的sort_buffer之中，进行快排</p>
 <blockquote>
@@ -958,7 +965,7 @@ tcp握手后便进行身份验证，校验用">
 <p>如果对于在进行条件筛选时，对索引字段进行了函数统计，则用不上索引了，索引能够快速查询时依托于索引的搜索树结构，而如果使用了函数，对索引本身的值进行了改变，破坏了索引的有序性，因此无法在通过搜索树快速定位，只能遍历该索引</p>
 <p>注：索引未被只用指的是索引的搜索树为生效，只能通过遍历的方式确定位置</p>
 <p>例：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; select count(*) from tradelog where month(t_modified)=7;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">mysql&gt; select count(*) from tradelog where month(t_modified)&#x3D;7;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>取月份之后传入一个7无法在搜索树内判断大小</p>
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/3e30d9a5e67f711f5af2e2599e800286.png?raw=true" alt="img"></p>
@@ -1062,7 +1069,16 @@ tcp握手后便进行身份验证，校验用">
 </li>
 </ul>
 <p><strong>案例分析</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE `t` (</span><br><span class="line">  `id` int(11) NOT NULL,</span><br><span class="line">  `c` int(11) DEFAULT NULL,</span><br><span class="line">  `d` int(11) DEFAULT NULL,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">  KEY `c` (`c`)</span><br><span class="line">) ENGINE=InnoDB;</span><br><span class="line"></span><br><span class="line">insert into t values(0,0,0),(5,5,5),</span><br><span class="line">(10,10,10),(15,15,15),(20,20,20),(25,25,25);</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">CREATE TABLE &#96;t&#96; (
+  &#96;id&#96; int(11) NOT NULL,
+  &#96;c&#96; int(11) DEFAULT NULL,
+  &#96;d&#96; int(11) DEFAULT NULL,
+  PRIMARY KEY (&#96;id&#96;),
+  KEY &#96;c&#96; (&#96;c&#96;)
+) ENGINE&#x3D;InnoDB;
+
+insert into t values(0,0,0),(5,5,5),
+(10,10,10),(15,15,15),(20,20,20),(25,25,25);<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/465990fe8f6b418ca3f9992bd1bb5465.png?raw=true" alt="img"></p>
 <ol>
@@ -1187,10 +1203,33 @@ tcp握手后便进行身份验证，校验用">
 <li>处于old区的数据页，如果在链表中存在超出的一定时间，则移动到链表的头部去，默认为1000ms，由innode_old_blocks_time控制，与操作系统当中的多级反馈队列调度方式的设计思想由相似之处</li>
 </ul>
 <h3 id="Join执行过程"><a href="#Join执行过程" class="headerlink" title="Join执行过程"></a>Join执行过程</h3><p>执行Join时，主要可以根据是否使用索引分为两种情况，对应不同的算法</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">CREATE TABLE `t2` (</span><br><span class="line">  `id` int(11) NOT NULL,</span><br><span class="line">  `a` int(11) DEFAULT NULL,</span><br><span class="line">  `b` int(11) DEFAULT NULL,</span><br><span class="line">  PRIMARY KEY (`id`),</span><br><span class="line">  KEY `a` (`a`)</span><br><span class="line">) ENGINE=InnoDB;</span><br><span class="line"></span><br><span class="line">drop procedure idata;</span><br><span class="line">delimiter ;;</span><br><span class="line">create procedure idata()</span><br><span class="line">begin</span><br><span class="line">  declare i int;</span><br><span class="line">  set i=1;</span><br><span class="line">  while(i&lt;=1000)do</span><br><span class="line">    insert into t2 values(i, i, i);</span><br><span class="line">    set i=i+1;</span><br><span class="line">  end while;</span><br><span class="line">end;;</span><br><span class="line">delimiter ;</span><br><span class="line">call idata();</span><br><span class="line"></span><br><span class="line">create table t1 like t2;</span><br><span class="line">insert into t1 (select * from t2 where id&lt;=100)</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">CREATE TABLE &#96;t2&#96; (
+  &#96;id&#96; int(11) NOT NULL,
+  &#96;a&#96; int(11) DEFAULT NULL,
+  &#96;b&#96; int(11) DEFAULT NULL,
+  PRIMARY KEY (&#96;id&#96;),
+  KEY &#96;a&#96; (&#96;a&#96;)
+) ENGINE&#x3D;InnoDB;
+
+drop procedure idata;
+delimiter ;;
+create procedure idata()
+begin
+  declare i int;
+  set i&#x3D;1;
+  while(i&lt;&#x3D;1000)do
+    insert into t2 values(i, i, i);
+    set i&#x3D;i+1;
+  end while;
+end;;
+delimiter ;
+call idata();
+
+create table t1 like t2;
+insert into t1 (select * from t2 where id&lt;&#x3D;100)<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
 <p><strong>使用索引：</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from t1 straight_join t2 on (t1.a=t2.a);</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select * from t1 straight_join t2 on (t1.a&#x3D;t2.a);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>对应的算法为Index Nested-Loop Join</p>
 <p>执行过程：</p>
@@ -1208,7 +1247,7 @@ tcp握手后便进行身份验证，校验用">
 <p>​    <strong>驱动表的选择</strong></p>
 <p>对于驱动表，需要进行全表扫描获得所有行，而对于被驱动表，只需根据条件走索引查询即可，综合复杂度为:N + N<em>2</em>log2(M)。(N为驱动，M被驱动)，因此选取小表作为驱动表的复杂度较低</p>
 <p><strong>不使用索引：</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from t1 straight_join t2 on (t1.a=t2.b);</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select * from t1 straight_join t2 on (t1.a&#x3D;t2.b);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>对应的算法为Block Nested-Loop Join</p>
 <ol>
@@ -1229,7 +1268,8 @@ tcp握手后便进行身份验证，校验用">
 </ul>
 <p>小表：查询出的字段较少，行较少的表，总数据量为字段*行数，总数量较小的为小表</p>
 <p><strong>left join&#x2F;where</strong></p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> a <span class="keyword">left</span> <span class="keyword">join</span> b <span class="keyword">on</span>(a.f1<span class="operator">=</span>b.f1) <span class="keyword">and</span> (a.f2<span class="operator">=</span>b.f2); <span class="comment">/*Q1*/</span></span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> a <span class="keyword">left</span> <span class="keyword">join</span> b <span class="keyword">on</span>(a.f1<span class="operator">=</span>b.f1) <span class="keyword">where</span> (a.f2<span class="operator">=</span>b.f2);<span class="comment">/*Q2*/</span></span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> a <span class="token keyword">left</span> <span class="token keyword">join</span> b <span class="token keyword">on</span><span class="token punctuation">(</span>a<span class="token punctuation">.</span>f1<span class="token operator">=</span>b<span class="token punctuation">.</span>f1<span class="token punctuation">)</span> <span class="token operator">and</span> <span class="token punctuation">(</span>a<span class="token punctuation">.</span>f2<span class="token operator">=</span>b<span class="token punctuation">.</span>f2<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">/*Q1*/</span>
+<span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> a <span class="token keyword">left</span> <span class="token keyword">join</span> b <span class="token keyword">on</span><span class="token punctuation">(</span>a<span class="token punctuation">.</span>f1<span class="token operator">=</span>b<span class="token punctuation">.</span>f1<span class="token punctuation">)</span> <span class="token keyword">where</span> <span class="token punctuation">(</span>a<span class="token punctuation">.</span>f2<span class="token operator">=</span>b<span class="token punctuation">.</span>f2<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">/*Q2*/</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/93a7294dd9ea8dc1016f69c0fd223f0387cf1067.jpg?raw=true" alt="2022-07-17-20-03-55-8966773b5370b0c514d019c9dcc4898.jpg"> </p>
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/b7f27917ceb0be90ef7b201f2794c817.png?raw=true" alt="img"></p>
@@ -1239,7 +1279,7 @@ tcp握手后便进行身份验证，校验用">
 <p>由于where的语义为匹配成功就放弃，与join 的语义一致，因此优化器会将left join优化为join,因此，left join的左边不一定为驱动表</p>
 <h3 id="Join优化"><a href="#Join优化" class="headerlink" title="Join优化"></a>Join优化</h3><p><strong>Multi-Range Read</strong></p>
 <p>主要思想为将随机读盘优化为顺序读盘</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from t1 where a&gt;=1 and a&lt;=100;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select * from t1 where a&gt;&#x3D;1 and a&lt;&#x3D;100;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>其中，a为唯一索引，当a的顺序与主键索引不一致时，则回表的查询过程为随机访问，开销较大，优化思路为将其优化成顺序读盘</p>
 <p>具体过程：</p>
@@ -1251,7 +1291,7 @@ tcp握手后便进行身份验证，校验用">
 <p><strong>Batched Key Access</strong></p>
 <p>在Join时，为一行行的从t1中获取数据再到t2中比对，此时便无法再使用MRR进行优化</p>
 <p>解决方案为将t1中的数据查询先放到一个临时内存(Join_buffer)当中，之后便可以使用MRR进行优化</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from t1 join t2 on (t1.b=t2.b) where t2.b&gt;=1 and t2.b&lt;=2000;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select * from t1 join t2 on (t1.b&#x3D;t2.b) where t2.b&gt;&#x3D;1 and t2.b&lt;&#x3D;2000;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <ol>
 <li><p>将t2中满足条件的行放入到临时表当中tmp_t</p>
@@ -1259,7 +1299,9 @@ tcp握手后便进行身份验证，校验用">
 <li><p>为使用BKA，给临时表的b加上索引(B+树搜索，join时无需遍历)</p>
 </li>
 <li><p>t1和tmp_t进行join</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> temporary <span class="keyword">table</span> temp_t(id <span class="type">int</span> <span class="keyword">primary</span> key, a <span class="type">int</span>, b <span class="type">int</span>, index(b))engine<span class="operator">=</span>innodb;</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> temp_t <span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> t2 <span class="keyword">where</span> b<span class="operator">&gt;=</span><span class="number">1</span> <span class="keyword">and</span> b<span class="operator">&lt;=</span><span class="number">2000</span>;</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> t1 <span class="keyword">join</span> temp_t <span class="keyword">on</span> (t1.b<span class="operator">=</span>temp_t.b);</span><br></pre></td></tr></table></figure></li>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">create</span> <span class="token keyword">temporary</span> <span class="token keyword">table</span> temp_t<span class="token punctuation">(</span>id <span class="token keyword">int</span> <span class="token keyword">primary</span> <span class="token keyword">key</span><span class="token punctuation">,</span> a <span class="token keyword">int</span><span class="token punctuation">,</span> b <span class="token keyword">int</span><span class="token punctuation">,</span> <span class="token keyword">index</span><span class="token punctuation">(</span>b<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token keyword">engine</span><span class="token operator">=</span><span class="token keyword">innodb</span><span class="token punctuation">;</span>
+<span class="token keyword">insert</span> <span class="token keyword">into</span> temp_t <span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> t2 <span class="token keyword">where</span> b<span class="token operator">>=</span><span class="token number">1</span> <span class="token operator">and</span> b<span class="token operator">&lt;=</span><span class="token number">2000</span><span class="token punctuation">;</span>
+<span class="token keyword">select</span> <span class="token operator">*</span> <span class="token keyword">from</span> t1 <span class="token keyword">join</span> temp_t <span class="token keyword">on</span> <span class="token punctuation">(</span>t1<span class="token punctuation">.</span>b<span class="token operator">=</span>temp_t<span class="token punctuation">.</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre></li>
 </ol>
 <h3 id="临时表"><a href="#临时表" class="headerlink" title="临时表"></a>临时表</h3><p><strong>内存表&#x2F;临时表</strong></p>
 <p>内存表指的是使用Memory引擎的表，数据保存在内存当中，而临时表只是表明表为临时的，存储的位置根据使用的引擎而定，二者之间并无直接的联系</p>
@@ -1280,7 +1322,8 @@ tcp握手后便进行身份验证，校验用">
 </ul>
 <p><strong>主备复制</strong></p>
 <p>当binlog为row形式时，不存储临时表有关的操作，需要在statement&#x2F;mix形式时，按照sql语句进行存储，才会记录有关临时表的相关操作</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">insert into temp_t values(1,1);/*Q3*/</span><br><span class="line">insert into t_normal select * from temp_t;/*Q4*/</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">insert into temp_t values(1,1);&#x2F;*Q3*&#x2F;
+insert into t_normal select * from temp_t;&#x2F;*Q4*&#x2F;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 
 <p>Q3Q4对应的row形式为write_row event里面记录的逻辑时插入一行数据(1,1)，未体现出临时表</p>
 <p>由于备库上执行日志为单线程，因此记录binlog时，会将主库中的线程一并写入到binlog当中，进行区分不同线程的临时表</p>
@@ -1291,7 +1334,7 @@ tcp握手后便进行身份验证，校验用">
 <p>​    <strong>group by</strong></p>
 <p>创建临时表和对应的字段，将查询到的结果放入到临时表中对应的分组下</p>
 <p>例：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select id%10 as m, count(*) as c from t1 group by m </span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select id%10 as m, count(*) as c from t1 group by m <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>group by 默认进行排序，如果想乱序，则<code>order by null</code></p>
 <p>​    <strong>group by 优化</strong></p>
@@ -1299,13 +1342,15 @@ tcp握手后便进行身份验证，校验用">
 <p>group by是统计不同的值出现的个数。但是，由于每一行的 id%10 的结果是无序的，所以我们就需要有一个临时表，来记录并统计结果。因此优化的方向便是令id%10处于一种有序的结果，共有两种思路：一是创建索引，二是通过SQL_BIG_RESULT指定进行filesort</p>
 <blockquote>
 <p>在 MySQL 5.7 版本支持了 generated column 机制，用来实现列数据的关联更新。你可以用下面的方法创建一个列 z，然后在 z 列上创建一个索引（如果是 MySQL 5.6 及之前的版本，你也可以创建普通列和索引，来解决这个问题）。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">alter table t1 add column z int generated always as(id % 100), add index(z);</span><br><span class="line"></span><br><span class="line">select z, count(*) as c from t1 group by z;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">alter table t1 add column z int generated always as(id % 100), add index(z);
+
+select z, count(*) as c from t1 group by z;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 </blockquote>
 <p>直接排序：</p>
 <p>直接使用sort buffer进行排序，不再使用临时表，便按照sort_buffer的排序原则，使用filesort算法进行排序</p>
 <blockquote>
 <p>在 group by 语句中加入 SQL_BIG_RESULT 这个提示（hint），就可以告诉优化器：这个语句涉及的数据量很大。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select SQL_BIG_RESULT id%100 as m, count(*) as c from t1 group by m;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">select SQL_BIG_RESULT id%100 as m, count(*) as c from t1 group by m;<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>扫描表 t1 的索引 a，依次取出里面的 id 值, 将 id%100 的值存入 sort_buffer 中,排序后即可得到一个有序<strong>数组</strong></p>
 </blockquote>
@@ -1317,7 +1362,7 @@ tcp握手后便进行身份验证，校验用">
 <li>数据：内存表不支持 Blob 和 Text 字段，并且即使定义了 varchar(N)，实际也当作 char(N)，也就是固定长度字符串来存储，因此内存表的每行数据长度相同。</li>
 </ul>
 <p>Memory引擎可以手动指定索引为btree,与MySQL情况相同</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alter table t1 add index a_btree_index using btree (id);</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-mysql" data-language="mysql"><code class="language-mysql">alter table t1 add index a_btree_index using btree (id);<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p><img src="https://github.com/Fischer0522/note/blob/master/mysql45%E8%AE%B2/mysql45%E8%AE%B2.assets/1788deca56cb83c114d8353c92e3bde3.jpg?raw=true" alt="img"></p>
 <p><strong>锁</strong></p>
@@ -1370,7 +1415,7 @@ tcp握手后便进行身份验证，校验用">
 <h3 id="赋权"><a href="#赋权" class="headerlink" title="赋权"></a>赋权</h3><p>grant用于给用户进行赋权，通常无需像部分文档说的那样在后面补充上一个flush privileges,将内存中的改变给flush到硬盘之中</p>
 <p><strong>全局权限</strong></p>
 <p>对于该用户在mysql全局有效，信息保存在mysql的user表当中，通过grant对其进行赋权,给予all privileges最高权限</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">all</span> privileges <span class="keyword">on</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">to</span> <span class="string">&#x27;ua&#x27;</span>@<span class="string">&#x27;%&#x27;</span> <span class="keyword">with</span> <span class="keyword">grant</span> option;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">grant</span> <span class="token keyword">all</span> <span class="token keyword">privileges</span> <span class="token keyword">on</span> <span class="token operator">*</span><span class="token punctuation">.</span><span class="token operator">*</span> <span class="token keyword">to</span> <span class="token string">'ua'</span><span class="token variable">@'%'</span> <span class="token keyword">with</span> <span class="token keyword">grant</span> <span class="token keyword">option</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <ol>
 <li><p>磁盘上将mysql.user表里，用户的所有的对应的权限全改为Y</p>
@@ -1380,10 +1425,10 @@ tcp握手后便进行身份验证，校验用">
 </ol>
 <p>通过新的客户端登录该用户时，MySQL创建一个新的连接维护线程对象,通过acl_user进行权限的确认，然后保存到该线程<strong>内部</strong>的权限位，因此该用户已经登录之后，全局权限不受grant的影响</p>
 <p>revoke用于撤销权限，作用效果和所作的工作与grant完全相反</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">revoke</span> <span class="keyword">all</span> privileges <span class="keyword">on</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">from</span> <span class="string">&#x27;ua&#x27;</span>@<span class="string">&#x27;%&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">revoke</span> <span class="token keyword">all</span> <span class="token keyword">privileges</span> <span class="token keyword">on</span> <span class="token operator">*</span><span class="token punctuation">.</span><span class="token operator">*</span> <span class="token keyword">from</span> <span class="token string">'ua'</span><span class="token variable">@'%'</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p><strong>数据库权限</strong></p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">all</span> privileges <span class="keyword">on</span> db1.<span class="operator">*</span> <span class="keyword">to</span> <span class="string">&#x27;ua&#x27;</span>@<span class="string">&#x27;%&#x27;</span> <span class="keyword">with</span> <span class="keyword">grant</span> option;</span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">grant</span> <span class="token keyword">all</span> <span class="token keyword">privileges</span> <span class="token keyword">on</span> db1<span class="token punctuation">.</span><span class="token operator">*</span> <span class="token keyword">to</span> <span class="token string">'ua'</span><span class="token variable">@'%'</span> <span class="token keyword">with</span> <span class="token keyword">grant</span> <span class="token keyword">option</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 
 <p>对内存和磁盘同时生效：</p>
 <ol>
@@ -1451,7 +1496,9 @@ tcp握手后便进行身份验证，校验用">
 <li>上限2^32^-1,到达上限后重置为0</li>
 <li>存在一个算法来保证不冲突的情况</li>
 </ul>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">  new_id= thread_id_counter++;</span><br><span class="line">&#125; <span class="keyword">while</span> (!thread_ids.insert_unique(new_id).second);    </span><br></pre></td></tr></table></figure>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">do</span> <span class="token punctuation">&#123;</span>
+  new_id<span class="token operator">=</span> thread_id_counter<span class="token operator">++</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span> <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span>thread_ids<span class="token punctuation">.</span><span class="token function">insert_unique</span><span class="token punctuation">(</span>new_id<span class="token punctuation">)</span><span class="token punctuation">.</span>second<span class="token punctuation">)</span><span class="token punctuation">;</span>    <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 
                 
             </div>
@@ -1697,6 +1744,9 @@ tcp握手后便进行身份验证，校验用">
 <script type="text/javascript" src="/libs/codeBlock/codeBlockFuction.js"></script>
 
 
+  <!-- 是否加载使用自带的 prismjs. -->
+  <script type="text/javascript" src="/libs/prism/prism.min.js"></script>
+
 
 <!-- 代码语言 -->
 
@@ -1872,7 +1922,7 @@ tcp握手后便进行身份验证，校验用">
             <br>
             
                 &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                        class="white-color">98.4k</span>
+                        class="white-color">98k</span>
             
             
             

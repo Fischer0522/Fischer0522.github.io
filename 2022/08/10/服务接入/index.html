@@ -4,13 +4,18 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="MySQL事务, Fischer">
-    <meta name="description" content="事务四大特性：ACID（原子性、一致性、隔离性、持久性）
-用于保证一组SQL语句执行的完整性并且执行期间不会受到其他不相关的SQL语句的影响
-事务隔离事务的隔离级别：
+    <meta name="keywords" content="服务接入, Fischer">
+    <meta name="description" content="服务接入概述
+域名系统
+自建DNS服务器
+HTTPS
+全站加速
+四层负载均衡
+七层负载均衡
 
-读未提交：事务未提交时所做的变更就已经能被别的事务看到
-读提交：事务提">
+域名系统初期使用host文件来进行IP和域名的映射配置，但随着网站的体量的不断增大，出现诸多问题：
+
+流量与负载：用户规模增长，host文件也越来">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -22,7 +27,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>MySQL事务 | Fischer</title>
+    <title>服务接入 | Fischer</title>
     <link rel="icon" type="image/png" href="/medias/favi.png">
     
     <style>
@@ -348,12 +353,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/16.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/4.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">MySQL事务</h1>
+                    <h1 class="description center-align post-title">服务接入</h1>
                 </div>
             </div>
         </div>
@@ -377,8 +382,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                                <span class="chip bg-color">数据库</span>
+                            <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">
+                                <span class="chip bg-color">计算机网络</span>
                             </a>
                         
                     </div>
@@ -393,7 +398,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-08-08
+                    2022-08-10
                 </div>
                 
 
@@ -402,14 +407,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    1.5k
+                    2.1k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    5 分
+                    7 分
                 </div>
                 
 
@@ -432,73 +437,163 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h1><p>四大特性：ACID（原子性、一致性、隔离性、持久性）</p>
-<p>用于保证一组SQL语句执行的完整性并且执行期间不会受到其他不相关的SQL语句的影响</p>
-<h2 id="事务隔离"><a href="#事务隔离" class="headerlink" title="事务隔离"></a>事务隔离</h2><p>事务的隔离级别：</p>
-<ul>
-<li>读未提交：事务未提交时所做的变更就已经能被别的事务看到</li>
-<li>读提交：事务提交后做的变更才能被别的事务看到，视图在每个SQL语句执行前创建</li>
-<li>可重复读：事务在开始时会创建一个视图，在事务执行的整个过程中，事务看到的数据都以这个视图为准，整个过程中数据一致，只有自己的事务所进行的修改才为可见</li>
-<li>串行化：对于同一行一句，读加读锁，写加写锁，读写冲突时后面的事务需要等待前面的事务提交</li>
+                <h1 id="服务接入"><a href="#服务接入" class="headerlink" title="服务接入"></a>服务接入</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><ul>
+<li>域名系统</li>
+<li>自建DNS服务器</li>
+<li>HTTPS</li>
+<li>全站加速</li>
+<li>四层负载均衡</li>
+<li>七层负载均衡</li>
 </ul>
-<p>四种隔离级别自上而下，随着隔离级别的提高，并发性能依次下降，InnoDB默认的隔离级别为可重复读。</p>
-<p><strong>事务启动方式</strong></p>
-<p><code>set autocommit = 1</code>，再通过显示的方法启动事务，手动begin commit</p>
-<p>可以使用<code>commit work and chain</code>,可以提交当前事务并开启下一个事务，减少一次交互，在频繁使用事务的业务中使用</p>
-<p><strong>事务的启动时机</strong></p>
+<h2 id="域名系统"><a href="#域名系统" class="headerlink" title="域名系统"></a>域名系统</h2><p>初期使用host文件来进行IP和域名的映射配置，但随着网站的体量的不断增大，出现诸多问题：</p>
 <ul>
-<li>对于bein&#x2F;start transsaction，在执行到第一个操作InnoDB表的语句时，才最终启动事务</li>
-<li>start transaction with consistent snapshot 立即启动事务，创建一致性视图</li>
+<li>流量与负载：用户规模增长，host文件也越来越大，统一分发引起较大的网络流量和CPU负载</li>
+<li>名称冲突</li>
+<li>时效性：靠管理员人工管理，时效性差</li>
 </ul>
-<p><strong>视图</strong></p>
-<p>分为两种：</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183671471-21617623-5284-43ba-a846-f44b833b6a92.png"></p>
+<p>因此，引入了域名系统还代替host文件，在分布式数据库上对域名和IP进行存储，再引入DNS系统对其进行解析</p>
+<p><strong><img src="https://user-images.githubusercontent.com/89784872/183347437-1abf63e2-e8fc-449c-a9e9-ffc6b58d72a0.png"></strong></p>
+<h2 id="自建DNS服务器"><a href="#自建DNS服务器" class="headerlink" title="自建DNS服务器"></a>自建DNS服务器</h2><p><strong>使用公网DNS的问题</strong></p>
 <ul>
-<li>一种为view，通过查询结果而创建，为一个虚拟表，可以当作一个表来进行查询，为真实的物理结构</li>
-<li>另一种为consistent read view,为一致性读视图，用于实现MVCC,在读提交和一致性读的隔离级别下存在，不存在真实的物理结构，只是定义的概念</li>
+<li>内网域名的解析也得去公网去获取，效率低下</li>
+<li>外部用户能看到内网ip地址，容易被攻击</li>
+<li>受云厂商权威DNS的影响</li>
 </ul>
-<h2 id="回滚日志"><a href="#回滚日志" class="headerlink" title="回滚日志"></a>回滚日志</h2><p>可重复读需要保证在整个事务的执行过程当中的数据的一致性，在此期间，如果有别的事务对数据进行的修改，则需要通过回滚日志 undolog找到视图创建时的版本</p>
-<p>值得注意的是，对于回滚日志，回滚日志中记录的是每一步的操作，想要得到前几步的结果需要通过当前数据加计算得到，因此长事务的回滚，性能开销也较大，会导致慢sql的问题</p>
-<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/d9c313809e5ac148fc39feff532f0fee.png" alt="img"></p>
-<p><strong>回滚日志的删除</strong></p>
-<p>当没有事务需要这个回滚日志时，即与该回滚日志相关的事务均已提交，该日志则会被删除</p>
-<h2 id="版本快照"><a href="#版本快照" class="headerlink" title="版本快照"></a>版本快照</h2><p><strong>transaction id</strong></p>
-<p>在事务开始时，InnoDB会向事务分配一个transaction id，按照严格递增的顺序</p>
-<p><strong>trx_id</strong></p>
-<p>数据库中的每一行都有自己的版本，版本号即为trx_id</p>
-<p>数据由事务产生，在事务更新数据时,将transaction id赋值给该行的trx_id,借此，便将事务和数据关联起来。</p>
-<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E4%BA%8B%E5%8A%A1%E4%B8%93%E9%A2%98.assets/68d08d277a6f7926a41cc5541d3dfced.png" alt="img"></p>
-<h3 id="活跃数组"><a href="#活跃数组" class="headerlink" title="活跃数组"></a>活跃数组</h3><p>由于trx_id是由transaction id生成的，因此二者之间便存在统一性，对于事务A，如果事务B是在事务A之后创建的，那么B的transaction id即大于A，同样trx_id也大于A，便可以借此将B操作产生的数据给”屏蔽掉”</p>
-<p>实现上，InnoDB为<strong>每个事务</strong>，用于保存这个事务启动瞬间时所有事务的状态，为一个静态数组，可认为拍了一张快照保存状态</p>
+<p><strong>DNS查询过程</strong></p>
 <ul>
-<li>活跃指的是启动了但还未提交的事务,以最小的transaction id作为低水位，以最大的作为高水位</li>
-<li>低水位之下的为已提交的事务</li>
-<li>高水位之上的为目前还未开始的事务</li>
+<li>迭代查询</li>
+<li>递归查询</li>
 </ul>
-<p><strong>数据的可见性</strong></p>
+<p>图中所示的为迭代查询</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183673127-b0441559-2e29-4a06-bf74-f1c05b1b780d.png"></p>
+<p>除自顶向下中A，MX，NS，CNAME类型之外，目前DNS记录还有：</p>
 <ul>
-<li>如果trx_id小于低水位，那么数据为当前事务开始前产生的，可见</li>
-<li>trx_id大于高水位,数据为当前事务开始之后其他事务做出的更新，不可见</li>
-<li>trx_id位于高低水位之间，则：<ul>
-<li>如果trx_id存在于活跃数组当中，则表明该数据由未提交的事务产生，不可见</li>
-<li>不存在于活跃数组当中，则表明该事务已经提交，数据可见</li>
+<li>AAAA：等同于A，A为IPV4，AAAA对应IPV6</li>
+<li>TXT：文本记录，购买证书时需要</li>
+<li>SOA：起始授权机构记录，每个zone仅有一条，SOA用于描述zone属性以及主要权威服务器的记录</li>
+</ul>
+<h3 id="权威DNS系统架构"><a href="#权威DNS系统架构" class="headerlink" title="权威DNS系统架构"></a>权威DNS系统架构</h3><ul>
+<li>DNS query 用户发起DNS查询</li>
+<li>DNS Response</li>
+<li>DNS update </li>
+<li>DNS Notify MS模式，master通知slave去更新变更</li>
+<li>DNS XFR slave进行变更时，发送一条XFR请求，拉去最新的记录</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/89784872/183674971-88c082b8-a3f7-4810-a215-1b2acc7fc805.png"></p>
+<p><strong>系统流程</strong>：向local发起请求，若localDNS无缓存，localDNS向自建的权威DNS发起查询请求，最终获取到ID地址</p>
+<h2 id="HTTPS"><a href="#HTTPS" class="headerlink" title="HTTPS"></a>HTTPS</h2><p>HTTP TCP提供的为稳定的连接，但是并不提供安全保障，请求为明文传输，故需引入HTTPS加密传输</p>
+<h3 id="加密算法"><a href="#加密算法" class="headerlink" title="加密算法"></a>加密算法</h3><p><strong>对称加密</strong></p>
+<p>一份秘钥，发送方对传输报文进行加密，接收方可以使用秘钥进行解密，但是秘钥本身也许进行传输，仍存在风险，故引入了非对称加密</p>
+<p><strong>非对称加密</strong></p>
+<p>公钥&#x2F;私钥</p>
+<p>公钥进行加密，再使用相应的私钥进行解密</p>
+<p>客户端拿到服务器的公钥，客户端生成秘钥KEY，使用公钥对秘钥进行加密，再将加密了的秘钥发送给客户端，客户端使用私钥进行解密，双方再使用秘钥KEY进行加密传输</p>
+<p>由于公钥加密的秘钥KEY只有私钥才能解密，因此在传输过程中即便公钥泄露也无所谓，私钥一直稳妥保存在服务器上，从而保证了秘钥KEY一定不会泄露，后续的加密传输也是有保障的</p>
+<p><strong><img src="https://user-images.githubusercontent.com/89784872/183679149-d3f931a0-4c3e-47b8-b322-a7c1abfb4e85.png"></strong></p>
+<h3 id="SSL通信过程"><a href="#SSL通信过程" class="headerlink" title="SSL通信过程"></a>SSL通信过程</h3><ol>
+<li><p>客户端发送ClientHello消息，包括了：</p>
+<p>（1）客户端可以支持的SSL高版本号</p>
+<p>（2）一个用于生成主秘密的32字节的随机数(ClientRandom)</p>
+<p>（3）一个确定会话的会话ID</p>
+<p>（4）一个客户端可以支持的密码套件列表</p>
+<p>（5）一个客户端可以支持的压缩算法列表</p>
+</li>
+<li><p>Server发送ServerHello，包含了:</p>
+<p>（1）一个SSL版本号。取客户端支持的高版本号和服务端支持的高版本号中的较低者</p>
+<p>（2）一个用于生成主秘密的32字节的随机数。（客户端一个、服务端一个）</p>
+<p>（3）会话ID</p>
+<p>（4）从客户端的密码套件列表中选择的一个密码套件</p>
+<p>（5）从客户端的压缩方法的列表中选择的压缩方法</p>
+</li>
+</ol>
+<p><img src="https://user-images.githubusercontent.com/89784872/183681668-162ab2b0-dcea-49a5-8b4d-14e8675606d1.png"></p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183688489-3d77b3e7-5789-4b80-b188-fad30f6d2f3c.png"></p>
+<h2 id="全站加速"><a href="#全站加速" class="headerlink" title="全站加速"></a>全站加速</h2><p>使用CDN进行静态加速，将内容放置在CDN节点上，访问时会对其请求进行拦截，CDN再根据算法选择合适的节点进行响应，将结果返回给用户</p>
+<p><strong>动态内容加速</strong></p>
+<p>由于动态内容如使用post请求获取的内容无法再节点上优先进行缓存，故可以选路技术，对堵塞的道路进行预先探寻，选择合适的道路来传输动态请求，达到加速的效果</p>
+<p><img src="https://github.com/nateshao/gogogo/blob/master/day8-05-21/8-3.gif?raw=true"></p>
+<p>引入后全站加速，对结构进行更新：</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183691082-6cb9d4ff-f1f1-4765-a509-ea667f2a8748.png"></p>
+<h2 id="四层负载均衡"><a href="#四层负载均衡" class="headerlink" title="四层负载均衡"></a>四层负载均衡</h2><p>四层针对的是OSI模型的四层，即基于运输层协议(TCP&#x2F;UDP)来进行封装，基于IP+端口，将报文转发给对应的后端服务器</p>
+<p>不对数据进行完全解析，不跟客户端建立连接（握手），请求分发的效率快。无法灵活的进行转发，负载的服务器必须部署的相同服务器，否则同一个请求信息可能获取的结果是不同的。</p>
+<p><strong>调度算法</strong></p>
+<ul>
+<li><p>RR轮询</p>
+</li>
+<li><p>加权RR轮询：按比例轮询</p>
+</li>
+<li><p>最小连接：新连接分配给当前连接最小的服务器</p>
+</li>
+<li><p>五元组Hash：根据sip sport proto dip dport做散列</p>
+<ul>
+<li>缺点：某个后端服务器故障后(少了一个Hash桶)，所有连接均需要重新计算，影响整个hash环</li>
 </ul>
 </li>
+<li><p>一致性Hash：只影响故障服务器上的连接session 其余服务器不受影响</p>
+</li>
 </ul>
-<blockquote>
-<p>对于高低水位，只能表明出一个范围，但是在此范围之间的可见性还要根据活跃数组来判断。</p>
-<p>例如，低水位对应的事务为一个长事务，事务B为一个短事务，事务B在低水位事务开始后开始，transaction id大于低水位事务，但是B为短事务，在事务A开始时事务B已经提交，那么事务B则不存在于事务A的活跃数组当中，因此事务B更新的行对于A为可见的</p>
-</blockquote>
-<p>在可重复读的隔离级别下，通过回滚日志undolog，找到对自己可见的trx_id的数据即可</p>
-<h3 id="当前读"><a href="#当前读" class="headerlink" title="当前读"></a>当前读</h3><p>在进行更新操作时，可重复的理念与并发更新存在冲突，并发更新在当前的最新值基础上进行更新，而可重复读又恰好看不到当前的最新值，有点类似于操作系统中其他线程产生的最新值还在寄存器当中，而该线程的更新无法读取到寄存器当中的值。</p>
-<p>因此，为了解决这种情况，存在这样一条规则</p>
-<p>更新数据都是先读后写的，而这个读，只能读当前的值，称为“当前读”（current read）。</p>
-<p>先读出最新的版本号的数据，在此之上进行更新</p>
-<p>当前读的语句：</p>
+<p><strong>实现方式：FULLNAT</strong></p>
+<p>四层负载均衡使用VIP接收请求，内部使用LIP和RS进行通信，RS处理完之后再回传给四层负载均衡，四层负载均衡再使用VIP向Client做出响应</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183695728-b590cd86-8950-497c-975d-393c2548b9e2.png"></p>
 <ul>
-<li>update</li>
-<li>select 加锁时的情况：<code>for update / lock in share mode</code></li>
+<li><p>CIP为客户端的IP</p>
+</li>
+<li><p>VIP、VPort即公网对应的IP和端口</p>
+</li>
+<li><p>LIP为内部转发使用的IP</p>
+</li>
+<li><p>RS IP RS port为实际处理的服务器的ip和端口</p>
+</li>
 </ul>
-<p>由于读写锁之间的冲突，只有等待事务提交之后，select 语句才能读到update所作出的变更</p>
+<p>RS通过TCP的option字段进行传递，通过特定的内核模块反解，从而RS知道了客户端的真实IP</p>
+<h2 id="七层负载均衡"><a href="#七层负载均衡" class="headerlink" title="七层负载均衡"></a>七层负载均衡</h2><p><img src="https://user-images.githubusercontent.com/89784872/183704647-4b645a6c-2785-4bdb-9280-00cb36e0a045.png"></p>
+<p>对应OSI七层模型的应用层，对四层负载均衡无法处理的HTTP请求进行治理</p>
+<p><strong>功能实现</strong></p>
+<ul>
+<li>SSL卸载</li>
+<li>请求重定向</li>
+<li>路由添加匹配策略</li>
+<li>跨域支持</li>
+<li>协议支持：Websocket等</li>
+</ul>
+<p><strong>Nginx</strong></p>
+<p>反向代理服务器</p>
+<ul>
+<li>模块化设计</li>
+<li>master&#x2F;worker</li>
+<li>事件驱动模型</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/89784872/183698308-f23eee52-371f-48ca-9397-4fac01fab040.png"></p>
+<p><strong>事件驱动模型</strong></p>
+<p>将动作归纳为一个个事件，事件之间相互不影响，对每个事件再绑定一个处理函数</p>
+<blockquote>
+<p> 事件驱动模型的代表：redis</p>
+<p> Redis为事件驱动程序，即针对不同的事件来进行响应和处理</p>
+<p> 主要分为文件事件和时间事件：</p>
+<ul>
+<li>文件事件：服务器对套接字操作的抽象，服务器和客户端之间通信便会产生响应的文件事件，服务器监听套接字并进行处理</li>
+<li>时间事件：服务器中的定时执行的函数</li>
+</ul>
+<p> 文件事件通过I&#x2F;O多路复用来监听多个套接字，将套接字放到一个<strong>队列</strong>之中，并向文件事件分派器传送产生了事件的套接字，文件事件分派器再调用对应的事件处理器</p>
+<p> 服务器将所有的时间事件都放置在一个无序链表中，时间事件执行器运行时，遍历整个链表，查找已经到达的时间事件，调用对应的处理器</p>
+</blockquote>
+<p><strong>异步非阻塞</strong></p>
+<ul>
+<li>传统服务器：一个进程处理有一个连接，请求阻塞模型，依赖OS实现并发，但是存在进程之间的切换的开销</li>
+<li>Nginx：一个进程处理多个连接，异步非阻塞模型，无OS进程切换带来的开销</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/89784872/183700502-73ac3ffd-c685-4d73-8205-91b1034255e9.png"></p>
+<p>加入四层、七层负载均衡之后再对架构进行更新：</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183700809-b3ecde87-bb54-4e1f-a448-63b1c6ad7ae1.png"></p>
+<p><strong>请求过程</strong></p>
+<ol>
+<li>用户向LocalDNS发起请求，缓存中有，直接返回IP，若没有，则向根、一级、二级、最终找到相关机构的权威DNS服务器，得到对应的IP</li>
+<li>用户获取到了IP，向IP发起请求，CDN全站加速对其进行拦截，如果是静态请求且节点上存在缓存，选择一个节点将节点上的相关内容返回给用户，如果是动态请求，则应用选路算法</li>
+<li>经过全站加速，请求到达负载均衡，四层在前，七层在后，将请求转发给合适的服务器(DNS查询基于UDP，故负载均衡只有四层)</li>
+</ol>
+<p>先四层后七层：</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183704892-f2a7def8-95f8-42f2-90a8-8d2e09f013e2.png"></p>
 
                 
             </div>
@@ -525,7 +620,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://fischer0522.github.io/2022/08/08/%E4%BA%8B%E5%8A%A1/">https://fischer0522.github.io/2022/08/08/%E4%BA%8B%E5%8A%A1/</a>
+                    <a href="https://fischer0522.github.io/2022/08/10/%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%85%A5/">https://fischer0522.github.io/2022/08/10/%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%85%A5/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -563,8 +658,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                                    <span class="chip bg-color">数据库</span>
+                                <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">
+                                    <span class="chip bg-color">计算机网络</span>
                                 </a>
                             
                         </div>
@@ -645,17 +740,18 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2022/08/08/%E7%BA%A2%E9%BB%91%E6%A0%91/">
+                <a href="/2022/08/10/%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%85%A5/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="红黑树">
+                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="服务接入">
                         
-                        <span class="card-title">红黑树</span>
+                        <span class="card-title">服务接入</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -665,9 +761,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-08-08
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-08-10
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -676,11 +772,12 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/">
-                        <span class="chip bg-color">数据结构与算法</span>
+                    <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">
+                        <span class="chip bg-color">计算机网络</span>
                     </a>
                     
                 </div>
@@ -694,13 +791,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2022/08/08/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F/">
+                <a href="/2022/08/08/GFS/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="MySQL日志系统">
+                        <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="GFS">
                         
-                        <span class="card-title">MySQL日志系统</span>
+                        <span class="card-title">GFS</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -724,8 +821,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                        <span class="chip bg-color">数据库</span>
+                    <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">
+                        <span class="chip bg-color">分布式系统</span>
                     </a>
                     
                 </div>

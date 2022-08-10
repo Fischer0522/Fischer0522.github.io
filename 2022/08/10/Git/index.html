@@ -4,8 +4,18 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="MySQL日志系统, Fischer">
-    <meta name="description" content="日志系统概述在目前的MySQL当中，日志系统主要通过redo log和binlog相配合，redo log 由InnoDB引擎提供，而binlog为MySQL Server层中实现，redo log负责在崩溃时进行恢复工作，binlog负责">
+    <meta name="keywords" content="Git, Fischer">
+    <meta name="description" content="Git分布式版本控制基本原理：
+
+每个库都有完整的提交历史，可以直接在本地进行提交代码
+每次提交记录为完整的文件快照，而不是增量记录
+通过Push等操作来完成和远端代码的同步
+
+基本使用方式
+目录
+
+HEAD中存储的为当前指向的分支、
+$ ">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -17,7 +27,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>MySQL日志系统 | Fischer</title>
+    <title>Git | Fischer</title>
     <link rel="icon" type="image/png" href="/medias/favi.png">
     
     <style>
@@ -343,12 +353,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/8.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/10.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">MySQL日志系统</h1>
+                    <h1 class="description center-align post-title">Git</h1>
                 </div>
             </div>
         </div>
@@ -372,8 +382,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                                <span class="chip bg-color">数据库</span>
+                            <a href="/tags/Git/">
+                                <span class="chip bg-color">Git</span>
                             </a>
                         
                     </div>
@@ -388,7 +398,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-08-08
+                    2022-08-10
                 </div>
                 
 
@@ -397,14 +407,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    2.5k
+                    1.6k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    9 分
+                    7 分
                 </div>
                 
 
@@ -427,146 +437,269 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="日志系统"><a href="#日志系统" class="headerlink" title="日志系统"></a>日志系统</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在目前的MySQL当中，日志系统主要通过redo log和binlog相配合，redo log 由InnoDB引擎提供，而binlog为MySQL Server层中实现，redo log负责在崩溃时进行恢复工作，binlog负责进行归档，用于备份和主从数据一致</p>
-<h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="主要功能"><a href="#主要功能" class="headerlink" title="主要功能"></a>主要功能</h3><p>redo log主要用于负责进行crash-safe功能，当MySQL崩溃时，便可以通过redo log将数据进行恢复</p>
-<p>简单来说，在MySQL向硬盘中写数据进行持久化之前，先写入日志系统，并且更新内存当中的数据。</p>
-<p>此时，由于之后对于当前数据页的读取都是直接从内存中读取，再进行CRUD时，因此可以认为以及完成了此次的数据更新过程，MySQL只需要再之后寻找机会再将内存中的数据<strong>flush</strong>到硬盘当中去即可。之后便涉及到另外一个相关的知识点flush脏页回写的过程</p>
-<h3 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h3><p><strong>循环写入：</strong></p>
-<ul>
-<li><p>相比于binlog的追加式写入方式，redo log为循环写入，空间会用完，即存在一个checkpoint和write pos，当write pos追上 checkpoint时，即需要清除一些记录，推进一下checkpoint</p>
-</li>
-<li><p>如果一个脏页已经被flush到内存当中，那么即便断电也不会收到威胁，因此可以对应的日志也无用，在推进checkpoint清除记录时，即可以将其删掉</p>
-</li>
-<li><p>循环写入指的是四个文件循环写入，而并非整个redo log为一个大型循环链表类似的结构</p>
-</li>
-</ul>
-<p><strong>记录形式：</strong> redo log为物理日志，记录的是进行的是在哪个数据页上进行了什么修改</p>
-<p><strong>写入时机：</strong> redo log的写入无需等待事务的提交，事务中进行了相应的操作边写入到redo log buffer当中(为进行持久化)</p>
-<p><strong>来源：</strong> 由InnoDB引擎所支持，MySQL本身并不存在redo log</p>
-<p><strong>缓存：</strong> 相比于binlog的 binlog cache，redo log buffer的为全局维护一个</p>
-<h3 id="写入机制"><a href="#写入机制" class="headerlink" title="写入机制"></a>写入机制</h3><p>整个redo log的写入过程可以认为有三部分：</p>
-<ul>
-<li>写入redo log buffer</li>
-<li>写入page cache</li>
-<li>fsync刷到硬盘中进行持久化</li>
-</ul>
-<p>在这个三个步骤其中，page cache(页高速缓冲存储器)为操作系统的相关机制，本质上为向文件系统申请的一块内存，用于处理内外存直接的速度同步问题，可以移步操作系统进行进一步学习</p>
-<p>只有真正的写入到了硬盘中的redo file当中去，才可认为是进行了持久化，之后才可以根据其进行cash safe</p>
-<p><strong>持久化策略</strong></p>
-<blockquote>
-<p>InnoDB 提供了 innodb_flush_log_at_trx_commit 参数，它有三种可能取值：</p>
-<ul>
-<li>设置为 0 的时候，表示每次事务提交时都只是把 redo log 留在 redo log buffer 中 ;</li>
-<li>设置为 1 的时候，表示每次事务提交时都将 redo log 直接持久化到磁盘；</li>
-<li>设置为 2 的时候，表示每次事务提交时都只是把 redo log 写到 page cache。</li>
-</ul>
-</blockquote>
-<p>而后台有一个进程专门进行持久化操作，每隔一秒进行一次轮询，将redo log buffer当中的数据直接持久化磁盘当中(先page cache再write)</p>
-<p>进行持久化的方式：</p>
-<ul>
-<li>等待后台线程的轮询</li>
-<li>被其他并行的进程顺带着持久化：由于无需等待事务提交即可将redo log写入redo buffer当中，因此redo log位于同一个数据页的事务进行了提交，将整个数据页持久化到硬盘当中，还未提交的也没等来轮询的事务的redo log 就被顺带着持久到硬盘当中去</li>
-<li>innodb_flush_log_at_trx_commit设置为1时主动提交</li>
-</ul>
-<p>而在innodb_log_buffer_size到达一半时会将其写入到page cache中，还需fsync然后进行持久化</p>
-<h4 id="组提交"><a href="#组提交" class="headerlink" title="组提交"></a>组提交</h4><p><strong>LSN：</strong> 日志逻辑序列号，单调递增，用来对应redo log的一个个写入点，每次写入长度为 length 的 redo log， LSN 的值就会加上 length。</p>
-<p>每一轮中最先抵达的事务选为leader，后续每来一个事务，则将leader的LSN递增至当前的LSN，在需要进行持久化时，在将所有小于等于leader LSN的事务的日志作为一个组全部进行持久化</p>
-<p>LSN有点类似于事务的多版本数据，在时间轴上进行一个标记</p>
-<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E4%B8%93%E9%A2%98.assets/933fdc052c6339de2aa3bf3f65b188cc.png" alt="img"></p>
-<h2 id="binlog"><a href="#binlog" class="headerlink" title="binlog"></a>binlog</h2><h3 id="主要功能-1"><a href="#主要功能-1" class="headerlink" title="主要功能"></a>主要功能</h3><p>归档备份，用于恢复数据，或者通过binlog传递数据，保证主从库的数据一致性</p>
-<h3 id="特点-1"><a href="#特点-1" class="headerlink" title="特点"></a>特点</h3><p><strong>追加写入：</strong> 写完当前的文件后会切换到下一个文件，并不会对之前的进行覆盖</p>
-<p><strong>记录形式:</strong> binlog为逻辑日志，记录的时进行了什么操作：</p>
-<ul>
-<li>在statement形式时，记录的为原始sql语句，</li>
-<li>在row形式时，记录的为发生了什么事件，如用于定义删除的行为</li>
-</ul>
-<p><strong>缓存:</strong> 每个线程单独一个binlog cache</p>
-<p><strong>写入时机：</strong> 按照两阶段提交，在redolog写完并且事务处于prepare的状态时，开始进行binlog的写入</p>
-<h3 id="写入机制-1"><a href="#写入机制-1" class="headerlink" title="写入机制"></a>写入机制</h3><p><strong>binlog格式</strong></p>
-<ul>
-<li>statement<ul>
-<li>记录的为原始sql语句</li>
-<li>在进行主备统一时会存在数据不一致的问题(如使用了limit并且索引选择不一致)</li>
-<li>通过COMMIT标识来确定日志的完整性</li>
-</ul>
-</li>
-<li>row<ul>
-<li>记录的为事件，如Delete_rows event，用于定义删除的行为</li>
-<li>在不同的情况下可以完全复现，直指原本操作的数据行，而非再对其重新执行得到结果</li>
-<li>相比于statement形式，占用的空间较大</li>
-<li>可以用于进行数据恢复，由于记录的为事件，可以对事件中涉及的数据直接进行逆向操作,如delete-&gt;insert，update前后写过互调</li>
-<li>通过XID event确定日志的完整性</li>
-</ul>
-</li>
-<li>mixed<ul>
-<li>statement和row相结合，利用各自的优点</li>
-<li>由MySQL自己进行判断选择，如有limit则使用row,无则使用statement</li>
-</ul>
-</li>
-</ul>
-<p><strong>写入过程：</strong></p>
-<p>事务执行时，先将其写入到binlog cache当中,由于binlog的写入需要保证完整性不被拆开，因此每个线程独享一个binlog cache</p>
-<p>事务提交时，再将binlog cache中的数据写入到page cache后再fsync进行持久化到磁盘当中去,持久化完成后再将cache中的数据进行清空</p>
-<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E4%B8%93%E9%A2%98.assets/9ed86644d5f39efb0efec595abb92e3e.png" alt="img"></p>
-<p><strong>控制策略：</strong></p>
-<blockquote>
-<p>write 和 fsync 的时机，是由参数 sync_binlog 控制的：</p>
+                <h1 id="Git"><a href="#Git" class="headerlink" title="Git"></a>Git</h1><h2 id="分布式版本控制"><a href="#分布式版本控制" class="headerlink" title="分布式版本控制"></a>分布式版本控制</h2><p>基本原理：</p>
 <ol>
-<li>sync_binlog&#x3D;0 的时候，表示每次提交事务都只 write，不 fsync；</li>
-<li>sync_binlog&#x3D;1 的时候，表示每次提交事务都会执行 fsync；</li>
-<li>sync_binlog&#x3D;N(N&gt;1) 的时候，表示每次提交事务都 write，但累积 N 个事务后才 fsync。</li>
+<li>每个库都有完整的提交历史，可以直接在本地进行提交代码</li>
+<li>每次提交记录为完整的文件快照，而不是增量记录</li>
+<li>通过Push等操作来完成和远端代码的同步</li>
 </ol>
+<h2 id="基本使用方式"><a href="#基本使用方式" class="headerlink" title="基本使用方式"></a>基本使用方式</h2><p><img src="https://user-images.githubusercontent.com/89784872/183828025-9b580deb-49c2-4d85-ba59-5f49b9918122.png"></p>
+<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p><img src="https://user-images.githubusercontent.com/89784872/183828576-339aaee5-d23f-4fa1-ae5a-b80fb8a90bd8.png"></p>
+<ul>
+<li><p>HEAD中存储的为当前指向的分支、</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">cat</span> .git/HEAD
+ref: refs/heads/master
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+</li>
+<li><p>config为配置信息</p>
+</li>
+<li><p>object为文件信息</p>
+</li>
+<li><p>refs分支信息</p>
+</li>
+</ul>
+<p><strong>工作区&amp;暂存区</strong></p>
+<p>工作区为平时修改代码的位置，通过git add 命令提交到暂存区，git commit提交到git目录</p>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><h4 id="config"><a href="#config" class="headerlink" title="config"></a>config</h4><p>分为 system global local三个级别，高级别的会覆盖低级别的配置</p>
+<ul>
+<li><code>git config --global user.name &quot;fischer&quot; </code>global级别配置用户名 </li>
+<li><code>git config --global url.git@github.com:insteadOf https//github.com/</code>instead of配置，使用SSH替代HTTP</li>
+</ul>
+<h4 id="remote"><a href="#remote" class="headerlink" title="remote"></a>remote</h4><p>添加远程仓库后：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> remote <span class="token function">add</span> origin git@github.com:Fischer0522/myPostBar.git
+
+
+$ <span class="token function">git</span> remote -v
+origin  git@github.com:Fischer0522/myPostBar.git <span class="token punctuation">(</span>fetch<span class="token punctuation">)</span>
+origin  git@github.com:Fischer0522/myPostBar.git <span class="token punctuation">(</span>push<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>分为fetch和push的源</p>
+<p>添加远程仓库的源后，配置文件也发生相应的变化：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">cat</span> .git/config
+<span class="token punctuation">[</span>core<span class="token punctuation">]</span>
+        repositoryformatversion <span class="token operator">=</span> <span class="token number">0</span>
+        filemode <span class="token operator">=</span> <span class="token boolean">false</span>
+        bare <span class="token operator">=</span> <span class="token boolean">false</span>
+        logallrefupdates <span class="token operator">=</span> <span class="token boolean">true</span>
+        symlinks <span class="token operator">=</span> <span class="token boolean">false</span>
+        ignorecase <span class="token operator">=</span> <span class="token boolean">true</span>
+<span class="token punctuation">[</span>remote <span class="token string">"origin"</span><span class="token punctuation">]</span>
+        url <span class="token operator">=</span> git@github.com:Fischer0522/myPostBar.git
+        fetch <span class="token operator">=</span> +refs/heads/*:refs/remotes/origin/*
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>HTTP&amp;SSH</strong></p>
+<p>通过HTTP配置在连接时提示输入密码进行身份验证，但可以采用配置进行免密认证：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">git</span> config --global credential.helper --timeout<span class="token operator">=</span><span class="token string">'3600'</span> 存储在内存中，过期时间为3600s,也可配置存储在硬盘当中<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<blockquote>
+<p>2021年之后不再支持使用HTTP进行配置，输入完密码后会提示</p>
 </blockquote>
-<p>sync_binlog 设置为 N，对应的风险是：如果主机发生异常重启，会丢失最近 N 个事务的 binlog 日志。</p>
-<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p><strong>两阶段提交</strong>:prepare和commit状态的设计意义</p>
-<p>简要来说即为redo log 和binlog穿插写入，二者全部写好之后再一同提交</p>
-<p>反证：</p>
+<p>SSH免密配置使用公私钥的机制，默认为rsa，但由于安全问题，不推荐dsa，rsa，优先推荐使用ed25519，</p>
+<h3 id="git-add"><a href="#git-add" class="headerlink" title="git add"></a>git add</h3><p><code>git add readme.md</code>后查看状态：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> status
+On branch master
+
+No commits yet
+
+Changes to be committed:
+  <span class="token punctuation">(</span>use <span class="token string">"git rm --cached &lt;file>..."</span> to unstage<span class="token punctuation">)</span>
+        new file:   readme.md
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>再次查看结构,在objects中新增了一个文件</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">.git
+<span class="token operator">|</span>-- HEAD
+<span class="token operator">|</span>-- config
+<span class="token operator">|</span>-- description
+<span class="token operator">|</span>-- hooks
+<span class="token operator">|</span>   <span class="token operator">|</span>-- applypatch-msg.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- commit-msg.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- fsmonitor-watchman.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- post-update.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- pre-applypatch.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- pre-commit.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- pre-merge-commit.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- pre-push.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- pre-rebase.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- pre-receive.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- prepare-commit-msg.sample
+<span class="token operator">|</span>   <span class="token operator">|</span>-- push-to-checkout.sample
+<span class="token operator">|</span>   <span class="token variable"><span class="token variable">`</span>-- update.sample
+<span class="token operator">|</span>-- index
+<span class="token operator">|</span>-- info
+<span class="token operator">|</span>   <span class="token variable">`</span></span>-- exclude
+<span class="token operator">|</span>-- objects
+<span class="token operator">|</span>   <span class="token operator">|</span>-- 2b
+<span class="token operator">|</span>   <span class="token operator">|</span>   <span class="token variable"><span class="token variable">`</span>-- e7c65ae93b54b988416f280298b0b8b5f20385
+<span class="token operator">|</span>   <span class="token operator">|</span>-- e6
+<span class="token operator">|</span>   <span class="token operator">|</span>   <span class="token variable">`</span></span>-- 9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+<span class="token operator">|</span>   <span class="token operator">|</span>-- info
+<span class="token operator">|</span>   <span class="token variable"><span class="token variable">`</span>-- pack
+<span class="token variable">`</span></span>-- refs
+    <span class="token operator">|</span>-- heads
+    `-- tags
+
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>使用<code>git cat-file -p id</code>可查看其中的内容</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> cat-file -p  2be7c65ae93b54b988416f280298b0b8b5f20385
+<span class="token comment"># hello world</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<h3 id="git-commit"><a href="#git-commit" class="headerlink" title="git commit"></a>git commit</h3><p>使用git commit后objects中新增了两个文件，分别查看：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">fisher@LAPTOP-1BJGV7S5 MINGW64 /d/learn_software/开发/字节后端青训营/gittest <span class="token punctuation">(</span>master<span class="token punctuation">)</span>
+$ <span class="token function">git</span> cat-file -p 767242a1145e1fba00b5538c1149713b5cebd9a3
+tree 386eb799bbfd0826f510b6587c5afaae2a962279
+author fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660114623</span> +0800
+committer fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660114623</span> +0800
+
+<span class="token function">add</span> readme.md
+
+fisher@LAPTOP-1BJGV7S5 MINGW64 /d/learn_software/开发/字节后端青训营/gittest <span class="token punctuation">(</span>master<span class="token punctuation">)</span>
+$ <span class="token function">git</span> cat-file -p 386eb799bbfd0826f510b6587c5afaae2a962279
+<span class="token number">100644</span> blob 2be7c65ae93b54b988416f280298b0b8b5f20385    readme.md
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
 <ul>
-<li><p>前提：InnoDB中redo log提交了则事务无法进行回滚</p>
-</li>
-<li><p>先redo log再binlog，可crash-safe但归档中事务丢失，影响备份和从库</p>
-</li>
-<li><p>先binlog再 redo log，备份中存在事务，但是数据库中无该事务进行的操作，同样出现数据不一致的问题</p>
-</li>
+<li>存放了一个blob类型，表示为一个目录树类型的object</li>
+<li>保存了目录树是什么(新增的另外一个类型)，作者和提交者的信息</li>
 </ul>
-<p>两阶段提交的意义为保证redo log和binlog写入的原子性，redo log对应着当前数据库中的数据,binlog对应着备份中的数据，只有保证二者的原子性才能保证备份和当前数据库的数据一致</p>
-<p><img src="https://github.com/Fischer0522/note/raw/master/mysql45%E8%AE%B2/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F%E4%B8%93%E9%A2%98.assets/ee9af616e05e4b853eba27048351f62a.jpg" alt="img"></p>
-<p><strong>关联：</strong></p>
-<p>redo log和binlog有一个共同的数据字段，叫 XID。崩溃恢复的时候，会按顺序扫描 redo log：</p>
-<ul>
-<li>如果碰到既有 prepare、又有 commit 的 redo log，就直接提交；</li>
-<li>如果碰到只有 parepare、而没有 commit 的 redo log，就拿着 XID 去 binlog 找对应的事务。</li>
+<h3 id="Objects"><a href="#Objects" class="headerlink" title="Objects"></a>Objects</h3><ul>
+<li>Blob：存储文件的内容</li>
+<li>Tree：存储的为文件目录信息</li>
+<li>commit：存储提交信息，一个commit对应一个提交代码</li>
+<li>Tag： 存储附注标签信息</li>
 </ul>
-<p><strong>与内存的关系</strong></p>
-<p>在执行sql语句时，向redo log buffer之中写入redo log，并且此时已经对内存进行了修改(否则无法进行当前读和当前事务在此基础上的操作)，二者之间不存在先后以及等待关系</p>
-<p><strong>change buffer&#x2F;redo log</strong></p>
-<ul>
-<li><p>对于一条更新数据，数据页存在于内存当中直接写入，若不在则写入change buffer</p>
+<p><strong>串联</strong></p>
+<ol>
+<li><p>先通过Commit寻找到Tree信息，每个Commit对应一个Tree ID</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> cat-file -p 767242a1145e1fba00b5538c1149713b5cebd9a3
+tree 386eb799bbfd0826f510b6587c5afaae2a962279
+author fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660114623</span> +0800
+committer fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660114623</span> +0800
+
+<span class="token function">add</span> readme.md
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
 </li>
-<li><p>而redo log 对于上述两种动作进行记录，再根据这些记录，对磁盘进行更新，即redolog有两种，一种记录普通数据页的改动，一种记录changebuffer的改动</p>
+<li><p>通过Tree存储的信息，获取对应的目录树信息</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> cat-file -p 386eb799bbfd0826f510b6587c5afaae2a962279
+<span class="token number">100644</span> blob 2be7c65ae93b54b988416f280298b0b8b5f20385    readme.md
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 </li>
-<li><p>真正对磁盘数据页的修改是通过将内存里脏页的数据刷回磁盘来完成的，而不是根据redolog， 真正刷新磁盘的工作为innodb中的存储引擎中的线程去做</p>
-</li>
-<li><p>change buffer 和redo log 二者的作用目标不同，关注的为两个事情</p>
-<ul>
-<li>redo log作为一个日志系统，最大的作用为再数据库宕机后的恢复工作</li>
-</ul>
-</li>
-</ul>
-<p><strong>双1配置：</strong></p>
-<p>通常我们说 MySQL 的“双 1”配置，指的就是 sync_binlog 和 innodb_flush_log_at_trx_commit 都设置成 1。也就是说，一个事务完整提交前，需要等待两次刷盘，一次是 redo log（prepare 阶段），一次是 binlog。</p>
-<h4 id="突发断电"><a href="#突发断电" class="headerlink" title="突发断电"></a>突发断电</h4><ol>
-<li><p>而对于还未进行持久化的redo log buffer，由于此时的redo log还存储于内存当中，binlog还未开始写，事务也处于还未提交的状态，现实，备份，逻辑上数据均未被记录(发生),因此直接认为事务回滚</p>
-</li>
-<li><p>redo log已经写完，内部事务完整，并且已经有了commit标识(表示binlog也已经写完)，供电后直接进行提交(逻辑，现实，备份均已经有了数据记录)</p>
-</li>
-<li><p>redo log写完，但是只处于prepare状态</p>
-<ul>
-<li>binlog完整，提交事务</li>
-<li>binlog不完整，回滚事务</li>
-</ul>
+<li><p>从tree中获取blob的ID，通过Blob ID获取文件的内容(blob id即为执行git add 时新增文件的id)</p>
 </li>
 </ol>
+<p>​	</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183837419-f43df18f-b521-404c-b157-25a49d5ec85b.png"></p>
+<h3 id="Refs"><a href="#Refs" class="headerlink" title="Refs"></a>Refs</h3><p>refs 内容为对应的commit ID，把ref当作指针，指向对应的commit来表示当前Ref(即对应的分支)对应的版本</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token variable"><span class="token variable">`</span>-- refs
+    <span class="token operator">|</span>-- heads
+    <span class="token operator">|</span>   <span class="token operator">|</span>-- master
+    <span class="token operator">|</span>   <span class="token variable">`</span></span>-- <span class="token builtin class-name">test</span>
+    `-- tags
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">cat</span> .git/refs/heads/master
+767242a1145e1fba00b5538c1149713b5cebd9a3
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p><strong>Branch</strong></p>
+<p><code>git checkout -b name</code>创建一个新分支，在开发时使用。可以通过不断添加commit进行迭代</p>
+<p><code>git tag v</code>创建一个tag 用于发布时表示版本号,表示一个稳定的版本，指向的commit一般不会变更</p>
+<h3 id="Annotation-tag"><a href="#Annotation-tag" class="headerlink" title="Annotation tag"></a>Annotation tag</h3><p>附注标签，用于给tag添加额外信息，如新增了什么feature等</p>
+<p>使用<code>git tag -a V0.0.2 -m &quot;add feature 1&quot;</code>进行创建，之后会在Object下新增一个文件，进入查看：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> cat-file -p d3db2ad70bd68a43c760592bc9a574ec12794080
+object 767242a1145e1fba00b5538c1149713b5cebd9a3
+<span class="token builtin class-name">type</span> commit
+tag V0.0.2
+tagger fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660115898</span> +0800
+
+<span class="token function">add</span> feature <span class="token number">1</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="追溯历史版本"><a href="#追溯历史版本" class="headerlink" title="追溯历史版本"></a>追溯历史版本</h3><ul>
+<li>当前版本代码：通过Ref指向的Commit唯一的代码版本</li>
+<li>parent commit字段，通过commit串联获取历史版本代码</li>
+</ul>
+<p>对readme文件进行重新修改后，新增一个commit，查看其中的内容：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">fisher@LAPTOP-1BJGV7S5 MINGW64 /d/learn_software/开发/字节后端青训营/gittest <span class="token punctuation">(</span>test<span class="token punctuation">)</span>
+$ <span class="token function">git</span> cat-file -p 3501f03ecdf290572f2b8641b068f0dcf3eb4298
+tree 2ae0aa36c4902dcceb633154925d36dedd116333
+parent 767242a1145e1fba00b5538c1149713b5cebd9a3
+author fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660135415</span> +0800
+committer fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660135415</span> +0800
+
+update readme
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>再查看其中parent的内容，发现即为上一个版本的commit,和前一个commit进行了串联</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">fisher@LAPTOP-1BJGV7S5 MINGW64 /d/learn_software/开发/字节后端青训营/gittest <span class="token punctuation">(</span>test<span class="token punctuation">)</span>
+$ <span class="token function">git</span> cat-file -p 767242a1145e1fba00b5538c1149713b5cebd9a3
+tree 386eb799bbfd0826f510b6587c5afaae2a962279
+author fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660114623</span> +0800
+committer fischer <span class="token operator">&lt;</span><span class="token number">1809327837</span>@qq.com<span class="token operator">></span> <span class="token number">1660114623</span> +0800
+
+<span class="token function">add</span> readme.md
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="修改历史版本"><a href="#修改历史版本" class="headerlink" title="修改历史版本"></a>修改历史版本</h3><ul>
+<li>commit –amend 修改最后一次commit的信息，修改之后commit ID会改变，执行后进入vim，对信息进行修改</li>
+<li>rebase：<code>git rebase -i HEAD~3</code>实现对最近三个commit的修改<ul>
+<li>合并commit</li>
+<li>修改具体的commit message</li>
+<li>删除某个commit</li>
+</ul>
+</li>
+<li>filter –branch ：删除commit中的某一个文件等操作</li>
+</ul>
+<p>使用amend操作后，新的修改在新的commit ID上，旧的commit则称为了没有ref指向的悬空的commit：使用<code>git fsck --lost-found</code>进行查看</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">$ <span class="token function">git</span> <span class="token function">fsck</span> --lost-found
+Checking object directories: <span class="token number">100</span>% <span class="token punctuation">(</span><span class="token number">256</span>/256<span class="token punctuation">)</span>, done.
+dangling blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+dangling commit 3501f03ecdf290572f2b8641b068f0dcf3eb4298<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="GitGC"><a href="#GitGC" class="headerlink" title="GitGC"></a>GitGC</h3><ul>
+<li>git gc 可以删除一些不需要的object，并对object进行打包压缩减少仓库体积</li>
+<li>Reflog 用于记录操作日志，手动将日志设置为过期</li>
+<li>git gc prune&#x3D;now 指定修剪多久之前的对象，默认为两周</li>
+</ul>
+<p>执行git gc之后objects目录发生了较大变化，只剩下pack</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token operator">|</span>-- objects
+<span class="token operator">|</span>   <span class="token operator">|</span>-- e6
+<span class="token operator">|</span>   <span class="token operator">|</span>   <span class="token variable"><span class="token variable">`</span>-- 9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+<span class="token operator">|</span>   <span class="token operator">|</span>-- info
+<span class="token operator">|</span>   <span class="token operator">|</span>   <span class="token operator">|</span>-- commit-graph
+<span class="token operator">|</span>   <span class="token operator">|</span>   <span class="token variable">`</span></span>-- packs
+<span class="token operator">|</span>   <span class="token variable"><span class="token variable">`</span>-- pack
+<span class="token operator">|</span>       <span class="token operator">|</span>-- pack-c8dfb6157c35d01da640ab4239bd755d951f4626.idx
+<span class="token operator">|</span>       <span class="token variable">`</span></span>-- pack-c8dfb6157c35d01da640ab4239bd755d951f4626.pack
+<span class="token operator">|</span>-- packed-refs
+<span class="token variable"><span class="token variable">`</span>-- refs
+    <span class="token operator">|</span>-- heads
+    <span class="token variable">`</span></span>-- tags
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><img src="https://user-images.githubusercontent.com/89784872/183907335-ec7ff457-4510-4f4c-bf5d-892f1ace2c3d.png"></p>
+<h3 id="远端同步"><a href="#远端同步" class="headerlink" title="远端同步"></a>远端同步</h3><ul>
+<li>clone：拉取完整的仓库到本地</li>
+<li>fetch：拉取远端的分支到本地，不会进行merge</li>
+<li>pull：等于 fetch+merge</li>
+<li>push</li>
+</ul>
+<h2 id="工作流"><a href="#工作流" class="headerlink" title="工作流"></a>工作流</h2><ul>
+<li>GitFlow</li>
+<li>Github Flow</li>
+<li>GitLab Flow</li>
+</ul>
+<h3 id="Github-Flow"><a href="#Github-Flow" class="headerlink" title="Github Flow"></a>Github Flow</h3><p>只有一个主干分支，基于Pull Request往主干分支提交代码</p>
+<p>本地进行push之后，可以直接使用返回的url提交一个PR，也可在github上手动创建一个PR来合并</p>
+<p><img src="https://user-images.githubusercontent.com/89784872/183916585-24b485ee-d046-444f-bf9f-e48db8d2c368.png"></p>
+<h3 id="代码合并"><a href="#代码合并" class="headerlink" title="代码合并"></a>代码合并</h3><ul>
+<li>Fast-Forward：不会产生一个merge节点保持线性历史</li>
+<li>三方合并：产生一个新的Merge节点</li>
+</ul>
 
                 
             </div>
@@ -593,7 +726,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="https://fischer0522.github.io/2022/08/08/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F/">https://fischer0522.github.io/2022/08/08/%E6%97%A5%E5%BF%97%E7%B3%BB%E7%BB%9F/</a>
+                    <a href="https://fischer0522.github.io/2022/08/10/Git/">https://fischer0522.github.io/2022/08/10/Git/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -631,8 +764,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                                    <span class="chip bg-color">数据库</span>
+                                <a href="/tags/Git/">
+                                    <span class="chip bg-color">Git</span>
                                 </a>
                             
                         </div>
@@ -713,17 +846,18 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/2022/08/08/%E4%BA%8B%E5%8A%A1/">
+                <a href="/2022/08/10/Git/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="MySQL事务">
+                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="Git">
                         
-                        <span class="card-title">MySQL事务</span>
+                        <span class="card-title">Git</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -733,9 +867,9 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-08-08
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-08-10
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -744,11 +878,12 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                        <span class="chip bg-color">数据库</span>
+                    <a href="/tags/Git/">
+                        <span class="chip bg-color">Git</span>
                     </a>
                     
                 </div>
@@ -762,13 +897,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2022/08/08/%E5%B9%B6%E5%8F%91%E4%B8%8E%E9%94%81/">
+                <a href="/2022/08/10/%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%85%A5/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="MySQL并发与锁">
+                        <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="服务接入">
                         
-                        <span class="card-title">MySQL并发与锁</span>
+                        <span class="card-title">服务接入</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -779,7 +914,7 @@
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-08-08
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-08-10
                             </span>
                         <span class="publish-author">
                             
@@ -792,8 +927,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">
-                        <span class="chip bg-color">数据库</span>
+                    <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">
+                        <span class="chip bg-color">计算机网络</span>
                     </a>
                     
                 </div>

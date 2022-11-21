@@ -1,0 +1,630 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Fischer的碎碎念 | Fischer的碎碎念</title><meta name="author" content="Fischer"><meta name="copyright" content="Fischer"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="数据库系统设计（2）查询优化 Rules： 重写查询来移除一些无效的东西，如：select * from A where 1 &#x3D; 1可以重写为select * from A 可能需要检查catalog   Cost-Based Search 使用cost model来进行评估执行一个计划的开销 评估多个然后选出开销最低的那个计划    通常先进行rule-based rewriting 然后进行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fischer的碎碎念">
+<meta property="og:url" content="https://fischer0522.github.io/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/index.html">
+<meta property="og:site_name" content="Fischer的碎碎念">
+<meta property="og:description" content="数据库系统设计（2）查询优化 Rules： 重写查询来移除一些无效的东西，如：select * from A where 1 &#x3D; 1可以重写为select * from A 可能需要检查catalog   Cost-Based Search 使用cost model来进行评估执行一个计划的开销 评估多个然后选出开销最低的那个计划    通常先进行rule-based rewriting 然后进行">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png">
+<meta property="article:published_time" content="2022-11-06T06:14:38.596Z">
+<meta property="article:modified_time" content="2022-11-06T06:10:17.000Z">
+<meta property="article:author" content="Fischer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png"><link rel="shortcut icon" href="/img/favi.png"><link rel="canonical" href="https://fischer0522.github.io/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Fischer的碎碎念',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-11-06 14:10:17'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/70068866_p0.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Fischer的碎碎念</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">无题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-11-06T06:14:38.596Z" title="发表于 2022-11-06 14:14:38">2022-11-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-11-06T06:10:17.000Z" title="更新于 2022-11-06 14:10:17">2022-11-06</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p><img src="/assets/69602151_p0-20221106003017-3krtp9h.jpg" alt="image"></p>
+<h1 id="数据库系统设计（2）"><a href="#数据库系统设计（2）" class="headerlink" title="数据库系统设计（2）"></a>数据库系统设计（2）</h1><h2 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h2><ul>
+<li>Rules：<ul>
+<li>重写查询来移除一些无效的东西，如：<code>select * from A where 1 = 1</code>可以重写为<code>select * from A</code></li>
+<li>可能需要检查catalog</li>
+</ul>
+</li>
+<li>Cost-Based Search<ul>
+<li>使用cost model来进行评估执行一个计划的开销</li>
+<li>评估多个然后选出开销最低的那个计划</li>
+</ul>
+</li>
+</ul>
+<p>通常先进行rule-based rewriting 然后进行代价评估<br><strong>架构总览&#x2F;执行流程</strong></p>
+<ol>
+<li>SQL Rewriter</li>
+<li>Parser：对SQL进行解析，生成一个抽象语法树</li>
+<li>Binder 如查询catalog确认是否有这一张表等操作，最终生成一个逻辑计划</li>
+<li>Tree Rewriter</li>
+<li>Optimizer：只进行计划之间的估计和比较，不会给出实际的代价 得到最终的物理计划，交给执行器来执行</li>
+</ol>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666367886501-019b3d8d-b6c0-4541-85ae-2eb60b076c5f.png#clientId=u2673651f-1b68-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=519&id=u5e1062d5&margin=%5Bobject%20Object%5D&name=image.png&originHeight=649&originWidth=1197&originalType=binary&ratio=1&rotation=0&showTitle=false&size=168769&status=error&style=none&taskId=u742eacf1-c33d-473f-87d4-5ea3f0cf4af&title=&width=957.6" alt="image.png"><br><strong>逻辑计划和物理计划</strong></p>
+<ul>
+<li>逻辑计划：从高层次说明这个sql要干什么，但是不说怎么实现，与关系代数或者sql的形式基本一致</li>
+<li>物理计划：使用访问路径定义了具体的执行策略 ：用这一个索引，通过hash join进行join等</li>
+<li>并非一一对应的：比如逻辑上执行了join和order by，但是如果join底层的实现算法为sort merged join,join的结果已经是排序好的，即不需要再通过order by进行排序</li>
+</ul>
+<h3 id="等价的关系代数"><a href="#等价的关系代数" class="headerlink" title="等价的关系代数"></a>等价的关系代数</h3><p>如果产生一组相同的tuple，那么这两个关系代数表达式就是等价的，关系模型不关心顺序<br>谓词下推，解释一下原理<br>先对enrolled对其进行条件判断过滤，在join之前先进行filter,减少最后参与join的tuple数量<br>二者产生了相同的一组tuple，可以被称为等价，但是在执行的性能上有差异<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666406259069-9624fa18-7c8a-4077-927e-309aad155269.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=408&id=u1433b17e&margin=%5Bobject%20Object%5D&name=image.png&originHeight=510&originWidth=1108&originalType=binary&ratio=1&rotation=0&showTitle=false&size=80411&status=error&style=none&taskId=ua211df96-b1d3-485b-b28d-af79e7368cd&title=&width=886.4" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666406387020-d8955905-065f-43ce-a217-8b2b4e7da3c4.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=173&id=ub6a139c7&margin=%5Bobject%20Object%5D&name=image.png&originHeight=216&originWidth=954&originalType=binary&ratio=1&rotation=0&showTitle=false&size=47551&status=error&style=none&taskId=ufbdab089-c755-4965-a67c-b1f72b6d32c&title=&width=763.2" alt="image.png"><br><strong>选择原则</strong></p>
+<ul>
+<li>尽量早的执行filter</li>
+<li>对谓词进行重新排序，DBMS应用最具有选择性的 （？？？）</li>
+<li>将复杂的谓词进行拆分，然后下推<img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666409875526-3acddb72-dac2-4cc0-99e4-780697ff4ac3.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=34&id=u0a310698&margin=%5Bobject%20Object%5D&name=image.png&originHeight=42&originWidth=422&originalType=binary&ratio=1&rotation=0&showTitle=false&size=15224&status=error&style=none&taskId=u964c3423-846d-42c0-a716-b1bfa191622&title=&width=337.6" alt="image.png"></li>
+</ul>
+<p>例：<code>X = Y AND Y = 3</code>-&gt;<code>X = 3 AND Y = 3</code></p>
+<ul>
+<li>X &#x3D; Y AND Y &#x3D; 3：先进行 X &#x3D; Y的join，然后再使用Y &#x3D; 3 进行过滤</li>
+<li>X &#x3D; 3 AND Y &#x3D; 3: 先分别对X Y进行过滤，之后再进行join</li>
+</ul>
+<p><strong>映射下推</strong><br>将最终的映射结果向下下推到student表上，来减少student向上传递的TupleDesc,以减少内存消耗<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666406817583-3501dbe2-0749-435a-9c4e-8b2601d1090f.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=398&id=ua059d1a3&margin=%5Bobject%20Object%5D&name=image.png&originHeight=497&originWidth=1072&originalType=binary&ratio=1&rotation=0&showTitle=false&size=85112&status=error&style=none&taskId=u6cf8317f-f8c9-451e-90c4-7a31d1e74a0&title=&width=857.6" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666407264496-e3be01da-2782-478c-a5a6-60047d852e03.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=149&id=u5e6cf390&margin=%5Bobject%20Object%5D&name=image.png&originHeight=186&originWidth=818&originalType=binary&ratio=1&rotation=0&showTitle=false&size=34511&status=error&style=none&taskId=udfe2d9b0-7657-4144-bfc9-5a22b98a7f8&title=&width=654.4" alt="image.png"></p>
+<ul>
+<li>false 直接返回</li>
+<li>true直接优化为<code>select * from A</code>，每次不再进行条件判断</li>
+</ul>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666407313009-b9a02b85-501a-4dad-bfb5-ddfe5dd5e044.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=135&id=u4e21fea0&margin=%5Bobject%20Object%5D&name=image.png&originHeight=169&originWidth=657&originalType=binary&ratio=1&rotation=0&showTitle=false&size=31656&status=error&style=none&taskId=ue39d3b0c-6413-4db7-8e7e-a60f8b260d8&title=&width=525.6" alt="image.png"><br>对A自身进行join 并且为一个恒等式，直接优化为<code>select * from A</code></p>
+<h3 id="开销评估"><a href="#开销评估" class="headerlink" title="开销评估"></a>开销评估</h3><p>通过开销模型来进行评估，并不去真正的执行<br>还有一种方式是开启多个线程按照不同的方式去查询，看哪个结果先回来：MongoDB<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666408595519-9b9d36f9-1f5c-45b3-a11e-122530845ba0.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=297&id=u9fe2ee2f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=371&originWidth=694&originalType=binary&ratio=1&rotation=0&showTitle=false&size=129093&status=error&style=none&taskId=u088c663b-9a99-4854-9ecd-8e36e90f1e9&title=&width=555.2" alt="image.png"><br><strong>统计模型</strong><br>存放表的元数据<br>DBMS存放关于一张表的一些统计数据或者元数据在目录当中，如属性，索引等<br>执行整张表的10% 或者20 %，来统计出整张表的情况</p>
+<p>一张表的统计模型主要存储：</p>
+<ul>
+<li>tuple的数量 N</li>
+<li>属性A的不同值的数量	V(A,R)</li>
+</ul>
+<p>选择基数(selection cardinality SC)： N&#x2F;V(A,R) 可以统计出每个属性出现的次数，但是前提假设是每个属性出现的次数相同，但是这并不符合实际，比如说一个表存放学校的学生，要计算每个学院的人数，则使用总人数&#x2F;学院数量，但是每个学院的人数显不会相等，因此会带来一定的误差<br><strong>selectivity</strong>：tuple中符合谓词P的比例</p>
+<h4 id="selectivity的计算"><a href="#selectivity的计算" class="headerlink" title="selectivity的计算"></a><strong>selectivity的计算</strong></h4><p>对于查询操作的谓词，主要涉及到以下几种：</p>
+<ul>
+<li>等值</li>
+<li>范围</li>
+<li>否定</li>
+<li>交集</li>
+<li>并集</li>
+</ul>
+<p>各种谓词的计算按照离散数学中的集合运算即可<br>直接使用sc&#x2F;N即可得到匹配到该属性的比例<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666423989215-f2ac9bcd-3ae5-4f80-acf4-a04be242cbfe.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=367&id=u99c269c6&margin=%5Bobject%20Object%5D&name=image.png&originHeight=459&originWidth=944&originalType=binary&ratio=1&rotation=0&showTitle=false&size=157018&status=error&style=none&taskId=ub35f0847-2a00-4b72-8d7c-ebf0649bc18&title=&width=755.2" alt="image.png"><br>计算公式为匹配上的范围&#x2F;总范围<br>下图正常的计算结果是3&#x2F;5但是根据公式为1&#x2F;2<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666424032348-bbbac5c8-02a4-495b-927e-47a6f1744a4e.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=350&id=u0c39e202&margin=%5Bobject%20Object%5D&name=image.png&originHeight=437&originWidth=996&originalType=binary&ratio=1&rotation=0&showTitle=false&size=122242&status=error&style=none&taskId=u3592cf15-caa4-4965-8a92-0b44317e615&title=&width=796.8" alt="image.png"><br>等值查询的情况取反即可<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666424219490-6d57107f-32b5-4658-8349-214ebafd04fe.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=320&id=ud01876d4&margin=%5Bobject%20Object%5D&name=image.png&originHeight=400&originWidth=962&originalType=binary&ratio=1&rotation=0&showTitle=false&size=122563&status=error&style=none&taskId=u48c4bd9c-5b1a-4094-9c7d-ca80a38e647&title=&width=769.6" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666430048489-3417b7eb-17fb-4939-aa73-96ea981704aa.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=278&id=u914e2853&margin=%5Bobject%20Object%5D&name=image.png&originHeight=347&originWidth=944&originalType=binary&ratio=1&rotation=0&showTitle=false&size=118939&status=error&style=none&taskId=u8fd78567-091f-4041-af8a-ca328f4e27f&title=&width=755.2" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666424331317-ebc0e193-6955-4971-89b1-cdec2089af88.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=302&id=u827a7438&margin=%5Bobject%20Object%5D&name=image.png&originHeight=377&originWidth=982&originalType=binary&ratio=1&rotation=0&showTitle=false&size=147323&status=error&style=none&taskId=u1e9d1f43-b326-4cc8-884c-a5a2a8bad25&title=&width=785.6" alt="image.png"><br><strong>假设</strong><br>为简化计算过程，对于selectivity的计算遵循以下三条假设</p>
+<ul>
+<li>数据均匀分发，每个属性的不同值的出现次数均一样，直接通过tuple总数&#x2F;属性不同值的数量即可</li>
+<li>谓词之间独立，类似概率论上的服从独立分布</li>
+<li>包含性准则：join中重叠的key在 内表和外表上均存在</li>
+</ul>
+<p><strong>相关属性</strong><br>各个属性直接并非简单的多对多的关系，可能为一对多或者一对一的关系，容易model &#x3D; accord的车只有honda这个厂商才会生产，其他的厂商都不会生产，此时便是一个一对多的关系<br><strong>在概率上可以说二者不服从独立分布</strong><br>此时便会产生一个较大的误差，如果告知数据库属性之间存在相关关系，即可纠正这个问题<br>例：<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666424580124-be84bce2-0718-419e-9eac-112e1a8ec6af.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=294&id=u48de3016&margin=%5Bobject%20Object%5D&name=image.png&originHeight=367&originWidth=711&originalType=binary&ratio=1&rotation=0&showTitle=false&size=126291&status=error&style=none&taskId=u36a8cc45-67eb-4cc8-b18c-41f604af61e&title=&width=568.8" alt="image.png"></p>
+<h4 id="模型的存储"><a href="#模型的存储" class="headerlink" title="模型的存储"></a>模型的存储</h4><p>既然上述采用均匀分布的估计模型存在种种问题导致最终的计算结果难以达到预期，因此则需要一个更加精准的模型来存储数据表的真实情况<br>如果使用hashtable来准确统计属性的每个值的出现的次数，在数据量大时开销会很大，不太现实，因此需要一种近似存储的折中方案：区间取值</p>
+<ul>
+<li>区间范围固定，一个范围内的作为一个hash bucket</li>
+</ul>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666425144707-4cceadbc-9de9-4a37-97b7-609d1c302a41.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=246&id=uef171836&margin=%5Bobject%20Object%5D&name=image.png&originHeight=308&originWidth=756&originalType=binary&ratio=1&rotation=0&showTitle=false&size=81218&status=error&style=none&taskId=ua06c28b2-6153-43ea-b615-2a5c2077044&title=&width=604.8" alt="image.png"></p>
+<ul>
+<li>hash bucket数值数量一定，将所有的值均匀到每个区间当中，·</li>
+</ul>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666431428435-1989aa59-3d90-45c3-a585-498e3ef07790.png#clientId=ue447a438-66f8-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=215&id=ubf80b98f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=269&originWidth=664&originalType=binary&ratio=1&rotation=0&showTitle=false&size=67358&status=error&style=none&taskId=u3c27eacb-fb2a-4b2c-a9bb-0f1d3a41770&title=&width=531.2" alt="image.png"></p>
+<h4 id="Sampling"><a href="#Sampling" class="headerlink" title="Sampling"></a>Sampling</h4><p>取一份小的样本，通过在小的样本上执行来推测整个表的情况<br>直方图HashTable记录的方法和去样本的方法并不冲突，二者可以同时设定好，在执行时在进行二者的二选一，如果一个执行长达数十秒，则执行一下样本所带来的代价可以忽略不计，<br>而如果一个查询本身不会耗费太多的时间，那么使用直方图记录的数据能够得到更好的结果</p>
+<h4 id="执行策略的选择"><a href="#执行策略的选择" class="headerlink" title="执行策略的选择"></a>执行策略的选择</h4><p><strong>单表查询</strong><br>通常只涉及到索引的选择问题<br><strong>join</strong><br>使用left-deep join tree的好处时可以直接使用迭代器模型进行计算，使用bushy tree时需要等待两边的join结果一同完成，将CD ABjoin的结果写道磁盘的临时文件上<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666426610370-f741d7ff-a339-477f-bf4a-c4b700ef8215.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=270&id=u231ab270&margin=%5Bobject%20Object%5D&name=image.png&originHeight=337&originWidth=891&originalType=binary&ratio=1&rotation=0&showTitle=false&size=84577&status=error&style=none&taskId=u7e83ffa2-c59c-44bd-be9d-3562d6fca86&title=&width=712.8" alt="image.png"><br>评估方向：</p>
+<ul>
+<li>join执行的顺序</li>
+<li>每个操作符的具体计划或者实现算法</li>
+<li>table表中数据的获取方式（遍历或者走索引）</li>
+</ul>
+<p><strong>动态编程</strong><br>计算不同连接方式和不同的join算法，保留最低的cost</p>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> R<span class="token punctuation">,</span>S<span class="token punctuation">,</span>T 
+	<span class="token keyword">where</span> R<span class="token punctuation">.</span>a <span class="token operator">=</span> S<span class="token punctuation">.</span>a
+		<span class="token operator">AND</span> S<span class="token punctuation">.</span>b <span class="token operator">=</span> T<span class="token punctuation">.</span>b<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>先评估每一步中的join顺序和join算法的代价，保留下当前这一次的最低代价<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427064895-4eb59675-3246-44be-b5da-324f58cc2647.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=354&id=u77d6692b&margin=%5Bobject%20Object%5D&name=image.png&originHeight=442&originWidth=406&originalType=binary&ratio=1&rotation=0&showTitle=false&size=72710&status=error&style=none&taskId=ub304a58f-f6a2-43be-9bd6-716d10ab986&title=&width=324.8" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427112889-ed3843ac-9ba8-40fb-a73a-6e288a40e145.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=346&id=uf7ce9a13&margin=%5Bobject%20Object%5D&name=image.png&originHeight=433&originWidth=985&originalType=binary&ratio=1&rotation=0&showTitle=false&size=169608&status=error&style=none&taskId=ufd165e61-9e89-4f55-a694-7b477b5ddc3&title=&width=788" alt="image.png"><br>最终保留：<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427138982-2af8847e-e430-430d-80ca-dc43d7403e44.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=388&id=u25c9449a&margin=%5Bobject%20Object%5D&name=image.png&originHeight=485&originWidth=1037&originalType=binary&ratio=1&rotation=0&showTitle=false&size=116731&status=error&style=none&taskId=ue971dd80-0516-46fa-af31-30296728098&title=&width=829.6" alt="image.png"></p>
+<p>先去除掉非join的 产生笛卡尔积的情况之前去除<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427525547-7facbb2d-1ac8-4337-bc31-b38069652088.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=322&id=u6846c8f4&margin=%5Bobject%20Object%5D&name=image.png&originHeight=403&originWidth=851&originalType=binary&ratio=1&rotation=0&showTitle=false&size=129242&status=error&style=none&taskId=u74c383da-9b4c-4be6-b13d-5c00409756a&title=&width=680.8" alt="image.png"><br>在一种join顺序内判断该不同算法的开销<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427554348-d4969d6a-2542-496f-a1b9-02b094c3648e.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=314&id=ub4b2ff2b&margin=%5Bobject%20Object%5D&name=image.png&originHeight=393&originWidth=698&originalType=binary&ratio=1&rotation=0&showTitle=false&size=79357&status=error&style=none&taskId=u23a7f024-d688-41ed-b7e8-79df2005e00&title=&width=558.4" alt="image.png"><br>最后确定所有join算法的tuple的获取方式<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427596340-dbbbee46-cc41-4d22-9b35-743e663a58d7.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=303&id=u3590aabc&margin=%5Bobject%20Object%5D&name=image.png&originHeight=379&originWidth=648&originalType=binary&ratio=1&rotation=0&showTitle=false&size=75536&status=error&style=none&taskId=ud201df50-fd6b-4c51-aa8c-055fb022e9d&title=&width=518.4" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427802447-4f3aec19-5aee-469e-8c24-04e2e4b7a1ff.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=266&id=uceaf2f4a&margin=%5Bobject%20Object%5D&name=image.png&originHeight=333&originWidth=707&originalType=binary&ratio=1&rotation=0&showTitle=false&size=121962&status=error&style=none&taskId=u6056b43a-fb82-4ed7-a46d-22531dbc166&title=&width=565.6" alt="image.png"><br><strong>Postgre优化器</strong><br>Postgre在小于12次join前使用传统算法，大于12个表进行join时则遗传算法来解决问题<br><a target="_blank" rel="noopener" href="https://www.yuque.com/docs/share/fa50f100-8ab9-4139-995e-bc988001f939?view=doc_embed">遗传算法</a></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666427900183-1b4150b0-70c9-4c6d-abe7-7da061f8e0eb.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=458&id=u8ec14927&margin=%5Bobject%20Object%5D&name=image.png&originHeight=573&originWidth=933&originalType=binary&ratio=1&rotation=0&showTitle=false&size=233809&status=error&style=none&taskId=u630c7994-23f9-4ab3-a891-d7662fd8321&title=&width=746.4" alt="image.png"></p>
+<p><strong>嵌套子查询</strong><br>DBMS将嵌套的子查询视为一个函数，比如在下面这个sql，遍历saliors表的每个tuple时调用一个子查询这个函数，对子查询的结果做判断</p>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">SELECT</span> name <span class="token keyword">FROM</span> sailors <span class="token keyword">AS</span> S
+	<span class="token keyword">WHERE</span> <span class="token keyword">EXISTS</span> <span class="token punctuation">(</span>
+    <span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> reserves <span class="token keyword">AS</span> R
+      <span class="token keyword">WHERE</span> S<span class="token punctuation">.</span>sid <span class="token operator">=</span> R<span class="token punctuation">.</span>sid
+        <span class="token operator">AND</span> R<span class="token punctuation">.</span><span class="token keyword">day</span> <span class="token operator">=</span> <span class="token string">'2018-10-15'</span>
+    <span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>多次调用子查询开销较高，统一一下两种方式进行优化</p>
+<ul>
+<li>去关联 扁平化</li>
+<li>分解子查询，存储在临时表当中</li>
+</ul>
+<p>重写去关联，变为普通的join<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666428925091-eafaab5c-023a-41bc-8ddb-d4f1a66e2639.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=318&id=u69d86451&margin=%5Bobject%20Object%5D&name=image.png&originHeight=397&originWidth=597&originalType=binary&ratio=1&rotation=0&showTitle=false&size=90808&status=error&style=none&taskId=uacff38e5-fff0-4d03-8bbc-27aefce1d9b&title=&width=477.6" alt="image.png"><br>单独查询出来进行存储，不用每次where的时候都进行一次子查询<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666429039280-ed5e152e-8c0c-423a-ab62-4c27e38c5774.png#clientId=uf2f64665-def6-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=319&id=ue96648fe&margin=%5Bobject%20Object%5D&name=image.png&originHeight=399&originWidth=713&originalType=binary&ratio=1&rotation=0&showTitle=false&size=122165&status=error&style=none&taskId=ue67e12f9-7a2a-46ab-8d7d-7b5d728afeb&title=&width=570.4" alt="image.png"></p>
+<h2 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h2><p>事务：DBMS中更改的单元，ACID<br><strong>最低级的并发控制</strong></p>
+<ul>
+<li>执行到达时使用队列来进行存储，执行时每次从队列中取出一个执行，在并发度上完全串行化，可以说是不支持并发</li>
+<li>在执行新的写入操作时，进行全复制，将当前所有的数据复制一份，在复制的上面进行写入，如果写入成功后，将指针指向复制内容，作为持久化的内容</li>
+<li>开销太大，没人会实际去应用</li>
+</ul>
+<p>如果进行并发（任意的交叉）操作则会导致：</p>
+<ul>
+<li>暂时的不一致性</li>
+<li>永久不一致性</li>
+<li>暂时性的不一致性时无法避免但是可接受</li>
+</ul>
+<p><strong>事务</strong><br>特性：ACID</p>
+<ul>
+<li>Atomicity：原子性</li>
+<li>Consistency：一致性</li>
+<li>Isolation：</li>
+<li>Durability：</li>
+</ul>
+<h3 id="持久性"><a href="#持久性" class="headerlink" title="持久性"></a>持久性</h3><p><strong>日志</strong></p>
+<ul>
+<li>DBMS的通过日志记录下来所有的操作，因此可以撤销掉终止的事务操作</li>
+<li>会将撤掉记录在内存和磁盘中均做记录</li>
+<li>将其视为飞机的黑匣子，记录下来都进行过什么操作</li>
+</ul>
+<p>几乎所有的DBMS都有了日志系统，带来了一些两个好处：</p>
+<ul>
+<li>审计追踪</li>
+<li>节省时间，直接写入到硬盘上需要进行随机写入，找到原本的位置然后进行写入，写日志通常采用顺序写入，即在原本的基础上进行追加写入，速度更快（参考粉板的例子）</li>
+</ul>
+<p><strong>Shadow Paging</strong><br>和全复制的原理相似，只不过只复制一页，在新的页上进行操作，事务提交后将指针指向新的页，令其对其他事务可见<br>性能存在问题，较慢 ，也几乎没有DBMS在使用</p>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><p>数据库尝试对现实世界进行建模并且遵循完整的约束，所谓一致性是数据库处理前后结果应与其所抽象的客观世界中真实状况保持一致。这种一致性是一种需要管理员去定义的规则。管理员如何指定规则，数据库就严格按照这种规则去处理数据。<br>比如通过DB来模拟一个银行系统来完成交易的管理，在进行转账时，如果转帐前A和B账户总计5000元，那么转账后的总计依旧为5000元，此时便称为符合一致性。或者说如果要插入一个年龄为负数的用户，会给予对应的提示让其无法插入<br>一致性分为数据库一致性和事务一致性</p>
+<ul>
+<li>数据库一致性：数据库一致性意味着，如果我在过去做了一次更改，只要没人覆盖掉我的更改，那么未来任何时刻都应当能读取到我这次的更改</li>
+<li>事务一致性：我们无法通过DBMS来保证事务的一致性，需要应用程序给予对应的逻辑，比如我给定一个规则是A账户-100，B账户+100，那么DBMS即按照这个规则进行操作，并且保证逻辑上不出现错误</li>
+</ul>
+<h3 id="隔离性"><a href="#隔离性" class="headerlink" title="隔离性"></a>隔离性</h3><p>多个用户提交多个事务，每个事务都各自运行，互相不存在干扰。<br>但是DB通过交叉执行各个事务来达到并发的效果，因此我们需要通过一种方式来协调各个事务，保证各个事务在时序上交叉执行，但是在逻辑上又独立运行互不干扰<br><strong>并发控制协议</strong><br>并发控制协议是DBMS如何决定在多事务时的正确交叉执行<br>存在两种协议：</p>
+<ul>
+<li>悲观锁：悲观锁：对于同一个数据的并发操作，悲观锁认为自己在使用数据的时候一定有别的线程来修改数据，因此在获取数据的时候会先加锁，确保数据不会被别的线程修改。Java中，synchronized关键字和Lock的实现类都是悲观锁。而在MySQL当中，排他锁即为悲观锁</li>
+<li>乐观锁：乐观锁认为自己在使用数据时不会有别的线程修改数据，假设并发冲突很罕见，所以不会添加锁，只是在更新数据的时候去判断之前有没有别的线程更新了这个数据（具体方法可以使用版本号机制和CAS算法）。如果这个数据没有被更新，当前线程将自己修改的数据成功写入。如果数据已经被其他线程更新，则根据不同的实现方式执行不同的操作：重试或者报异常。</li>
+</ul>
+<p>悲观锁为实际的锁，而乐观锁为通过协调来保证不会出现冲突，如果出现冲突再尝试解决</p>
+<blockquote>
+<p>例：假设有两个账户A和B，分别有1000元，现在A要向B转账100元，但存储时会有0.06的利息，一个事务T1负责进行转账，另外一个事务T2负责进行利息的计算。此时这两个事务同时创建，那么最终的执行结果如何？</p>
+</blockquote>
+<p>目前存在的问题是无法保证T1 T2的执行顺序，根据 T1  T2的执行顺序不同，可以得到以下两种结果：<br>但T1 T2的执行顺序我们并不会做强制要求，不去要求如果T1先执行，则T1一定要先commit，这被称为外部一致性，外部一致性问题在lock base或mvcc实现的单机数据库中并不存在，而在分布式事务中比较常见的<br>对于单机数据库来说，我们只需要其保证内部一致性即可，即转账+利息操作后的总金额为2120即可。即以下的两种执行顺序得到的结果都可以认为是正确的。<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666917801486-726a05ec-cfa0-463e-8395-9bf51483e7ef.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=332&id=u6cf349a1&margin=%5Bobject%20Object%5D&name=image.png&originHeight=415&originWidth=809&originalType=binary&ratio=1&rotation=0&showTitle=false&size=113541&status=error&style=none&taskId=ud14b6eed-1eca-436b-bb04-5646920debb&title=&width=647.2" alt="image.png"><br>但目前状态为其依旧是串行化的，并没有涉及到并发。需要通过最大化的并发来解决磁盘或者网络IO较慢的问题，并且充分利用多核CPU<br>当一个事务由于资源而被延缓或阻塞时（例如page fault等），其他的事务可以继续执行<br>以下为合理并发，产生的结果和右图的串行执行的结果都可以符合一致性<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666918260084-fb56481f-2a37-4a06-a3b4-ebcfaa1a5ffe.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=378&id=u867a6f40&margin=%5Bobject%20Object%5D&name=image.png&originHeight=472&originWidth=772&originalType=binary&ratio=1&rotation=0&showTitle=false&size=135237&status=error&style=none&taskId=u40cf4900-ccfa-4b76-8f30-ae65ab88dc5&title=&width=617.6" alt="image.png"><br>下图中T1 T2的写操作相互干扰，A，B应当在同一状态下进行利息的计算<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666918313320-95a07b47-b4d0-4fe4-badf-484b876cfb83.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=0.8512&crop=1&errorMessage=unknown%20error&from=paste&height=167&id=u9243808c&margin=%5Bobject%20Object%5D&name=image.png&originHeight=442&originWidth=882&originalType=binary&ratio=1&rotation=0&showTitle=false&size=128874&status=error&style=none&taskId=u3b195146-2053-4a15-a95d-ef41524c5db&title=&width=333" alt="image.png"><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666918515867-61a72347-1a6e-4a57-8357-72dc7a2e3106.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=196&id=u94eba904&margin=%5Bobject%20Object%5D&name=image.png&originHeight=427&originWidth=729&originalType=binary&ratio=1&rotation=0&showTitle=false&size=169313&status=error&style=none&taskId=ucd157a31-c548-46c1-8262-a26a07c2ba0&title=&width=335.20001220703125" alt="image.png"></p>
+<h3 id="调度"><a href="#调度" class="headerlink" title="调度"></a>调度</h3><p>串行调度：各个事务之间的串行化执行<br>等效调度：如果两种调度方式执行产生的最终结果一直，则可以认为两种调度方式的结果为一致的<br>序列化调度：如果一个调度方式可以等效于一些事务串行执行，则可以称为可序列化的调度<br>如果每个事务都能够保证一致性，则每个串行化调度可以保证一致性<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666918795887-4be09ae0-650d-4f9d-899a-bfa076b1ff51.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=201&id=u19e9e633&margin=%5Bobject%20Object%5D&name=image.png&originHeight=251&originWidth=790&originalType=binary&ratio=1&rotation=0&showTitle=false&size=101889&status=error&style=none&taskId=u24906e36-5804-4ea4-8f87-ee97c088d65&title=&width=632" alt="image.png"><br>并行冲突：</p>
+<ul>
+<li>Read-Write</li>
+<li>Write-Read</li>
+<li>Write-Write</li>
+</ul>
+<p>左图为不可重复读，即在一次事务中所读取出来的两个值的结果不一致。隔离级别对应MySQL中的读未提交，即事务未提交时做出的变更其他事务就能看到<br>右图出现脏读问题，T2读取的值为T1修改的，但是T1事务本身已经被回滚掉了，T2读取的值与硬盘中的值不一致<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666918909652-479b1133-3bca-4232-92a6-8c98c6a778fb.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=240&id=u60988780&margin=%5Bobject%20Object%5D&name=image.png&originHeight=501&originWidth=648&originalType=binary&ratio=1&rotation=0&showTitle=false&size=95709&status=error&style=none&taskId=ub628dcb3-769a-44f3-964b-799cad26d91&title=&width=310.3999938964844" alt="image.png"><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666918983581-082163ab-2023-4305-9f0d-c3a0b7d5bc18.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=232&id=u222a13eb&margin=%5Bobject%20Object%5D&name=image.png&originHeight=376&originWidth=651&originalType=binary&ratio=1&rotation=0&showTitle=false&size=94092&status=error&style=none&taskId=u7031f1c8-4432-414d-b70e-5b055eb7f8a&title=&width=401.79998779296875" alt="image.png"><br>一个tuple的内容被两个事务各修改一部分，最终得到的为一个混合结果。对此在MySQL中存在一个解决方案为当前读，即进行写操作时先进行读取，获取到最新的结果，在最新的结果的基础上进行写操作<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666919060178-9aaa9f7a-5fdf-47fe-affb-6cb5d49791f2.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=306&id=ufe29c0bd&margin=%5Bobject%20Object%5D&name=image.png&originHeight=383&originWidth=706&originalType=binary&ratio=1&rotation=0&showTitle=false&size=89270&status=error&style=none&taskId=ue7224dd1-87a2-401c-be20-9f48b1aeb44&title=&width=564.8" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666919119526-e5a4512e-333d-477f-9ae6-a88f045c5093.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=286&id=u762f5bcd&margin=%5Bobject%20Object%5D&name=image.png&originHeight=357&originWidth=840&originalType=binary&ratio=1&rotation=0&showTitle=false&size=158731&status=error&style=none&taskId=uf3036706-e467-4605-a918-f66d414892b&title=&width=672" alt="image.png"><br><strong>冲突等效</strong>：（概念有点模糊）<br>两个调度方式在相同的事务当中涉及相同的操作，并且每对冲突以相同的方式排序<br>下图中：</p>
+<ul>
+<li>写A和读B不存在冲突，因此可以进行顺序调换，先进行读B再进行写A</li>
+<li>读B和读A不冲突，调换</li>
+<li>写B和读A写B不存在冲突，调换</li>
+<li>最后将commit提前，得到等效出来的串行化执行结果</li>
+</ul>
+<p><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922157471-ead563ba-5048-41a6-88ff-3cf6d156efe4.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=295&id=u884d1a03&margin=%5Bobject%20Object%5D&name=image.png&originHeight=369&originWidth=289&originalType=binary&ratio=1&rotation=0&showTitle=false&size=49248&status=error&style=none&taskId=u2f2a56fc-914e-4343-a685-f631db0b322&title=&width=231.2" alt="image.png"><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922106791-2176ce8c-78ac-4aa0-83d0-845fedbf2808.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=297&id=ueb451ed9&margin=%5Bobject%20Object%5D&name=image.png&originHeight=375&originWidth=295&originalType=binary&ratio=1&rotation=0&showTitle=false&size=46355&status=error&style=none&taskId=ue855b12a-5c8a-4b55-8c31-593062f8a8b&title=&width=234" alt="image.png"><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922129113-c82e4b9e-764f-46bc-b4bd-d611ffa6352a.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=291&id=u59b13d6a&margin=%5Bobject%20Object%5D&name=image.png&originHeight=364&originWidth=287&originalType=binary&ratio=1&rotation=0&showTitle=false&size=45703&status=error&style=none&taskId=ue70269b5-1567-44c3-bb6c-2272bc676be&title=&width=229.6" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922404492-36c60c9c-bba1-47e8-a046-e8c8a681e2d6.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=318&id=u1125dfc3&margin=%5Bobject%20Object%5D&name=image.png&originHeight=397&originWidth=718&originalType=binary&ratio=1&rotation=0&showTitle=false&size=108716&status=error&style=none&taskId=u2962c892-ab6c-4ee2-be7d-b282dbe2749&title=&width=574.4" alt="image.png"><br>下图的调换写A的顺序则会影响最的结果，因此不能调换<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922417381-f71c2f1d-3966-4bbf-a7d3-88ca83243984.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=316&id=u8b14d4d0&margin=%5Bobject%20Object%5D&name=image.png&originHeight=395&originWidth=710&originalType=binary&ratio=1&rotation=0&showTitle=false&size=103387&status=error&style=none&taskId=u48ed5f42-e65e-471e-81f0-82bd59ae88b&title=&width=568" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922514361-509e59e3-fef7-4783-b52e-670c5a696aad.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=283&id=ud76fba87&margin=%5Bobject%20Object%5D&name=image.png&originHeight=354&originWidth=874&originalType=binary&ratio=1&rotation=0&showTitle=false&size=149686&status=error&style=none&taskId=u3524b2c9-90c0-4165-84ca-f568d8da762&title=&width=699.2" alt="image.png"><br>判断冲突：</p>
+<ul>
+<li>每个事务作为一个节点</li>
+<li>不同事务的两个操作如果出现冲突则存在一条边，由出现较早的指向出现较晚的</li>
+</ul>
+<p>如果关系图上面出现了循环，则证明存在冲突，无法序列化<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922576991-77261c32-7274-4030-b9d0-4ea15fc2dde6.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=349&id=u3408635f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=436&originWidth=890&originalType=binary&ratio=1&rotation=0&showTitle=false&size=186905&status=error&style=none&taskId=u0dc48fff-f445-451d-acfb-7d845b57135&title=&width=712" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922653335-f7c8fa0a-b149-4b2d-bd20-7d139431725f.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=334&id=u13c1953d&margin=%5Bobject%20Object%5D&name=image.png&originHeight=417&originWidth=916&originalType=binary&ratio=1&rotation=0&showTitle=false&size=180269&status=error&style=none&taskId=u2ccc165a-ca42-43e3-8fb8-580d0384def&title=&width=732.8" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922928830-7cd1f762-0a75-426c-968b-74d8097d9fcf.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=363&id=ucc04d6f4&margin=%5Bobject%20Object%5D&name=image.png&originHeight=454&originWidth=877&originalType=binary&ratio=1&rotation=0&showTitle=false&size=210255&status=error&style=none&taskId=ucafc3be1-e376-4cab-a9ec-5ed3a198319&title=&width=701.6" alt="image.png"><br>视图可序列化性<br>一下三个写操作最终的结果实际上只由T3的写操作决定，因此可以做一下的序列化等效：<br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666956095165-12f57d6b-cb2f-41b5-9eb4-8aa440367d65.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=207&id=u211c0a4b&margin=%5Bobject%20Object%5D&name=image.png&originHeight=452&originWidth=1016&originalType=binary&ratio=1&rotation=0&showTitle=false&size=84544&status=error&style=none&taskId=u58747e8e-c5e5-4c66-9f36-6bd75947572&title=&width=466" alt="image.png"><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666956179884-17d4d943-afa3-4644-a632-c7d46c2a4cf4.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=205&id=u84b15239&margin=%5Bobject%20Object%5D&name=image.png&originHeight=471&originWidth=481&originalType=binary&ratio=1&rotation=0&showTitle=false&size=48805&status=error&style=none&taskId=uc8b3a8d5-07bc-4073-95a5-ca844888215&title=&width=209.8000030517578" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666956225224-582f8b9a-d346-438d-855c-b856f2b655de.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=315&id=u118af1c9&margin=%5Bobject%20Object%5D&name=image.png&originHeight=460&originWidth=987&originalType=binary&ratio=1&rotation=0&showTitle=false&size=63827&status=error&style=none&taskId=ucb1b3578-4265-4711-b317-240361638e8&title=&width=676" alt="image.png"><br><img src="https://cdn.nlark.com/yuque/0/2022/png/23002745/1666922946665-5599d918-b665-4375-82c5-a97b7423ced8.png#clientId=u1583364f-96f5-4&crop=0&crop=0&crop=1&crop=1&errorMessage=unknown%20error&from=paste&height=330&id=u625394b3&margin=%5Bobject%20Object%5D&name=image.png&originHeight=413&originWidth=745&originalType=binary&ratio=1&rotation=0&showTitle=false&size=158067&status=error&style=none&taskId=u7167f554-653f-43ff-84f3-1fca7ffa268&title=&width=596" alt="image.png"></p>
+<h2 id="两阶段锁协议"><a href="#两阶段锁协议" class="headerlink" title="两阶段锁协议"></a>两阶段锁协议</h2><p>首先先讨论最简单的模型，即最基本的悲观锁形式，不区分锁的种类，即在需要读或者写时都申请锁，如果拿不到锁的权限则等待，一次并发读写的流程如下：</p>
+<p><img src="/assets/image-20221105215030-3l33fjy.png" alt="image">​</p>
+<p>在之前的课程中也提到过锁与锁存器的区别，主要可以通过一下的表格来概述二者的区别</p>
+<p>锁的概念更加属于数据库的抽象逻辑层面的，意在保护数据库的逻辑结构 ，如tuple或者 表等</p>
+<p>锁存器意在保护数据库的物理结构 如真实的数据结构等，如使用锁存器来解决一个B+树的并发问题，所讨论的就是使用锁存器来对那个树的节点来进行加锁保护。</p>
+<p>本节课主要讨论的是锁，即数据库的逻辑层面</p>
+<p><img src="/assets/image-20221105215042-3c7r5yf.png" alt="image">​</p>
+<p>锁的种类，简单来说有以下两种，后续再进行扩展</p>
+<ul>
+<li>共享锁（读锁）shared locks for reads <strong>S-LOCK</strong></li>
+<li>排他锁（写锁） Exclusive locks for writes <strong>X-LOCK</strong></li>
+</ul>
+<p>数据库通过Lock Manager来进行对锁的控制，维护一个 internal lock-table来记录目前锁的申请和获取 等待情况，从而控制并发：</p>
+<ul>
+<li>事务来申请一个锁</li>
+<li>Lock Manager判断后授予一个锁或者令该事务阻塞等待</li>
+<li>事务最后释放锁</li>
+</ul>
+<p>通过区分了锁的种类之后，由于S-LOCK 与S-LOCK之间并不冲突，因此提升了一定的并发度，加上锁的种类之后，一次并发流程如下图</p>
+<p>但是下图中在引入了锁的种类之后又出现新的问题，即T1事务的不可重复读问题，在T1执行过程中进行了两次获取-释放锁，在T1事务第一次释放锁之后T2进行了一次写，导致T1事务第二次获取S-LOCK进行读取时的两次读的结果不一致，又称为不可重复读</p>
+<p>为了解决此问题，引入了两阶段锁协议</p>
+<p><img src="/assets/image-20221105215106-ka5gtjf.png" alt="image">​</p>
+<h3 id="两阶段锁协议-1"><a href="#两阶段锁协议-1" class="headerlink" title="两阶段锁协议"></a>两阶段锁协议</h3><p>顾名思义分为两个阶段：Growing和Shrinking</p>
+<ul>
+<li>在Growing阶段中，每个事务按照自己的需要来从lock manager那里去获取锁，Lock Manager也根据锁的冲突原则来赋予或拒绝锁</li>
+<li>在Shrinking阶段中，事务只被允许去释放之前所获取的锁，无法再去申请新的锁</li>
+</ul>
+<p><img src="/assets/image-20221105215122-buoxuzo.png" alt="image">​</p>
+<p>遵守两阶段锁协议之后，在一次事务的执行过程中，不会存在多个获取-释放的动作，获取和释放的过程被严格分于两个阶段当中，在遵循两阶段锁协议后，上一个例子的执行流程如下：解决了不可重复读的问题</p>
+<p><img src="/assets/image-20221105215154-989q7gn.png" alt="image">​</p>
+<h3 id="级联中止（Cascading-Aborts）"><a href="#级联中止（Cascading-Aborts）" class="headerlink" title="级联中止（Cascading Aborts）"></a>级联中止（Cascading Aborts）</h3><p>使用两阶段锁协议在协调冲突可序列化时很有效，但是又引入了新的问题，即级联终止</p>
+<p>在下图中，T2锁读取的是T1写之后的数据，但是如果T1进行了回滚，放弃掉整个事务，则磁盘和内存中的数据应当还是原本没被T1修改过的值，但是T2读取到的是T1修改过的值，因此T1的终止导致T2发生了<strong>脏读</strong>，因此T2也应被终止，形成了级联终止T1终止导致T2读取了不存在于存储中的数据，因此T2也被回滚</p>
+<p><img src="/assets/image-20221105215211-2r3dyo6.png" alt="image">​</p>
+<p>除此之外，两阶段锁协议还会导致死锁的问题，后续再进行讨论</p>
+<h3 id="强限制两阶段锁"><a href="#强限制两阶段锁" class="headerlink" title="强限制两阶段锁"></a>强限制两阶段锁</h3><p>在原本的两阶段锁协议的基础上再加以限制：</p>
+<ul>
+<li>Growing阶段与原本的不变</li>
+<li>Shrinking阶段等到事务提交时才允许释放锁</li>
+</ul>
+<p><img src="/assets/image-20221105215226-jqkslwt.png" alt="image">​</p>
+<p>因此只有提交后的事务的数据才对其他事务可见,带来了以下的好处：</p>
+<ul>
+<li>不存在级联中止问题</li>
+<li>可以通过存储之前的原始值来进行事务的回滚</li>
+</ul>
+<p>举一个简单的AB转账的例子来探讨无两阶段锁协议、两阶段锁协议、强限制两阶段锁协议的不同：</p>
+<p><strong>无两阶段锁协议</strong></p>
+<p>T2赶在T1进行获取了S-LOCK，导致T1获取X-LOCK进行B值的更新的动作被阻塞，因此最后T2 ECHO回写的结果是未+100的B，因此最终的结果为1900，产生了不一致性的问题</p>
+<p><img src="/assets/image-20221105215250-f856gcv.png" alt="image">​</p>
+<p><strong>两阶段锁协议</strong></p>
+<p>由于两阶段锁协议，T1会在释放A的X-LOCK之前就先获取B的X-LOCK，T2只有先等待T1释放了X-LOCK(A)之后才能去申请S-LOCK(B)，因此就可以保证对B的更新在ECHO之前</p>
+<p><img src="/assets/image-20221105215315-g2r6yg0.png" alt="image">​</p>
+<p><strong>强限制两阶段锁协议</strong></p>
+<p>使用两阶段锁协议之后，T1在事务提交时才释放掉X-LOCK(A)，因此T2在T1提交之后才进行ReadA的操作，总体上已经比较接近于串行化，相比于普通的两阶段锁协议并行度降低</p>
+<p><img src="/assets/image-20221105215332-zvq5kgr.png" alt="image">​</p>
+<h3 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h3><p>两阶段锁协议可能会导致死锁</p>
+<p>都在尝试获取对方的锁</p>
+<p>对于死锁问题，主要采用破除和预防两种手段</p>
+<p><img src="/assets/image-20221105215413-b9gr4vv.png" alt="image">​</p>
+<p>在等待图中如果出现循环，则证明发生了循环等待，出现死锁</p>
+<p>需要终止一个进程来破除循环</p>
+<p>当DBMS检测到了死锁，选择出一个牺牲者是来进行回顾来破除循环等待问题</p>
+<p>牺牲者进程可能重启也可能直接放弃掉（通常是直接放弃）取决如何调用</p>
+<p>由于使用一个后台线程去建立<code>Waits-For Graph</code>​去探寻是否有死锁也存在CPU开销，如果我想尽快发现死锁，那么可能频率是一微秒一次，这就会带来较大的CPU开销，而如果将频率放宽到一秒一次，那么遇到死锁时最长需要等待一秒，但是后台线程的CPU开销就大大降低，在这二者之间需要有一个权衡取舍，究竟是要尽快检测出死锁还是降低CPU的开销用于别的事</p>
+<p>牺牲者的选取通常由一下几个因素：</p>
+<ul>
+<li>年龄，即事务创建的时间戳</li>
+<li>任务，比如如果一个事务需要执行大量的查询，那么最好把他当作牺牲者（最好不要把他当作牺牲者）具体是否选取取决于不同的数据库</li>
+<li>持有的锁的数量</li>
+<li>回滚时关联的其他的事务的多少（级联终止）<strong>强限制两阶段锁并不是必须的，有的系统采用普通的两阶段锁协议，锁定然后级联中止的处理方式</strong></li>
+</ul>
+<p>真正的选择牺牲者时并非考虑以上的某一单一因素，而是综合情况，甚至需要建立一个预测模型</p>
+<p><strong>死锁预防</strong></p>
+<p>对于死锁的处理，可以通过锁的合理分配，来达到提前避免，首先假设时间较久的时间戳的事务拥有较高的优先级，则通常有以下两种策略：</p>
+<ul>
+<li><p>Wait-Die（old waits for young）</p>
+<ul>
+<li>如果申请锁的比现在持有锁的拥有更高的优先级，那么申请锁的继续等待，直到持有锁的释放锁</li>
+<li>其他情况申请的事务放弃（ aborts）</li>
+</ul>
+</li>
+<li><p>Wound-Wait(yong wait for old)</p>
+<ul>
+<li>如果申请锁的比现在持有锁的拥有更高的优先级，那么持有锁的放弃（aborts），然后释放锁</li>
+<li>其他情况申请锁的等待</li>
+</ul>
+</li>
+</ul>
+<p>在下图中 T1先开启事务，则拥有较早的时间戳，因此有较高的优先级，但是此时T2已经持有了锁，最终的结果即为：</p>
+<ul>
+<li>Wait-Die：T1 继续等待</li>
+<li>Wound-Wait：T2 放弃</li>
+</ul>
+<p>在下图中 T1先开启事务，则拥有较早的时间戳，因此有较高的优先级，并且此时T1已经持有了锁，最终的结果即为：</p>
+<ul>
+<li>Wait-Die：T2 放弃</li>
+<li>Wound-Wait：T2 等待</li>
+</ul>
+<p><img src="/assets/image-20221105215437-c73eiqc.png" alt="image">​</p>
+<p>当一个事务进行重启时，为了防止饥饿，被重启的事务保持原有的优先级，否则会一直保持较低的优先级导致一直重启</p>
+<h3 id="锁级别"><a href="#锁级别" class="headerlink" title="锁级别"></a>锁级别</h3><p>之前讨论的锁都是锁一个tuple，那么如果一个事务需要更新一百万条tuple，那么则需要加100w个锁，显然不合理，因此需要引入锁级别，上述情况下直接锁住整张表，则相当于该表所有的tuple均加上了锁</p>
+<p><img src="/assets/image-20221105215451-kvicyol.png" alt="image">​</p>
+<h3 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h3><p>意向锁是一种不与行级锁冲突<strong>表级锁</strong>，因此可以不去检查底层的节点（tuple）是否存在冲突就去对更高一级别的节点去加锁（Table）</p>
+<p>意向锁分为两种：</p>
+<ul>
+<li><strong>意向共享锁</strong>（intention shared lock, IS）：事务有意向对表中的某些行加<strong>共享锁</strong>（S锁）</li>
+</ul>
+<pre class="line-numbers language-SQL" data-language="SQL"><code class="language-SQL">-- 事务要获取某些行的 S 锁，必须先获得表的 IS 锁。
+SELECT column FROM table ... LOCK IN SHARE MODE; <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<ul>
+<li><strong>意向排他锁</strong>（intention exclusive lock, IX）：事务有意向对表中的某些行加<strong>排他锁</strong>（X锁）</li>
+</ul>
+<pre class="line-numbers language-SQL" data-language="SQL"><code class="language-SQL">-- 事务要获取某些行的 X 锁，必须先获得表的 IX 锁。
+SELECT column FROM table ... FOR UPDATE; <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>即：意向锁是有数据引擎自己维护的，用户无法手动操作意向锁，在为数据行加共享 &#x2F; 排他锁之前，InooDB 会先获取该数据行所在在数据表的对应意向锁。</p>
+<ul>
+<li><strong>共享意向排他锁</strong>（Shared Intention Exclusive Lock）：&#x3D; S-LOCK + IX-LOCK，S-LOCK这一属性表明要去读取表的所有的记录，其他的事务就不会并发的更新任意的记录，IX-LOCK让其他事务知道我们要更新目标表的一部分记录，其他事务就不会并发的读取所有的记录</li>
+</ul>
+<p><img src="/assets/image-20221105215514-lp9m3lf.png" alt="image">​</p>
+<ul>
+<li>如果想要在一个节点上获取到S或者IS，那么事务必须在父节点（table）上至少持有IS</li>
+<li>如果向获取X，IX SIX，那么必须在父节点上至少持有IX</li>
+</ul>
+<p>以下两种情况 T1 T2 均不存在冲突问题</p>
+<p><img src="/assets/image-20221105215530-e376u46.png" alt="image">​</p>
+<p><img src="/assets/image-20221105215552-hbnjcz1.png" alt="image">​</p>
+<p>下图中由于T1持有了SIX，T3要进行全表扫描，需要获取S，产生冲突</p>
+<p><img src="/assets/image-20221105215604-tnevtz4.png" alt="image">​</p>
+<p><img src="/assets/image-20221105215616-8yyihd2.png" alt="image">​</p>
+<h2 id="时间戳排序并发控制"><a href="#时间戳排序并发控制" class="headerlink" title="时间戳排序并发控制"></a>时间戳排序并发控制</h2><p><img src="/assets/image-20221105214926-7dbcveb.png" alt="image">​</p>
+<p>乐观与悲观的定义是针对于对并发过程中是否存在冲突的看法，悲观锁假定每次访问都存在冲突，因此每次无论读写都需要获取锁来确保正确处理冲突，而乐观锁是假定不存在冲突，将主数据库中需要读取或修改的数据读出一份本地副本，在本地副本上进行操作，最后在提交到主数据库当中，在提交前去检验是否存在冲突，如果存在则再去处理。</p>
+<p>对于乐观锁来说，在数据库的逻辑层面上不需要进行任何的显示加锁操作，但是对于底层的数据结构而言，依旧需要锁存器的支持，保证不会进行随意的覆盖。两个事务即便在逻辑上不存在任何的交互，最终在数据结构上也可能存在冲突。</p>
+<p>对于每个事务，分配一个时间戳，来表示这个事务的执行时间，时间戳的具体签发时机根据不同的策略而定，时间戳本身有以下特点：</p>
+<ul>
+<li>Timestamp单调递增</li>
+<li>唯一值</li>
+</ul>
+<p>每一个事务分配一个独一的时间戳，有以下的实现策略：</p>
+<ul>
+<li>System Clock</li>
+<li>Logical Counter</li>
+<li>Hybrid</li>
+</ul>
+<h3 id="基本时间戳顺序协议"><a href="#基本时间戳顺序协议" class="headerlink" title="基本时间戳顺序协议"></a>基本时间戳顺序协议</h3><p>首先通过时间戳来对事务进行标记，同时对于一个tuple 需要记录其 W-TS和R-TS，即最后一次对其进行读写操作的事务的时间戳，用于在一个事务要对一个tuple进行读写操作时判断是否有其他事务会和它产生冲突</p>
+<p>在基本时间戳顺序协议中，时间戳记录的是该<strong>事务开始时的时间，即通过BEGIN关键字声明开启事务时旧分配一个时间戳</strong>，但是DBMS本身还是并发的，因此可能会出现后续的事务在较早的事务之前执行，此时就可能存在问题，可能要考虑将较早的事务给撤销，并重新分配时间戳重新执行</p>
+<p>当一个事务访问到一个tuple时，发现TS &lt; W-TS ，则证明未来的一次写入覆盖了目前正在读的数值，即出现了脏读问题，读取到的是旧值，需要终止</p>
+<p>对于读写，有以下的规则：</p>
+<ul>
+<li><p>读：</p>
+<ul>
+<li><p>如果TS($T_i$) &lt; W-TS(X),则违反了时间戳顺序，读到了旧的值，该事务需要重启并分配新的时间戳</p>
+</li>
+<li><p>否则：</p>
+<ul>
+<li>允许事务T去读取tuple X</li>
+<li>更新R-TS（X）为$max(R-TS(X),TS(T_i))$​</li>
+<li>生成一个本地副本用于该事务后续的重复读（如果再去读最新的数据则会产生两次读取不一致的不可重复读的问题）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>写：</p>
+<ul>
+<li><p>如果$TS(T_i)&lt;R-TS(X) or TS(T_i) &lt; W-TS(X)$ 放弃$T_i$并重启$T_i$</p>
+<ul>
+<li>$TS(T_i)&lt;R-TS(X)$会导致后续读取操作读取不到此次的写入</li>
+<li>$TS(T_i) &lt; W-TS(X)$会导致此次的写入无意义</li>
+</ul>
+</li>
+<li><p>否则：</p>
+<ul>
+<li>允许事务$T_i$去写入，并且更新W-TS(X)</li>
+<li>生成一个本地副本用于可重复读​</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>例子：</p>
+<ol>
+<li>T1先执行，生成一个时间戳1</li>
+<li>T1进行读操作，更新tupleB的R-TS(B)为1</li>
+<li>T2事务开始，生成一个时间戳2</li>
+<li>T2进行读操作和写操作，将R-TS(B)和W-TS(B)均修改为2，之前的R-TS(B)为1 &lt; 2，因此不存在冲突</li>
+<li>T1 读，R-TS(A) &#x3D;1</li>
+<li>T2 读写 R-TS(A) &#x3D; 2 W-TS(A) &#x3D; 2</li>
+</ol>
+<p>不存在任何冲突问题</p>
+<p><img src="/assets/image-20221105214842-2teli7r.png" alt="image">​</p>
+<p>例2</p>
+<ol>
+<li>T1开启事务，分配时间戳1</li>
+<li>T1 写，R-TS(A) &#x3D; 1</li>
+<li>T2 开启事务，分配时间戳2</li>
+<li>T2 写 W-TS(A) &#x3D; 2</li>
+<li>T1 写A， T &#x3D; 1 &lt; W-TS(A) 发生冲突 T1事务被放弃</li>
+</ol>
+<p><img src="/assets/image-20221105214814-gynnwjx.png" alt="image">​</p>
+<p><strong>Thomas Write Rule</strong></p>
+<ul>
+<li>$TS(T_i) &lt;R-TS(X)$:放弃并重启$T_i$（与原本一致）</li>
+<li>$TS(T_i) &lt;W-TS(X)$:忽略此次写入，并允许事务继续执行</li>
+<li>其他情况则未违反协议，允许$T_i$写入，并更新$W-TS(X)$</li>
+</ul>
+<p>虽然本质上违反了协议，但是当前此次写后续会被覆盖掉，因此可以直接进行忽略</p>
+<p>按照此原则，上图中的T1的W（A）就会被忽略掉，事务T1继续直接执行，只维护一个本地的副本，用于后续的读取操作</p>
+<p>如果存在一个长事务，后续新来的短在产生冲突时会一直放弃，最终导致饥饿</p>
+<p><strong>可恢复性</strong></p>
+<p>一个事务T，假设他所依赖的数据为D，那么如果在T进行commit时，所有同样依赖于D并且位于T之前的事务都已经commit了，则称为可恢复的</p>
+<p>A位于B之前，AB都依赖于data D，B commit时A应当已经commit了</p>
+<p>如下，T1位于T2之前，T2commit时T1还未commit，此时如果T1放弃了，则T2读到了T1写了的但是放弃了的值，发生了脏读</p>
+<p><img src="/assets/image-20221106011702-he0g4ut.png" alt="image">​</p>
+<h3 id="乐观并发控制"><a href="#乐观并发控制" class="headerlink" title="乐观并发控制"></a>乐观并发控制</h3><p>DBMS给每个事务均分配一个私有的工作空间：</p>
+<ul>
+<li>进行读操作时将读的结果copy到私有的工作空间当中</li>
+<li>修改操作则针对于工作空间来进行修改</li>
+</ul>
+<p>当一个事务准备提交时，再将工作空间和全局Database进行比较，查看是否存在冲突，这个过程称为<strong>Validation</strong>​</p>
+<p>如果不存在冲突，则将工作空间的结果应用到全局Database当中</p>
+<h4 id="阶段"><a href="#阶段" class="headerlink" title="阶段"></a>阶段</h4><ul>
+<li>Read Phase：当事务进行读写操作时，将所有访问到的数据（tuple）读取到私有的工作空间后，再工作空间上进行操作</li>
+<li>Validation Phase：在事务commit前验证是否和其他事务存在冲突</li>
+<li>Write Phase：如果不存在冲突，则将私有工作空间的做的更改应用到全局数据库上，否则放弃并重启事务</li>
+</ul>
+<p>在还未进行validate时，副本的时间戳设置为<strong>∞</strong>，如果进行了写操作，那么此时私有空间中W-TS即为∞</p>
+<p>在验证节点才会获取一个时间戳，因此将<strong>验证的时间操作视为事务真正的开始时间</strong>，A先于B进行验证，则认为A先于B开启事务</p>
+<p>例：</p>
+<ol>
+<li>T1 开启事务，但不分配时间戳</li>
+<li>T1 R(A)，将A copy到自己的私有空间当中</li>
+<li>T2开启事务</li>
+<li>T2 R(A)，将A copy到自己的私有空间当中</li>
+<li>T2 准备提交，进行验证，获取一个时间戳TS &#x3D; 1 T1的时间戳为正无穷，不存在冲突直接提交</li>
+<li>T1 W(A)</li>
+<li>T1 验证并提交</li>
+</ol>
+<p><img src="/assets/image-20221105225321-ys7alry.png" alt="image"></p>
+<p>对于所有的活动的事务，维护一个全局变量来记录各个事务的状态，让各自的状态都对其他事务彼此可见，用于在validation阶段判断是否存在冲突</p>
+<p><strong>Read Phase</strong>​</p>
+<p><strong>Validation Phase</strong>​</p>
+<p>通常有以下两种检验方式，进行二选一</p>
+<ul>
+<li><strong>Backward Validation</strong></li>
+</ul>
+<p>T2在提交时验证比T2时间戳老的事务，在此处T1先进行了commit，即去验证T1，T2可能读的内容可能T1进行了写操作，则T2读到的就是为经T1写的旧值， 如果发生了就需要放弃T2</p>
+<p><img src="/assets/image-20221105230232-3uv1efe.png" alt="image">​</p>
+<ul>
+<li><strong>Forward Validation</strong></li>
+</ul>
+<p>T2可能做了一些更改，导致T3读到了旧的值，此时T2被抛弃</p>
+<p>​</p>
+<p><img src="/assets/image-20221105230402-fte95v9.png" alt="image">​</p>
+<p>后续假设进行的都是Forward Validation</p>
+<p>最简单的情况，T1的三个阶段都在T2之前，T1结束后T2才开始，可以直接视作串行执行，不存在任何冲突</p>
+<p><img src="/assets/image-20221105231027-h5jfz7g.png" alt="image"></p>
+<p>T1在T2的write阶段之前完成：</p>
+<p><img src="/assets/image-20221106015940-adji1gl.png" alt="image">​</p>
+<p>Forward validation：</p>
+<p>T2 的W-TS是直接从全局数据库中读取得到，T1的读操作由于还未进行验证，因此W-TS为∞，</p>
+<p>W-TS(T1) &gt; W-TS(T2),违反协议</p>
+<p>T1写入的值T2无法正确读取 ，因此T1抛弃</p>
+<p><img src="/assets/image-20221105231140-fw9993i.png" alt="image"></p>
+<p>forward validation  由于在验证时才分配时间戳，因此视为T2在T1之前执行，T2没有影响到T1，因此可以直接commit</p>
+<p><img src="/assets/image-20221105232926-i9cwbfz.png" alt="image">​</p>
+<p><img src="/assets/image-20221105233729-6mmrmqy.png" alt="image">​</p>
+<ul>
+<li>T1首先进行验证：分配一个时间戳为1，T2在T1之后对数据库进行读取，因此不存在问题，T1可以成功提交，私有空间的操作写回到全局数据库当中</li>
+<li>T2进行验证，在T2之后不存在其他事务，因此也直接提交回写数据</li>
+</ul>
+<p><img src="/assets/image-20221105234149-wc8t3os.png" alt="image">​</p>
+<p>在冲突很低时，能取得很好的效果</p>
+<p><img src="/assets/image-20221105234242-k27xqxv.png" alt="image">​</p>
+<p><img src="/assets/image-20221105234822-sp0etfa.png" alt="image">​</p>
+<h3 id="基于分区的时间戳排序"><a href="#基于分区的时间戳排序" class="headerlink" title="基于分区的时间戳排序"></a>基于分区的时间戳排序</h3><p><img src="/assets/image-20221105235247-gzy5bw1.png" alt="image">​</p>
+<h3 id="幻读"><a href="#幻读" class="headerlink" title="幻读"></a>幻读</h3><p>T1进行了两次<code>select max</code>​，但是在两次<code>select</code>​之间进行了一次插入操作，最终导致了不可重复读问题，即称为幻读</p>
+<p>在使用两阶段锁协议时会存在幻读，原因为两阶段锁协议只能对当前存在的元素去加锁，因此无法防止别的事务去新插入的别的值</p>
+<p>可以通过谓词锁定的方式解决，即锁定所有<code>status = &#39;lit&#39;</code>​的tuple，但是由于代价开销过高，没有任何一个系统会去使用</p>
+<p>除此之外还可以采用索引锁，即在索引上进行加锁，由于索引的有序性，各个值有序排列，通过间隙锁的方式在值与值之间的间隙上加锁，就可以防止新的值的插入，MySQL即采用了间隙锁的解决方案</p>
+<p><img src="/assets/image-20221106022955-svvdlbq.png" alt="image">​</p>
+<h2 id="多版本并发控制"><a href="#多版本并发控制" class="headerlink" title="多版本并发控制"></a>多版本并发控制</h2><p><img src="/assets/image-20221106111803-7gbpjwt.png" alt="image">​</p>
+<p>命名上存在歧义，实际上MVCC独立于并发控制</p>
+<p><img src="/assets/image-20221106113050-834rdlt.png" alt="image">​</p>
+<p>每个版本标记开始时间和结束时间，事务读取自己所属的时间段的版本的内容</p>
+<p>具体读取哪个版本取决于隔离级别</p>
+<p><img src="/assets/image-20221106113615-hm4qhsn.png" alt="image">​</p>
+<h3 id="并发控制协议："><a href="#并发控制协议：" class="headerlink" title="并发控制协议："></a>并发控制协议：</h3><ul>
+<li>两阶段锁</li>
+<li>时间戳排序</li>
+<li>乐观锁</li>
+</ul>
+<h3 id="版本存储"><a href="#版本存储" class="headerlink" title="版本存储"></a>版本存储</h3><p><img src="/assets/image-20221106114344-hrm0yel.png" alt="image">​</p>
+<p><img src="/assets/image-20221106114535-k7sgzht.png" alt="image">​</p>
+<h4 id="Append-Only-Storage"><a href="#Append-Only-Storage" class="headerlink" title="Append-Only Storage"></a>Append-Only Storage</h4><p><img src="/assets/image-20221106114844-vgx5w9n.png" alt="image">​</p>
+<p><img src="/assets/image-20221106114945-bhjt98z.png" alt="image">​</p>
+<p>链表的头部追加新元素和链表尾部追加新元素</p>
+<h4 id="Time-Travel-Storage"><a href="#Time-Travel-Storage" class="headerlink" title="Time-Travel Storage"></a>Time-Travel Storage</h4><p>主表和Time-Travel 表分开 Time-Travel专门用于存放历史记录，主表则是最新的记录</p>
+<p><img src="/assets/image-20221106115307-2rqsr8p.png" alt="image">​</p>
+<p><img src="/assets/image-20221106115251-0ymbjot.png" alt="image">​</p>
+<h4 id="Delta-Storage"><a href="#Delta-Storage" class="headerlink" title="Delta Storage"></a>Delta Storage</h4><p>对于Time-Travel方式，将原本的值复制到Time-Travel Table中，而Delta Storage只是进行增量记录，只需记录一个属性的变化，无需复制整个tuple，因此在速度上存在优势</p>
+<p><img src="/assets/image-20221106115448-2mgsbfd.png" alt="image">​</p>
+<h3 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h3><p>如果当前这个版本的数据所涉及到的事务都已经提交，那么就可以将其删除，进行GC</p>
+<p><img src="/assets/image-20221106120003-kinoig3.png" alt="image">​</p>
+<p><img src="/assets/image-20221106120151-9t5vxgy.png" alt="image">​</p>
+<h4 id="Tuple-Level-GC"><a href="#Tuple-Level-GC" class="headerlink" title="Tuple-Level GC"></a>Tuple-Level GC</h4><p><img src="/assets/image-20221106120635-3evm8wr.png" alt="image">​</p>
+<p>通过BitMap进行标记优化</p>
+<p>如果进行修改时，直接修改BitMap即可，表明该page为脏页，，后续Vacuum直接访问BitMap，来确定应当回收哪一页</p>
+<p><img src="/assets/image-20221106121038-33hvccv.png" alt="image">​</p>
+<p><img src="/assets/image-20221106121359-dqodgeh.png" alt="image">​</p>
+<h3 id="索引管理"><a href="#索引管理" class="headerlink" title="索引管理"></a>索引管理</h3><p><img src="/assets/image-20221106121633-qfnjfl6.png" alt="image">​</p>
+<h4 id="二级索引"><a href="#二级索引" class="headerlink" title="二级索引"></a>二级索引</h4><p><img src="/assets/image-20221106121848-e9dmgqr.png" alt="image"></p>
+<p>postgre的解决方案，二级索引存放的为真实的物理地址，如果进行GC，则需进行修改所有的二级索引，而对于一个OLTP型数据库来说，通常一个表上可能会有很多个二级索引，因此开销可能较大</p>
+<p><img src="/assets/image-20221106122413-kobpott.png" alt="image"></p>
+<p>MySQL的解决方案，二级索引存放的为主键的地址，只需修改主键索引即可</p>
+<p><img src="/assets/image-20221106122438-pd24vmg.png" alt="image">​</p>
+<p><img src="/assets/image-20221106122813-u2t3c57.png" alt="image">​</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://fischer0522.github.io">Fischer</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fischer0522.github.io/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/">https://fischer0522.github.io/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fischer0522.github.io" target="_blank">Fischer的碎碎念</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2022/11/21/MIT-6-830-lab2/"><img class="prev-cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">MIT 6.830 lab2</div></div></a></div><div class="next-post pull-right"><a href="/2022/10/01/MIT%206.830%20lab1/"><img class="next-cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/67446310_p0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">MIT 6.830 lab1</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/70068866_p0.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Fischer</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Fischer0522"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Fischer0522" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:1809327837@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">数据库系统设计（2）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96"><span class="toc-number">1.1.</span> <span class="toc-text">查询优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AD%89%E4%BB%B7%E7%9A%84%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0"><span class="toc-number">1.1.1.</span> <span class="toc-text">等价的关系代数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E9%94%80%E8%AF%84%E4%BC%B0"><span class="toc-number">1.1.2.</span> <span class="toc-text">开销评估</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#selectivity%E7%9A%84%E8%AE%A1%E7%AE%97"><span class="toc-number">1.1.2.1.</span> <span class="toc-text">selectivity的计算</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%AD%98%E5%82%A8"><span class="toc-number">1.1.2.2.</span> <span class="toc-text">模型的存储</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sampling"><span class="toc-number">1.1.2.3.</span> <span class="toc-text">Sampling</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E7%AD%96%E7%95%A5%E7%9A%84%E9%80%89%E6%8B%A9"><span class="toc-number">1.1.2.4.</span> <span class="toc-text">执行策略的选择</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">1.2.</span> <span class="toc-text">并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%81%E4%B9%85%E6%80%A7"><span class="toc-number">1.2.1.</span> <span class="toc-text">持久性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-number">1.2.2.</span> <span class="toc-text">一致性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%94%E7%A6%BB%E6%80%A7"><span class="toc-number">1.2.3.</span> <span class="toc-text">隔离性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E5%BA%A6"><span class="toc-number">1.2.4.</span> <span class="toc-text">调度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E9%94%81%E5%8D%8F%E8%AE%AE"><span class="toc-number">1.3.</span> <span class="toc-text">两阶段锁协议</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E9%94%81%E5%8D%8F%E8%AE%AE-1"><span class="toc-number">1.3.1.</span> <span class="toc-text">两阶段锁协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BA%A7%E8%81%94%E4%B8%AD%E6%AD%A2%EF%BC%88Cascading-Aborts%EF%BC%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">级联中止（Cascading Aborts）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%BA%E9%99%90%E5%88%B6%E4%B8%A4%E9%98%B6%E6%AE%B5%E9%94%81"><span class="toc-number">1.3.3.</span> <span class="toc-text">强限制两阶段锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%BB%E9%94%81"><span class="toc-number">1.3.4.</span> <span class="toc-text">死锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%94%81%E7%BA%A7%E5%88%AB"><span class="toc-number">1.3.5.</span> <span class="toc-text">锁级别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%84%8F%E5%90%91%E9%94%81"><span class="toc-number">1.3.6.</span> <span class="toc-text">意向锁</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%B6%E9%97%B4%E6%88%B3%E6%8E%92%E5%BA%8F%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">1.4.</span> <span class="toc-text">时间戳排序并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%97%B6%E9%97%B4%E6%88%B3%E9%A1%BA%E5%BA%8F%E5%8D%8F%E8%AE%AE"><span class="toc-number">1.4.1.</span> <span class="toc-text">基本时间戳顺序协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B9%90%E8%A7%82%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">1.4.2.</span> <span class="toc-text">乐观并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5"><span class="toc-number">1.4.2.1.</span> <span class="toc-text">阶段</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%88%86%E5%8C%BA%E7%9A%84%E6%97%B6%E9%97%B4%E6%88%B3%E6%8E%92%E5%BA%8F"><span class="toc-number">1.4.3.</span> <span class="toc-text">基于分区的时间戳排序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%BB%E8%AF%BB"><span class="toc-number">1.4.4.</span> <span class="toc-text">幻读</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E7%89%88%E6%9C%AC%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">1.5.</span> <span class="toc-text">多版本并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6%E5%8D%8F%E8%AE%AE%EF%BC%9A"><span class="toc-number">1.5.1.</span> <span class="toc-text">并发控制协议：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%89%88%E6%9C%AC%E5%AD%98%E5%82%A8"><span class="toc-number">1.5.2.</span> <span class="toc-text">版本存储</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Append-Only-Storage"><span class="toc-number">1.5.2.1.</span> <span class="toc-text">Append-Only Storage</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Time-Travel-Storage"><span class="toc-number">1.5.2.2.</span> <span class="toc-text">Time-Travel Storage</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Delta-Storage"><span class="toc-number">1.5.2.3.</span> <span class="toc-text">Delta Storage</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="toc-number">1.5.3.</span> <span class="toc-text">垃圾回收</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Tuple-Level-GC"><span class="toc-number">1.5.3.1.</span> <span class="toc-text">Tuple-Level GC</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B4%A2%E5%BC%95%E7%AE%A1%E7%90%86"><span class="toc-number">1.5.4.</span> <span class="toc-text">索引管理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95"><span class="toc-number">1.5.4.1.</span> <span class="toc-text">二级索引</span></a></li></ol></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab4"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4">MIT 6.830 lab4</a><time datetime="2022-11-21T09:37:19.000Z" title="发表于 2022-11-21 17:37:19">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab3"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3">MIT 6.830 lab3</a><time datetime="2022-11-21T09:35:19.000Z" title="发表于 2022-11-21 17:35:19">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab2"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2">MIT 6.830 lab2</a><time datetime="2022-11-21T09:30:44.000Z" title="发表于 2022-11-21 17:30:44">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/" title="无题"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/" title="无题">无题</a><time datetime="2022-11-06T06:14:38.596Z" title="发表于 2022-11-06 14:14:38">2022-11-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/67446310_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab1"/></a><div class="content"><a class="title" href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1">MIT 6.830 lab1</a><time datetime="2022-10-01T14:23:21.000Z" title="发表于 2022-10-01 22:23:21">2022-10-01</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By Fischer</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

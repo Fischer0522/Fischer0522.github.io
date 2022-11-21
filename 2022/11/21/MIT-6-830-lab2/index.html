@@ -1,0 +1,925 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>MIT 6.830 lab2 | Fischer的碎碎念</title><meta name="author" content="Fischer"><meta name="copyright" content="Fischer"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="MIT 6.830 Lab2exercise1主要实现Filter和Join两个操作 ：  Filter根据条件进行筛选 Join即为将两个表join起来，产生的为笛卡尔积  FilterPredicatePredicate为对Filter的提前一步辅助封装，对要进行判断的字段，判断的操作符还有涉及到的逻辑先进行封装其中，逻辑判断部分主要涉及的为filter方法，具体比较部分lab已经在field">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MIT 6.830 lab2">
+<meta property="og:url" content="https://fischer0522.github.io/2022/11/21/MIT-6-830-lab2/index.html">
+<meta property="og:site_name" content="Fischer的碎碎念">
+<meta property="og:description" content="MIT 6.830 Lab2exercise1主要实现Filter和Join两个操作 ：  Filter根据条件进行筛选 Join即为将两个表join起来，产生的为笛卡尔积  FilterPredicatePredicate为对Filter的提前一步辅助封装，对要进行判断的字段，判断的操作符还有涉及到的逻辑先进行封装其中，逻辑判断部分主要涉及的为filter方法，具体比较部分lab已经在field">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png">
+<meta property="article:published_time" content="2022-11-21T09:30:44.000Z">
+<meta property="article:modified_time" content="2022-11-21T09:34:58.479Z">
+<meta property="article:author" content="Fischer">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png"><link rel="shortcut icon" href="/img/favi.png"><link rel="canonical" href="https://fischer0522.github.io/2022/11/21/MIT-6-830-lab2/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'MIT 6.830 lab2',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-11-21 17:34:58'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/70068866_p0.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Fischer的碎碎念</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">MIT 6.830 lab2</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-11-21T09:30:44.000Z" title="发表于 2022-11-21 17:30:44">2022-11-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-11-21T09:34:58.479Z" title="更新于 2022-11-21 17:34:58">2022-11-21</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="MIT 6.830 lab2"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="MIT-6-830-Lab2"><a href="#MIT-6-830-Lab2" class="headerlink" title="MIT 6.830 Lab2"></a>MIT 6.830 Lab2</h1><h2 id="exercise1"><a href="#exercise1" class="headerlink" title="exercise1"></a>exercise1</h2><p>主要实现Filter和Join两个操作 ：</p>
+<ul>
+<li>Filter根据条件进行筛选</li>
+<li>Join即为将两个表join起来，产生的为笛卡尔积</li>
+</ul>
+<h3 id="Filter"><a href="#Filter" class="headerlink" title="Filter"></a>Filter</h3><p><strong>Predicate</strong><br>Predicate为对Filter的提前一步辅助封装，对要进行判断的字段，判断的操作符还有涉及到的逻辑先进行封装<br>其中，逻辑判断部分主要涉及的为filter方法，具体比较部分lab已经在field中已经实现好，直接调用field.compare即可，由于操作符中涉及到一些不等式比较，因此需要注意调用关系：</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public boolean filter(Tuple t) &#123;
+        &#x2F;&#x2F; some code goes here
+        Field field1 &#x3D; t.getField(this.field);
+        return field1.compare(this.op,this.operand);
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>除此之外为setter和getter方法<br><strong>Filter</strong><br>Filter类为一种操作，继承自Operator类，而Operator类又实现了OpIterator接口<br>因此，Filter的本质上即为一个迭代器，根据Predicate中的filter方法对所有的tuple进行过滤，再使用迭代器来迭代过滤后的结果<br>在Operator类中，存在一个fetchNext的抽象方法，并且在next方法中进行调用<br>fetchNext为根据该操作的逻辑获取下一个Tuple（可能是filter，可以能是Join，具体逻辑由继承的子类来定义实现）<br>next()即为一般迭代器中的next，用于和hasNext()配合迭代</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+    public Tuple next() throws DbException, TransactionAbortedException,
+            NoSuchElementException &#123;
+        if (next &#x3D;&#x3D; null) &#123;
+            next &#x3D; fetchNext();
+            if (next &#x3D;&#x3D; null) &#123;
+                throw new NoSuchElementException();
+            &#125;
+        &#125;
+
+        Tuple result &#x3D; next;
+        next &#x3D; null;
+        return result;
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>因此，在fetchNext()中实现该抽象方法fetchNext()，给出过滤的逻辑即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+    protected Tuple fetchNext() throws NoSuchElementException,
+            TransactionAbortedException, DbException &#123;
+        &#x2F;&#x2F; some code goes here
+        while (child.hasNext()) &#123;
+            Tuple next &#x3D; child.next();
+            boolean filter &#x3D; p.filter(next);
+            if (filter &#x3D;&#x3D; true) &#123;
+                return next;
+            &#125;
+        &#125;
+        return null;
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>由于继承自Operator，因此在打开迭代器是需要打开父类的Opetrator的迭代器</p>
+<h3 id="Join"><a href="#Join" class="headerlink" title="Join"></a>Join</h3><p>做lab遇到的最大的一个坑，之后挖的坑在这里被发现了<br><strong>JoinPredicate</strong><br>和Filter一样，先进行封装，同样也是注意调用关系即可，左.compare(右)<br><strong>Join</strong></p>
+<ul>
+<li>对两张表进行join，因此在字段上涉及到合并，调用之前写好的静态方法merge即可</li>
+<li>需打开父类的迭代器、</li>
+</ul>
+<p>重点为fetchNext方法，通过fetchNext方法来产生一个笛卡尔积，并在笛卡尔积的基础上进行过滤，实现Join，而迭代器的next为访问到即令指针向下移动一次，因此需要定义一个t来保存next获取的结果，保证在对表而进行迭代时，表1只被访问到一次，产生的才为笛卡尔积，而不是表1表2的next一同向下移动</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+   protected Tuple fetchNext() throws TransactionAbortedException, DbException &#123;
+
+       while (this.child1.hasNext() || t !&#x3D; null)&#123;
+           if(this.child1.hasNext() &amp;&amp; t &#x3D;&#x3D; null)&#123;
+               t &#x3D; this.child1.next();
+           &#125;
+           while(child2.hasNext())&#123;
+               Tuple t2 &#x3D; child2.next();
+               if(p.filter(t, t2))&#123;
+                   TupleDesc td1 &#x3D; t.getTupleDesc();
+                   TupleDesc td2 &#x3D; t2.getTupleDesc();
+                   &#x2F;&#x2F; 合并
+                   TupleDesc tupleDesc &#x3D; TupleDesc.merge(td1, td2);
+                   &#x2F;&#x2F; 创建新的行
+                   Tuple newTuple &#x3D; new Tuple(tupleDesc);
+                   &#x2F;&#x2F; 设置路径
+                   newTuple.setRecordId(t.getRecordId());
+                   &#x2F;&#x2F; 合并
+                   int i &#x3D; 0;
+                   for (; i &lt; td1.numFields(); i++) &#123;
+
+                       newTuple.setField(i, t.getField(i));
+                   &#125;
+                   for (int j &#x3D; 0; j &lt; td2.numFields(); j++) &#123;
+
+                       newTuple.setField(i + j, t2.getField(j));
+                   &#125;
+                   &#x2F;&#x2F; 遍历完t2后重置，t置空，准备遍历下一个
+                   if(!child2.hasNext())&#123;
+                       child2.rewind();
+                       t &#x3D; null;
+                   &#125;
+                   return newTuple;
+               &#125;
+           &#125;
+           &#x2F;&#x2F; 重置 child2
+           child2.rewind();
+           t &#x3D; null;
+       &#125;
+       return null;
+
+
+   &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Bug"><a href="#Bug" class="headerlink" title="Bug"></a>Bug</h3><p>再说说之前遇到的bug,在Join中，首先需要获取能够迭代所有tuple的迭代器，因此OpIterator，对应的实现类即为SeqScan，可以用于扫描表中所有的tuple，当时在实现SeqScan时，定义了一个DbFileIterator，用于迭代一个文件中的所有tuple</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public class SeqScan implements OpIterator &#123;
+
+    private static final long serialVersionUID &#x3D; 1L;
+    private final TransactionId tid;
+    private  int tableId;
+    private  String tableAlias;
+    private DbFileIterator it;
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>DbFile的实现类为HeapFileIterator，HeapFileIterator所做的，就是找出一个File中的所有的tuple,然后交给<code>Iterator&lt;Tuple&gt; it</code>来进行迭代<br>坑也就坑在这个位置，当时声明时手滑把<code>Iterator&lt;Tuple&gt; it</code>声明成了静态变量<br>因此在Join中声明了两个child，但是他们共用的却是一个迭代器，在迭代的过程当中就会出现互相干扰的问题。<br>至此，发现了lab中所遗留的bug,也层层剖析找到了迭代器的源头</p>
+<h3 id="测试过程"><a href="#测试过程" class="headerlink" title="测试过程"></a>测试过程</h3><p>在找bug的过程中读了读lab所提供的系统测试中代码，不妨将文件创建和数据读取的过程记录一下<br><strong>文件创建</strong><br>首先调用validateJoin方法，并指定表1和表2的行数和列数，<br>在其中使用createRandomheapFile方法创建文件，在其中，经过层层嵌套找到了真正的逻辑部分：<br>根据传入的行数和列数生成数据，使用List存储，在使用File的系统调用创建一个临时文件，并指定结束时删除，（存储路径为操作系统提供的默认临时文件的存储路径）<br>之后再使用HeapFileEncoder中的convert输入数据，并将其转换为二进制文件</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">for (int i &#x3D; 0; i &lt; rows; ++i) &#123;
+            List&lt;Integer&gt; tuple &#x3D; new ArrayList&lt;&gt;(columns);
+            for (int j &#x3D; 0; j &lt; columns; ++j) &#123;
+                &#x2F;&#x2F; Generate random values, or use the column specification
+                Integer columnValue &#x3D; null;
+                if (columnSpecification !&#x3D; null) columnValue &#x3D; columnSpecification.get(j);
+                if (columnValue &#x3D;&#x3D; null) &#123;
+                    columnValue &#x3D; r.nextInt(maxValue);
+                &#125;
+                tuple.add(columnValue);
+            &#125;
+            tuples.add(tuple);
+        &#125;
+		File temp &#x3D; File.createTempFile(&quot;table&quot;, &quot;.dat&quot;);
+        temp.deleteOnExit();
+        HeapFileEncoder.convert(tuples, temp, BufferPool.getPageSize(), columns);<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>最后将表1表2的数据汇总到一个list当中,格式如下：<br><code>[[t11 t12,t21,t22]]</code><br>最后将join的结果合并成一个list比较是否相同即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public void validateJoin(int table1ColumnValue, int table1Rows, int table2ColumnValue,
+           int table2Rows)&#123;
+     HeapFile table1 &#x3D; SystemTestUtil.createRandomHeapFile(
+               COLUMNS, table1Rows, columnSpecification, t1Tuples);
+    HeapFile table2 &#x3D; SystemTestUtil.createRandomHeapFile(
+               COLUMNS, table2Rows, columnSpecification, t2Tuples);
+       assert t2Tuples.size() &#x3D;&#x3D; table2Rows;
+
+       &#x2F;&#x2F; Generate the expected results
+       List&lt;List&lt;Integer&gt;&gt; expectedResults &#x3D; new ArrayList&lt;&gt;();
+       for (List&lt;Integer&gt; t1 : t1Tuples) &#123;
+           for (List&lt;Integer&gt; t2 : t2Tuples) &#123;
+               &#x2F;&#x2F; If the columns match, join the tuples
+               if (t1.get(0).equals(t2.get(0))) &#123;
+                   List&lt;Integer&gt; out &#x3D; new ArrayList&lt;&gt;(t1);
+                   &#x2F;&#x2F; table2的数据追加到table1后面
+                   out.addAll(t2); 
+                   expectedResults.add(out);
+               &#125;
+           &#125;
+       &#125;
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>数据读取</strong><br>结合Join的系统测试来看，在文件和要比较的数据都创建好之后，便是执行join并获取join的结果</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">TransactionId tid &#x3D; new TransactionId();
+        SeqScan ss1 &#x3D; new SeqScan(tid, table1.getId(), &quot;&quot;);
+        SeqScan ss2 &#x3D; new SeqScan(tid, table2.getId(), &quot;&quot;);
+        JoinPredicate p &#x3D; new JoinPredicate(0, Predicate.Op.EQUALS, 0);
+        Join joinOp &#x3D; new Join(p, ss1, ss2);
+
+        &#x2F;&#x2F; test the join results
+        SystemTestUtil.matchTuples(joinOp, expectedResults);
+
+        joinOp.close();
+        Database.getBufferPool().transactionComplete(tid);<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>点入<code>matchTuples</code>,首先打开调用join的open()，</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">iterator.open();
+        while (iterator.hasNext()) &#123;
+            Tuple t &#x3D; iterator.next();
+            List&lt;Integer&gt; list &#x3D; tupleToList(t);
+            boolean isExpected &#x3D; copy.remove(list);
+            Debug.log(&quot;scanned tuple: %s (%s)&quot;, t, isExpected ? &quot;expected&quot; : &quot;not expected&quot;);
+            if (!isExpected) &#123;
+                Assert.fail(&quot;expected tuples does not contain: &quot; + t);
+            &#125;
+        &#125;
+        iterator.close();<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在join的open中，我们调用的child1.open()去读取遍历的原始数据，对OpIterator，child我们传入的实现类为SeqScan，因此我们找到SeqScan的open,在其中，先通过TableId获取到对应的迭代器，由于一个Table和一个File为一一对应关系，因此获取到的为HeapFile中的迭代器HeapFileInterator：</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+    public void open() throws DbException, TransactionAbortedException &#123;
+        it &#x3D; Database.getCatalog().getDatabaseFile(tableId).iterator(tid);
+        it.open();
+        &#x2F;&#x2F; some code goes here
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在HeapFileInterator中，由于一个File由多个Page组成，因此我们需要获取一个能够遍历该Page的迭代器：<br>为了获取Page的迭代器，首先需要将Page本身获取出来，因此调用BufferPool的getPage()</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+        public void open() throws DbException, TransactionAbortedException &#123;
+            &#x2F;&#x2F; 获取第一页的全部元组
+            whichPage &#x3D; 0;
+            iterator &#x3D; getPageTuple(whichPage);
+        &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">private Iterator&lt;Tuple&gt; getPageTuple(int pageNumber) throws TransactionAbortedException, DbException &#123;
+            &#x2F;&#x2F; 在文件范围内
+            if(pageNumber &gt;&#x3D; 0 &amp;&amp; pageNumber &lt; heapFile.numPages())&#123;
+                HeapPageId pid &#x3D; new HeapPageId(heapFile.getId(), pageNumber);
+                &#x2F;&#x2F; 从缓存池中查询相应的页面 读权限
+                HeapPage page &#x3D; (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
+                return page.iterator();
+            &#125;
+            throw new DbException(String.format(&quot;heapFile %d not contain page %d&quot;, pageNumber, heapFile.getId()));
+        &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在Buffer Pool当中，首先判断Buffer Pool中是否有该Page，如果有则可以直接返回，没有则需要去文件中读取，先获取到该page所属的file，在调用file的readPage，获取到真正的page</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">if(!pageStore.containsKey(pid.hashCode()))&#123;
+            &#x2F;&#x2F; 获取
+            DbFile dbFile &#x3D; Database.getCatalog().getDatabaseFile(pid.getTableId());
+            Page page &#x3D; dbFile.readPage(pid);
+            &#x2F;&#x2F; 是否超过大小
+            if(pageStore.size() &gt;&#x3D; numPages)&#123;
+                &#x2F;&#x2F; 淘汰 (后面的 Exercise 书写)
+                throw new DbException(&quot;页面已满&quot;);
+            &#125;
+            &#x2F;&#x2F; 放入缓存
+            pageStore.put(pid.hashCode(), page);
+        &#125;
+        &#x2F;&#x2F; 从 缓存池 中获取
+        return pageStore.get(pid.hashCode());<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>DbFile的实现类为HeapFile,因此找到的为HeapFile的readPage，在其中通过随机读取的方式，根据偏移量找到该page的位置，进行读取。再将结果按照上述顺序层层向上返回，最后将数据交给child1，child2，也就是SeqScan，在Join中在迭代获取数据</p>
+<p><strong>流程如下：</strong></p>
+<p><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20221121173404.png"></p>
+<h2 id="exercise2"><a href="#exercise2" class="headerlink" title="exercise2"></a>exercise2</h2><p>主要为实现各种聚合函数：<code>GROUP BY ,COUNT, SUM ,AVG ,MIN ,MAX</code><br>由于Field所支持的类型也只有Integer和String，因此Aggeretor也有IntegerAggregator和StringAggregator两个实现类</p>
+<ul>
+<li>String只需要实现分组聚合count即可</li>
+<li>Integer需要实现多种聚合函数</li>
+</ul>
+<h3 id="StringAggregator"><a href="#StringAggregator" class="headerlink" title="StringAggregator"></a>StringAggregator</h3><p>先判断是否需要分组，之后简单count即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public void mergeTupleIntoGroup(Tuple tup) &#123;
+        &#x2F;&#x2F; 先判断是否为空
+        Field fieldToGroupBy;
+        if (this.gbfield &#x3D;&#x3D; NO_GROUPING) &#123;
+            fieldToGroupBy &#x3D;null;
+        &#125; else &#123;
+            fieldToGroupBy  &#x3D; tup.getField(gbfield);
+        &#125;
+        Integer orDefault &#x3D; group.getOrDefault(fieldToGroupBy, 0);
+        orDefault++;
+        group.put(fieldToGroupBy,orDefault);
+
+        &#x2F;&#x2F; some code goes here
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>迭代器，需要根据要求将Map中的不同组按照<code>groupVal aggregateVal</code>的形式进行返回，如果无需分组，只需要返回<code>aggregateVal</code>即可，因此只需要封装成对应的Tuple形式，然后创建一个TupleInterator即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public OpIterator iterator() &#123;
+    List&lt;Tuple&gt; tuples &#x3D; new ArrayList&lt;&gt;();
+    Type[] types;
+    String[] names;
+    if (this.gbfield &#x3D;&#x3D; NO_GROUPING) &#123;
+        types &#x3D; new Type[]&#123;Type.INT_TYPE&#125;;
+        names &#x3D; new String[]&#123;&quot;aggregateVal&quot;&#125;;
+        TupleDesc tupleDesc &#x3D; new TupleDesc(types,names);
+        Tuple tuple &#x3D; new Tuple(tupleDesc);
+        Integer integer &#x3D; group.get(null);
+        IntField intField &#x3D; new IntField(integer);
+        tuple.setField(0,intField);
+        tuples.add(0,tuple);
+        return new TupleIterator(tupleDesc,tuples);
+    &#125; else &#123;
+        types &#x3D; new Type[]&#123;gbfieldtype,Type.INT_TYPE&#125;;
+        names &#x3D; new String[]&#123;&quot;groupVal&quot;,&quot;aggregateVal&quot;&#125;;
+        TupleDesc tupleDesc &#x3D; new TupleDesc(types,names);
+
+        Set&lt;Field&gt; fields1 &#x3D; group.keySet();
+        for(Field field : fields1) &#123;
+            Tuple tuple &#x3D; new Tuple(tupleDesc);
+            Integer integer &#x3D; group.get(field);
+            tuple.setField(0,field);
+            IntField intField &#x3D; new IntField(integer);
+            tuple.setField(1,intField);
+            tuples.add(tuple);
+        &#125;
+        return new TupleIterator(tupleDesc,tuples);
+    &#125;
+
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="IntegerAggregator"><a href="#IntegerAggregator" class="headerlink" title="IntegerAggregator"></a>IntegerAggregator</h3><p>Ingeger涉及到多种聚合函数，因此需要根据聚合函数的不同，调用对应的handler<br>定义一个抽象类AggHandler，再定义不同的子类去继承AggHandler类，实现其中的抽象方法handle提供对应的逻辑即可：</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">private abstract class AggHandler&#123;
+        Map&lt;Field,Integer&gt; group;
+
+        abstract void handle(Tuple tuple);
+
+        Map&lt;Field,Integer&gt; getGroup() &#123;
+            return this.group;
+        &#125;
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>内部需要封装一个存储结果的Map，因此使用抽象类而不是接口<br>简单看一个子类：</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">private class AvgHandler extends AggHandler &#123;
+        Map&lt;Field,Integer&gt; sumMap;
+        Map&lt;Field,Integer&gt; countMap;
+        public AvgHandler() &#123;
+            group &#x3D; new HashMap&lt;&gt;();
+            sumMap &#x3D; new HashMap&lt;&gt;();
+            countMap &#x3D; new HashMap&lt;&gt;();
+        &#125;
+
+       @Override
+       void handle(Tuple tuple) &#123;
+           &#x2F;&#x2F; 先判断是否为空
+           Field groupByField;
+           if (gbfield &#x3D;&#x3D; NO_GROUPING) &#123;
+               groupByField &#x3D; null;
+           &#125; else &#123;
+               groupByField &#x3D; tuple.getField(gbfield);
+           &#125;
+
+           IntField intField &#x3D; (IntField) tuple.getField(afield);
+           int value &#x3D; intField.getValue();
+           Integer orDefault &#x3D; sumMap.getOrDefault(groupByField, 0);
+           orDefault +&#x3D; value;
+           sumMap.put(groupByField,orDefault);
+           Integer count &#x3D; countMap.getOrDefault(groupByField, 0);
+           count++;
+           countMap.put(groupByField,count);
+           group.put(groupByField, orDefault &#x2F; count);
+
+       &#125;
+   &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<ul>
+<li>构造方法中根据聚合函数的不同选择对应的实现类</li>
+<li>MergeTupleIntoGroup中根据聚合函数的不同调用对应的handle方法</li>
+</ul>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+   public void mergeTupleIntoGroup(Tuple tup) &#123;
+       if (this.what &#x3D;&#x3D; Op.MIN) &#123;
+
+           aggHandler.handle(tup);
+       &#125; else if (this.what &#x3D;&#x3D; Op.MAX) &#123;
+
+           aggHandler.handle(tup);
+       &#125; else if (this.what &#x3D;&#x3D; Op.SUM) &#123;
+
+           aggHandler.handle(tup);
+       &#125; else if (this.what &#x3D;&#x3D; Op.AVG) &#123;
+
+           aggHandler.handle(tup);
+       &#125; else if (this.what &#x3D;&#x3D; Op.COUNT) &#123;
+
+           aggHandler.handle(tup);
+       &#125;
+
+       &#x2F;&#x2F; some code goes here
+   &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Aggregate"><a href="#Aggregate" class="headerlink" title="Aggregate"></a>Aggregate</h3><p>本质上和Filter和Join一样，为一个Operator，源头上为一个迭代器，按照迭代器的方法写即可，把经过StringAggregator和IntergerAggregator处理好返回的进行迭代即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public Aggregate(OpIterator child, int afield, int gfield, Aggregator.Op aop) &#123;
+        this.child &#x3D; child;
+        this.afield &#x3D; afield;
+        this.gfield &#x3D; gfield;
+        this.aop &#x3D; aop;
+        Type aFieldType &#x3D; child.getTupleDesc().getFieldType(afield);
+        Type gFieldType &#x3D; null;
+        if (gfield !&#x3D; -1) &#123;
+            gFieldType &#x3D; child.getTupleDesc().getFieldType(gfield);
+        &#125;
+        Type[] types &#x3D; new Type[]&#123;gFieldType,aFieldType&#125;;
+        String[] names &#x3D; new String[] &#123;&quot;groupVal&quot;,&quot;aggregateVal&quot;&#125;;
+        TupleDesc tupleDesc &#x3D; new TupleDesc(types,names);
+        this.tupleDesc &#x3D; tupleDesc;
+        
+        if (aFieldType &#x3D;&#x3D; Type.INT_TYPE) &#123;
+            aggregator &#x3D; new IntegerAggregator(gfield,gFieldType,afield,aop);
+        &#125; else &#123;
+            aggregator &#x3D; new StringAggregator(gfield,gFieldType,afield,aop);
+        &#125;
+        &#x2F;&#x2F; some code goes here
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+    public void open() throws NoSuchElementException, DbException,
+            TransactionAbortedException &#123;
+        &#x2F;&#x2F; 先打开child的迭代器，用于获取所有的tuple,之后迭代将所有的tuple进行merge
+        child.open();
+        while (child.hasNext()) &#123;
+            Tuple next &#x3D; child.next();
+            aggregator.mergeTupleIntoGroup(next);
+        &#125;
+        &#x2F;&#x2F; 打开聚合迭代器，用于之后获取聚合后的结果
+        opIterator &#x3D; aggregator.iterator();
+        opIterator.open();
+        &#x2F;&#x2F; 父迭代器Operator
+        super.open();
+
+        &#x2F;&#x2F; some code goes here
+    &#125;
+
+ @Override
+    protected Tuple fetchNext() throws TransactionAbortedException, DbException &#123;
+        &#x2F;&#x2F; some code goes here
+        &#x2F;&#x2F; 迭代聚合之后的结果
+        if(opIterator.hasNext()) &#123;
+            return opIterator.next();
+        &#125;
+        return null;
+
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>setChildren用于后续更换数据，重新设置一下属性即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">@Override
+    public void setChildren(OpIterator[] children) &#123;
+        &#x2F;&#x2F; some code goes here
+        child &#x3D; children[0];
+        Type aFieldType &#x3D; child.getTupleDesc().getFieldType(afield);
+        Type gFieldType &#x3D; child.getTupleDesc().getFieldType(gfield);
+        Type[] types &#x3D; new Type[]&#123;gFieldType,aFieldType&#125;;
+        String[] names &#x3D; new String[]&#123;&quot;groupVal&quot;,&quot;aggregateVal&quot;&#125;;
+        this.tupleDesc &#x3D; new TupleDesc(types,names);
+
+        if (aFieldType &#x3D;&#x3D; Type.INT_TYPE) &#123;
+            this.aggregator &#x3D; new IntegerAggregator(gfield,gFieldType,afield,aop);
+        &#125; else &#123;
+            this.aggregator &#x3D; new StringAggregator(gfield,gFieldType,afield,aop);
+        &#125;
+    &#125;
+
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="exercise3"><a href="#exercise3" class="headerlink" title="exercise3"></a>exercise3</h2><p>主要实现的为insert和delete操作，需要将tuple插入到对应的file的某个page上，而所有指向硬盘的操作都需要经过bufferpool<br>因此写入顺序就变成了:<code>bufferpool-&gt;heapFile-&gt;heapPage</code><br>实现：</p>
+<ul>
+<li>HeapPage</li>
+<li>HeapFile</li>
+<li>BufferPool</li>
+</ul>
+<h3 id="HeapPage"><a href="#HeapPage" class="headerlink" title="HeapPage"></a>HeapPage</h3><p>HeapPage中主要使用tuples来保存一条条数据，header来记录slot的使用情况，因此在insert和delete是需要一同修改<br>针对header提供一个<code>markSlotUsed()</code>来对header进行标记：</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">private void markSlotUsed(int i, boolean value) &#123;
+        int index &#x3D; i &#x2F;8;
+        int offset &#x3D; i % 8;
+        if (!value) &#123;
+
+            this.header[index] -&#x3D; (1 &lt;&lt; offset);
+        &#125; else &#123;
+            this.header[index] +&#x3D; (1 &lt;&lt; offset);
+        &#125;
+        &#x2F;&#x2F; some code goes here
+        &#x2F;&#x2F; not necessary for lab1
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>插入逻辑：</strong><br>遍历page中所有的slot，寻找空的slot进行插入,由于tuple的recordId是根据page和在page中的位置决定的，因此需要先设置recordId，之后再对header进行标记即可<br>如果遍历结束也没插入，则证明该页已经满了，抛出一个异常<br><strong>值得注意的是，该操作只是修改了内存中的状态，真正想要持久化到硬盘中需要通过另外一个方法writePage来实现</strong></p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public void insertTuple(Tuple t) throws DbException &#123;
+        &#x2F;&#x2F; some code goes here
+        &#x2F;&#x2F; not necessary for lab1
+        for (int i &#x3D; 0; i &lt;tuples.length ;i++) &#123;
+            if (tuples[i] &#x3D;&#x3D; null) &#123;
+                if (isSlotUsed(i)) &#123;
+                    throw new DbException(&quot;this tuple is already in use&quot;);
+                &#125;
+                RecordId recordId &#x3D; new RecordId(this.pid,i);
+                t.setRecordId(recordId);
+                tuples[i] &#x3D; t;
+                markSlotUsed(i,true);
+                return;
+            &#125;
+        &#125;
+        throw new DbException(&quot;this page is already full&quot;);
+
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>删除逻辑</strong><br>根据给定的tuple，通过RecordId获取到在page中的偏移量，然后删除即可，删除之前判断一下是否属于该页或者对应的slot是否已经为空即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public void deleteTuple(Tuple t) throws DbException &#123;
+
+        &#x2F;&#x2F; some code goes here
+        int tupleNumber &#x3D; t.getRecordId().getTupleNumber();
+        if (!t.getRecordId().getPageId().equals(this.pid)) &#123;
+            throw new DbException(&quot;this tuple doesn&#39;t belong to this page&quot;);
+        &#125;
+        if (!isSlotUsed(tupleNumber)) &#123;
+
+            throw new DbException(&quot;this slot is already empty&quot;);
+        &#125;
+        tuples[tupleNumber] &#x3D; null;
+        markSlotUsed(tupleNumber,false);
+        
+        &#x2F;&#x2F; not necessary for lab1
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="HeapFile"><a href="#HeapFile" class="headerlink" title="HeapFile"></a>HeapFile</h3><p>主要负责找到对应的Page然后再将tuple转交给Page来进行操作，同时负责新page的创建和写盘的操作<br><strong>Insert</strong><br>插入前，遍历该File中的所有的Page，找到一个还有空余空间的page，将其插入并且进行改动的<strong>脏页</strong>进行记录，如果所有的page均满了，则就在重新创建一个page来存储<br>有一个点需要注意，在最后新的文件，先直接写入磁盘上一个空page，再通过bufferpool来读出来，一并加载到bufferpool当中</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public List&lt;Page&gt; insertTuple(TransactionId tid, Tuple t)
+            throws DbException, IOException, TransactionAbortedException &#123;
+        &#x2F;&#x2F; some code goes here
+        List&lt;Page&gt; pages &#x3D; new ArrayList&lt;&gt;();
+        &#x2F;&#x2F; 先判断当前是否由已经存在的页是否由剩余空间
+        for(int i &#x3D; 0; i &lt;numPages();i++) &#123;
+            HeapPageId heapPageId &#x3D; new HeapPageId(this.getId(),i);
+            HeapPage page &#x3D; (HeapPage)Database.getBufferPool().getPage(tid, heapPageId, Permissions.READ_WRITE);
+            if (page.getNumEmptySlots() !&#x3D; 0) &#123;
+                page.insertTuple(t);
+                pages.add(page);
+                return pages;
+            &#125;
+
+        &#125;
+        &#x2F;&#x2F; 若当前页全部满，先创建一个新的空白page,再通过bufferPool将该空白page读出来
+        BufferedOutputStream output &#x3D; new BufferedOutputStream(new FileOutputStream(file,true));
+        byte[] emptyPageData &#x3D; HeapPage.createEmptyPageData();
+        output.write(emptyPageData);
+        output.close();
+        &#x2F;&#x2F; 物理上已经创建了一个新的page，因此numPages获取到的数量也+1，因此需要-1来得到最后一页
+        HeapPageId pageId &#x3D; new HeapPageId(this.getId(),numPages() -1);
+        HeapPage page &#x3D;(HeapPage) Database.getBufferPool().getPage(tid, pageId, Permissions.READ_WRITE);
+        page.insertTuple(t);
+        pages.add(page);
+        return pages;
+        &#x2F;&#x2F; not necessary for Exercise1
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>delete</strong><br>删除比较简单，只需要通过tuple的RecordId获取到page，然后交给page来处理即可，再处理一下异常</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public ArrayList&lt;Page&gt; deleteTuple(TransactionId tid, Tuple t) throws DbException,
+            TransactionAbortedException &#123;
+        ArrayList&lt;Page&gt; pages &#x3D; new ArrayList&lt;&gt;();
+        PageId pageId &#x3D; t.getRecordId().getPageId();
+        &#x2F;&#x2F; 找到该tuple所属于的页
+        if (!(getId() &#x3D;&#x3D; pageId.getTableId())) &#123;
+                throw new DbException(&quot;this page does not belong to this file&quot;);
+        &#125;
+        HeapPage page &#x3D;(HeapPage) Database.getBufferPool().getPage(tid, pageId, Permissions.READ_WRITE);
+        page.deleteTuple(t);
+        pages.add(page);
+        return pages;
+        &#x2F;&#x2F; some code goes here
+        &#x2F;&#x2F; not necessary for Exercise1
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>writePage</strong><br>写盘操作，根据pageNumber * pageSize得到偏移量然后写入即可</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public void writePage(Page page) throws IOException &#123;
+        HeapPageId pageId &#x3D; (HeapPageId) page.getId();
+        int pageNumber &#x3D; pageId.getPageNumber();
+        if (pageNumber &gt; numPages()) &#123;
+            throw new IllegalArgumentException(&quot;this file is full&quot;);
+        &#125;
+        int offset &#x3D; BufferPool.getPageSize() * pageNumber;
+        RandomAccessFile r &#x3D; new RandomAccessFile(file,&quot;rw&quot;);
+        r.seek(offset);
+        r.write(page.getPageData());
+        r.close();
+        &#x2F;&#x2F; some code goes here
+        &#x2F;&#x2F; not necessary for Exercise1
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="BufferPool"><a href="#BufferPool" class="headerlink" title="BufferPool"></a>BufferPool</h3><p>调用HeapFile的insert&#x2F;delete即可<br>定义一个updateBufferPool来更新BufferPool中的散列表的状态和标记该页为脏</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public void updateBufferPool(List&lt;Page&gt; pages,TransactionId tid) &#123;
+        for(Page page : pages) &#123;
+            page.markDirty(true,tid);
+
+            if (pageStore.size() &gt;&#x3D; numPages) &#123;
+                try &#123;
+                    evictPage();
+                &#125; catch (DbException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+            int pageKey &#x3D; page.getId().hashCode();
+            pageStore.put(pageKey,page);
+        &#125;
+
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>11.21更：</p>
+<p>在进行insert操作时，正确的逻辑应当为调用buffer pool的insert操作，然后bufferpool直接调用 HeapFile的yinsertTuple操作，对于不在buffer pool中的page进行insertTuple，在HeapFile的insertTuple通过调用bufferPool的getPage方式将其加载到内存当中，因此，在updateBufferPool当中可以直接从bufferPool当中获取到对应的page，然后修改该page的信息</p>
+<p>但是目前存在的问题是，在lab提供的系统测试当中，他是通过一个HeapFileDuplicates类来插入tuple，该HeapFileDuplicates类继承自HeapFile，因此在进行bufferPool传入HeapFileDuplicates类的pageId，后续在调用的insetTuple就是调用的HeapFileDeplicates这个子类的insertTuple方法（父类指向子类的实例），当时HeapFileDeplicates并没有对其进行实现，也就无法将page加载到bufferPool当中，最终导致<code>handleManyDirtyPages</code>​​单元测试无法通过。暂时还未找到合理的解决办法，有待后续再思考</p>
+<p>临时解决为了通过测试的解决方案为多加一个if进行判断，来避免不调用HeapFile中的insertTuple方法，同时也并不会影响到别的测试，只能说是为了解决问题而解决问题吧</p>
+<p><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20221121173433.png"></p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">if</span> <span class="token punctuation">(</span>linkedNode <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                linkedNode<span class="token punctuation">.</span>page <span class="token operator">=</span> page<span class="token punctuation">;</span>
+                pageStore<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span>linkedNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">LinkedNode</span> node <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LinkedNode</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span>page<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token function">addToHead</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                pageStore<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>node<span class="token punctuation">.</span>pageId<span class="token punctuation">,</span> node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">HeapFileDuplicates</span> <span class="token keyword">extends</span> <span class="token class-name">HeapFile</span> <span class="token punctuation">&#123;</span>
+
+    	<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span> duplicates<span class="token punctuation">;</span>
+  
+    	<span class="token keyword">public</span> <span class="token class-name">HeapFileDuplicates</span><span class="token punctuation">(</span><span class="token class-name">File</span> f<span class="token punctuation">,</span> <span class="token class-name">TupleDesc</span> td<span class="token punctuation">,</span> <span class="token keyword">int</span> duplicates<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    		<span class="token keyword">super</span><span class="token punctuation">(</span>f<span class="token punctuation">,</span> td<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    		<span class="token keyword">this</span><span class="token punctuation">.</span>duplicates <span class="token operator">=</span> duplicates<span class="token punctuation">;</span>
+    	<span class="token punctuation">&#125;</span>
+  
+    	<span class="token comment">// this version of insertTuple inserts duplicate copies of the same tuple,</span>
+    	<span class="token comment">// each on a new page</span>
+    	<span class="token annotation punctuation">@Override</span>
+    	<span class="token keyword">public</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Page</span><span class="token punctuation">></span></span> <span class="token function">insertTuple</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> tid<span class="token punctuation">,</span> <span class="token class-name">Tuple</span> t<span class="token punctuation">)</span>
+    			<span class="token keyword">throws</span> <span class="token class-name">DbException</span><span class="token punctuation">,</span> <span class="token class-name">IOException</span> <span class="token punctuation">&#123;</span>
+    		<span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Page</span><span class="token punctuation">></span></span> dirtypages <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    		<span class="token keyword">for</span><span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> duplicates<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    			<span class="token comment">// create a blank page</span>
+    			<span class="token class-name">BufferedOutputStream</span> bw <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BufferedOutputStream</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">FileOutputStream</span><span class="token punctuation">(</span><span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">getFile</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> emptyData <span class="token operator">=</span> <span class="token class-name">HeapPage</span><span class="token punctuation">.</span><span class="token function">createEmptyPageData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                bw<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>emptyData<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                bw<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    			<span class="token class-name">HeapPage</span> p <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HeapPage</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">HeapPageId</span><span class="token punctuation">(</span><span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">numPages</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    					<span class="token class-name">HeapPage</span><span class="token punctuation">.</span><span class="token function">createEmptyPageData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    	        p<span class="token punctuation">.</span><span class="token function">insertTuple</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    			dirtypages<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    		<span class="token punctuation">&#125;</span>
+    		<span class="token keyword">return</span> dirtypages<span class="token punctuation">;</span>
+    	<span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="exercise4"><a href="#exercise4" class="headerlink" title="exercise4"></a>exercise4</h2><h3 id="Insert"><a href="#Insert" class="headerlink" title="Insert"></a>Insert</h3><p>根据exe	rcise3封装好的insert&#x2F;delete来实现Insert&#x2F;Delete操作<br>和Filter&#x2F;Join&#x2F;SeqScan一样，本质上为一个OpIterator迭代器，在实现逻辑上也差不多<br>主要靠一个fetchNext方法将迭代的结果进行操作，对于Insert，此处的child的实现类即为SqeScan，将传入的所有tuple进行插入<br>而对于delete，此处的child则为filter，根据条件匹配进行删除</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">protected Tuple fetchNext() throws TransactionAbortedException, DbException &#123;
+        if(!isInsertd) &#123;
+            int count &#x3D; 0;
+            isInsertd &#x3D; true;
+            while (child.hasNext()) &#123;
+                Tuple next &#x3D; child.next();
+                try &#123;
+                    Database.getBufferPool().insertTuple(this.t, this.tableId, next);
+                    count++;
+                &#125; catch (IOException e) &#123;
+                    e.printStackTrace();
+                &#125;
+            &#125;
+            Tuple tuple &#x3D; new Tuple(this.tupleDesc);
+            IntField field &#x3D; new IntField(count);
+            tuple.setField(0,field);
+            return tuple;
+        &#125;
+        return null;
+        &#x2F;&#x2F; some code goes here
+
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>用于Insert未对父类Operator的hasNext进行覆写，因此逻辑仍为Operator的hasNext：</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">public boolean hasNext() throws DbException, TransactionAbortedException &#123;
+        if (!this.open) &#123;
+            throw new IllegalStateException(&quot;Operator not yet open&quot;);
+        &#125;
+        
+        if (next &#x3D;&#x3D; null) &#123;
+            next &#x3D; fetchNext();
+        &#125;
+        return next !&#x3D; null;
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>因此为了防止fetchNext的返回结果一直不为null，设置一个isInsert的字段，保证fetchNext只能返回一次非null的值</p>
+<p>同时在insert的系统测试中，可以看到一个while循环，并且在第一次循环后将hasResult设置为true，在第二次循环时则会断言终止循环，防止多次调用fetchNext</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">insOp.open();
+       boolean hasResult &#x3D; false;
+       while (insOp.hasNext()) &#123;
+           Tuple tup &#x3D; insOp.next();
+           assertFalse(hasResult);
+           hasResult &#x3D; true;
+           assertEquals(SystemTestUtil.SINGLE_INT_DESCRIPTOR, tup.getTupleDesc());
+           assertEquals(sourceRows, ((IntField) tup.getField(0)).getValue());
+       &#125;
+       assertTrue(hasResult);
+       insOp.close();<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h3><p>和Insert基本一致，但是有个bug，即为调用Heap File的delete操作会影响child的迭代器进行next迭代，初步推测应该是child的数据来源为HeapFile,而Heap File的delete操作会影响到其中的状态。暂时先用一个List接受一下，等child迭代完再去删除，也算某种程度上解决了吧。。。<br>后续再逐步debug找找问题,理论上二者之间不应该存在冲突</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">protected Tuple fetchNext() throws TransactionAbortedException, DbException &#123;
+
+
+       &#x2F;&#x2F; some code goes here
+       if (!isDeleted) &#123;
+           List&lt;Tuple&gt;  tuples &#x3D; new ArrayList&lt;&gt;();
+           while (child.hasNext()) &#123;
+               Tuple next &#x3D; child.next();
+               tuples.add(next);
+           &#125;
+           &#x2F;&#x2F; filter读取的和delete删除的为同一个heapFile，存在冲突，后续再看是否需要解决
+           isDeleted &#x3D; true;
+           for(Tuple tuple : tuples) &#123;
+               try &#123;
+                   Database.getBufferPool().deleteTuple(t,tuple);
+               &#125; catch (IOException e) &#123;
+                   e.printStackTrace();
+               &#125;
+
+           &#125;
+           Tuple tuple &#x3D; new Tuple(this.tupleDesc);
+           IntField field &#x3D; new IntField(tuples.size());
+           tuple.setField(0,field);
+           return tuple;
+       &#125;
+       return null;
+   &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="exercise5"><a href="#exercise5" class="headerlink" title="exercise5"></a>exercise5</h2><p>完善BufferPool，实现页淘汰策略，暂时先用最low的FIFO，后续再考虑使用LRU或者clock或者近似LRU替代一下</p>
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">private final List&lt;Node&gt; lruList;
+    private class Node &#123;
+        private PageId pageId;
+        private Page page;
+
+        public Node() &#123;
+
+        &#125;
+
+        public Node(PageId pageId, Page page) &#123;
+            this.pageId &#x3D; pageId;
+            this.page &#x3D; page;
+        &#125;
+
+        public PageId getPageId() &#123;
+            return pageId;
+        &#125;
+
+        public void setPageId(PageId pageId) &#123;
+            this.pageId &#x3D; pageId;
+        &#125;
+
+        public Page getPage() &#123;
+            return page;
+        &#125;
+
+        public void setPage(Page page) &#123;
+            this.page &#x3D; page;
+        &#125;
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-Java" data-language="Java"><code class="language-Java">private synchronized  void evictPage() throws DbException &#123;
+        &#x2F;&#x2F; some code goes here
+        &#x2F;&#x2F; not necessary for Exercise1
+        Node remove &#x3D; lruList.remove(0);
+        int pageKey &#x3D; remove.getPageId().hashCode();
+        try &#123;
+            flushPage(remove.pageId);
+        &#125; catch (IOException e) &#123;
+            e.printStackTrace();
+        &#125;
+        pageStore.remove(pageKey);
+    &#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>分别在从硬盘中读取page和重新写脏页时进行一次内存淘汰</p>
+<h2 id="buffer-pool重构"><a href="#buffer-pool重构" class="headerlink" title="buffer pool重构"></a>buffer pool重构</h2><p>之前buffer pool采用的策略为一个concurrentHashMap来作为内存中的页管理，在额外添加一个LinkedList来实现FIFO的页淘汰策略，需要进行淘汰时则从链表的头部进行淘汰</p>
+<p>list起到的是一个索引的作用，只是告诉buffer pool应该淘汰哪一页，存在一定的额外空间占用，并且实现的也只是FIFO级别的页淘汰策略，命中率并不高，在后续lab4时需要进行页淘汰时，这种额外一个list进行管理的结构操作起来也越来越麻烦，因此选择进行重构</p>
+<p>在物理层面上，只使用一个concurrentHashMap作为页管理，内部存放节点，节点之间再通过链表的形式串联起来</p>
+<p>首先定义节点</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">class</span> <span class="token class-name">LinkedNode</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">PageId</span> pageId<span class="token punctuation">;</span>
+        <span class="token class-name">Page</span> page<span class="token punctuation">;</span>
+        <span class="token class-name">LinkedNode</span> prev<span class="token punctuation">;</span>
+        <span class="token class-name">LinkedNode</span> next<span class="token punctuation">;</span>
+        <span class="token comment">// head与tail均为dummy节点，仅为表示，不真实存储数据</span>
+        <span class="token keyword">public</span> <span class="token class-name">LinkedNode</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+        <span class="token keyword">public</span> <span class="token class-name">LinkedNode</span><span class="token punctuation">(</span><span class="token class-name">PageId</span> pageId<span class="token punctuation">,</span> <span class="token class-name">Page</span> page<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>pageId <span class="token operator">=</span> pageId<span class="token punctuation">;</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>page <span class="token operator">=</span> page<span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>修改 ConcurrentHashMap的K V类型</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">PageId</span><span class="token punctuation">,</span> <span class="token class-name">LinkedNode</span><span class="token punctuation">></span></span> pageStore<span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>提供一些方法用于进行lru时对链表进行内存管理</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">LinkedNode</span> head<span class="token punctuation">;</span>
+<span class="token class-name">LinkedNode</span> tail<span class="token punctuation">;</span>
+
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">addToHead</span><span class="token punctuation">(</span><span class="token class-name">LinkedNode</span> node<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    node<span class="token punctuation">.</span>prev <span class="token operator">=</span> head<span class="token punctuation">;</span>
+    node<span class="token punctuation">.</span>next <span class="token operator">=</span> head<span class="token punctuation">.</span>next<span class="token punctuation">;</span>
+    head<span class="token punctuation">.</span>next<span class="token punctuation">.</span>prev <span class="token operator">=</span> node<span class="token punctuation">;</span>
+    head<span class="token punctuation">.</span>next <span class="token operator">=</span> node<span class="token punctuation">;</span>
+
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">remove</span><span class="token punctuation">(</span><span class="token class-name">LinkedNode</span> node<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    node<span class="token punctuation">.</span>prev<span class="token punctuation">.</span>next <span class="token operator">=</span> node<span class="token punctuation">.</span>next<span class="token punctuation">;</span>
+    node<span class="token punctuation">.</span>next<span class="token punctuation">.</span>prev <span class="token operator">=</span> node<span class="token punctuation">.</span>prev<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">moveToHead</span><span class="token punctuation">(</span><span class="token class-name">LinkedNode</span> node<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">remove</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">addToHead</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token class-name">LinkedNode</span> <span class="token function">removeTail</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">LinkedNode</span> node <span class="token operator">=</span> tail<span class="token punctuation">.</span>prev<span class="token punctuation">;</span>
+    <span class="token function">remove</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> node<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<ul>
+<li>定义一个dummyHead和一个dummyTail，不存储真实数据，仅用于标识</li>
+<li>链表的头部维护最新的page，如果buffer pool当中的page被访问到了，则将其移动到链表的头部位置</li>
+<li>链表的尾部标识长时间未被访问的节点，淘汰则从尾部开始进行淘汰</li>
+</ul>
+<p>最终在内存淘汰策略上，实现的为一种近似LRU的策略，相比于直接FIFO，效果还是要好上许多</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://fischer0522.github.io">Fischer</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fischer0522.github.io/2022/11/21/MIT-6-830-lab2/">https://fischer0522.github.io/2022/11/21/MIT-6-830-lab2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fischer0522.github.io" target="_blank">Fischer的碎碎念</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></div><div class="post_share"><div class="social-share" data-image="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2022/11/21/MIT-6-830-lab3/"><img class="prev-cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">MIT 6.830 lab3</div></div></a></div><div class="next-post pull-right"><a href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/"><img class="next-cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info"></div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/67446310_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-10-01</div><div class="title">MIT 6.830 lab1</div></div></a></div><div><a href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-11-21</div><div class="title">MIT 6.830 lab3</div></div></a></div><div><a href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-11-21</div><div class="title">MIT 6.830 lab4</div></div></a></div><div><a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" title="Redis设计与实现"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-42-23.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-08</div><div class="title">Redis设计与实现</div></div></a></div><div><a href="/2022/08/08/MySQL45%E8%AE%B2/" title="MySQL45讲"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-08</div><div class="title">MySQL45讲</div></div></a></div><div><a href="/2022/08/08/%E4%BA%8B%E5%8A%A1/" title="MySQL事务"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/69602151_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-08</div><div class="title">MySQL事务</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/70068866_p0.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Fischer</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Fischer0522"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Fischer0522" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:1809327837@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MIT-6-830-Lab2"><span class="toc-number">1.</span> <span class="toc-text">MIT 6.830 Lab2</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#exercise1"><span class="toc-number">1.1.</span> <span class="toc-text">exercise1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Filter"><span class="toc-number">1.1.1.</span> <span class="toc-text">Filter</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Join"><span class="toc-number">1.1.2.</span> <span class="toc-text">Join</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bug"><span class="toc-number">1.1.3.</span> <span class="toc-text">Bug</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E8%BF%87%E7%A8%8B"><span class="toc-number">1.1.4.</span> <span class="toc-text">测试过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exercise2"><span class="toc-number">1.2.</span> <span class="toc-text">exercise2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#StringAggregator"><span class="toc-number">1.2.1.</span> <span class="toc-text">StringAggregator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IntegerAggregator"><span class="toc-number">1.2.2.</span> <span class="toc-text">IntegerAggregator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Aggregate"><span class="toc-number">1.2.3.</span> <span class="toc-text">Aggregate</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exercise3"><span class="toc-number">1.3.</span> <span class="toc-text">exercise3</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HeapPage"><span class="toc-number">1.3.1.</span> <span class="toc-text">HeapPage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HeapFile"><span class="toc-number">1.3.2.</span> <span class="toc-text">HeapFile</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BufferPool"><span class="toc-number">1.3.3.</span> <span class="toc-text">BufferPool</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exercise4"><span class="toc-number">1.4.</span> <span class="toc-text">exercise4</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Insert"><span class="toc-number">1.4.1.</span> <span class="toc-text">Insert</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Delete"><span class="toc-number">1.4.2.</span> <span class="toc-text">Delete</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exercise5"><span class="toc-number">1.5.</span> <span class="toc-text">exercise5</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#buffer-pool%E9%87%8D%E6%9E%84"><span class="toc-number">1.6.</span> <span class="toc-text">buffer pool重构</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab4"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4">MIT 6.830 lab4</a><time datetime="2022-11-21T09:37:19.000Z" title="发表于 2022-11-21 17:37:19">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab3"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3">MIT 6.830 lab3</a><time datetime="2022-11-21T09:35:19.000Z" title="发表于 2022-11-21 17:35:19">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab2"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2">MIT 6.830 lab2</a><time datetime="2022-11-21T09:30:44.000Z" title="发表于 2022-11-21 17:30:44">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/" title="无题"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/" title="无题">无题</a><time datetime="2022-11-06T06:14:38.596Z" title="发表于 2022-11-06 14:14:38">2022-11-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/67446310_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab1"/></a><div class="content"><a class="title" href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1">MIT 6.830 lab1</a><time datetime="2022-10-01T14:23:21.000Z" title="发表于 2022-10-01 22:23:21">2022-10-01</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By Fischer</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

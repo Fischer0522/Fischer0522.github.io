@@ -1,0 +1,535 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>MIT 6.830 lab4 | Fischer的碎碎念</title><meta name="author" content="Fischer"><meta name="copyright" content="Fischer"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="MIT 6.830 Lab4Exercise1 &amp; Exercise2为实现页级锁，需要定义一个PageLock​​和LockManager​​来进行辅助管理 buffer pool policy策略上，选择了NO-STEAL + FORCE 简单来说就是对于一个为提交的事务，不可将其的操作进行刷盘，而在一个事务commit时，需要将其所有的更改刷盘进行持久化，为最简单的实现方式。最低限度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MIT 6.830 lab4">
+<meta property="og:url" content="https://fischer0522.github.io/2022/11/21/MIT-6-830-lab4/index.html">
+<meta property="og:site_name" content="Fischer的碎碎念">
+<meta property="og:description" content="MIT 6.830 Lab4Exercise1 &amp; Exercise2为实现页级锁，需要定义一个PageLock​​和LockManager​​来进行辅助管理 buffer pool policy策略上，选择了NO-STEAL + FORCE 简单来说就是对于一个为提交的事务，不可将其的操作进行刷盘，而在一个事务commit时，需要将其所有的更改刷盘进行持久化，为最简单的实现方式。最低限度">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg">
+<meta property="article:published_time" content="2022-11-21T09:37:19.000Z">
+<meta property="article:modified_time" content="2022-11-21T09:44:03.952Z">
+<meta property="article:author" content="Fischer">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg"><link rel="shortcut icon" href="/img/favi.png"><link rel="canonical" href="https://fischer0522.github.io/2022/11/21/MIT-6-830-lab4/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'MIT 6.830 lab4',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-11-21 17:44:03'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/70068866_p0.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Fischer的碎碎念</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">MIT 6.830 lab4</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-11-21T09:37:19.000Z" title="发表于 2022-11-21 17:37:19">2022-11-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-11-21T09:44:03.952Z" title="更新于 2022-11-21 17:44:03">2022-11-21</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="MIT 6.830 lab4"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="MIT-6-830-Lab4"><a href="#MIT-6-830-Lab4" class="headerlink" title="MIT 6.830 Lab4"></a>MIT 6.830 Lab4</h1><h2 id="Exercise1-amp-Exercise2"><a href="#Exercise1-amp-Exercise2" class="headerlink" title="Exercise1 &amp; Exercise2"></a>Exercise1 &amp; Exercise2</h2><p>为实现页级锁，需要定义一个<code>PageLock</code>​​和<code>LockManager</code>​​来进行辅助管理</p>
+<p>buffer pool policy策略上，选择了NO-STEAL + FORCE</p>
+<p>简单来说就是对于一个为提交的事务，不可将其的操作进行刷盘，而在一个事务commit时，需要将其所有的更改刷盘进行持久化，为最简单的实现方式。最低限度的保证了并发安全，但是并无法实现WAL，WAL采用的buffer pool policy使用的为STEAL + NO-FORCE，具体和buffer pool policy相关的看：数据库系统设计（2）[^1]</p>
+<p>锁的管理策略为 <code>Strict two-phase locking</code>​，即只有事务进行commit时再释放所有相关的锁，来避免级联中止的问题。因此需要一个相应的<code>TransactionComplete</code>​方法来释放该事务设计的所有相关的锁</p>
+<h3 id="PageLock"><a href="#PageLock" class="headerlink" title="PageLock"></a>PageLock</h3><p>针对一个page进行上锁，因此需要记录，锁的类型，还有占有锁的事务tid</p>
+<p>提供一个用于修改锁类型的方法用于后续的锁类型升级</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">package</span> <span class="token namespace">simpledb<span class="token punctuation">.</span></span><span class="token class-name">Lock</span><span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">simpledb<span class="token punctuation">.</span>storage<span class="token punctuation">.</span></span><span class="token class-name">PageId</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">simpledb<span class="token punctuation">.</span>transaction<span class="token punctuation">.</span></span><span class="token class-name">TransactionId</span></span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">PageLock</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> SHARED <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> EXCLUSIVE <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token class-name">TransactionId</span> transactionId<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">int</span> type<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">PageLock</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> transactionId<span class="token punctuation">,</span> <span class="token keyword">int</span> type<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>transactionId <span class="token operator">=</span> transactionId<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>type <span class="token operator">=</span> type<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">TransactionId</span> <span class="token function">getTransactionId</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> transactionId<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setTransactionId</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> transactionId<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>transactionId <span class="token operator">=</span> transactionId<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> type<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setType</span><span class="token punctuation">(</span><span class="token keyword">int</span> type<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>type <span class="token operator">=</span> type<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="LockManager"><a href="#LockManager" class="headerlink" title="LockManager"></a>LockManager</h3><p>用于管理锁</p>
+<p>首先需要一个concurrentHashMap来管理一个page上有多少个锁，因此该concurrentHashMap的key为<code>PageId</code>​,value为<code>pageLocks</code>​，pageLocks用于记录该page上一共有多少个锁，</p>
+<p>对于LockManager本身，需要实现获取锁，查看该page上是否有锁，释放一个page上的所有锁，并且提供一个事务结束的方法，释放该事务对应的所有page上的锁</p>
+<h4 id="pageLocks"><a href="#pageLocks" class="headerlink" title="pageLocks"></a>pageLocks</h4><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">TransactionId</span><span class="token punctuation">,</span> <span class="token class-name">PageLock</span><span class="token punctuation">></span></span> pageLock<span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>用于记录一个page上存在什么锁，自身的数据结构选择为concurrentHashMap类型，来保证线程安全，key为事务id，便于事务commit时可以将该事务所有的锁全部释放，value为一个pageLock对象，表明该page上的锁的实体</p>
+<p>由于锁的类型问题，由于一个page上面只能有一个排他锁，因此如果pageLocks的size &gt; 1的话，那么当前该page上面的锁一定全为共享锁，如果当前只有一把锁，那么再去获取并判断该锁的类型</p>
+<h4 id="isHoldLock"><a href="#isHoldLock" class="headerlink" title="isHoldLock"></a>isHoldLock</h4><p>需保证线程安全，使用<code>synchronized</code>​关键字</p>
+<p>判断一个事务是否在该page上加了锁，因此传入一个tid和pageId，</p>
+<p>先通过pageId来获取到pageLocks，如果pageLocks为null则证明并不存在任何事务在该page上加了锁，因此可以直接返回false，如果能够通过pageId获取到pageLocks，再通过tid来尝试是否能够获取到锁</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">boolean</span> <span class="token function">isHoldLock</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> transactionId<span class="token punctuation">,</span> <span class="token class-name">PageId</span> pageId<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">TransactionId</span><span class="token punctuation">,</span> <span class="token class-name">PageLock</span><span class="token punctuation">></span></span> transactionIdPageLockConcurrentHashMap <span class="token operator">=</span> lockMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">//如果该page上无锁则可以直接返回</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>transactionIdPageLockConcurrentHashMap <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// 尝试根据id来获取锁</span>
+        <span class="token class-name">PageLock</span> pageLock <span class="token operator">=</span> transactionIdPageLockConcurrentHashMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pageLock <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="releaseLock"><a href="#releaseLock" class="headerlink" title="releaseLock"></a>releaseLock</h4><p>需保证线程安全，使用<code>synchronized</code>​关键字</p>
+<p>释放该page上的锁，如果释放成功则返回true，否则返回false，首先尝试获取该page上的锁，如果<code>pageLocks==null</code>​则证明该page上并不存在锁，直接返回false，</p>
+<p>如果能够获取成功，则将pageLocks中的锁直接remove，返回true</p>
+<p>如果remove后<code>pageLocks.size()==0</code>​则证明该page上面已经不存在锁，将其从lockMap中移除即可</p>
+<p>其他情况则视为释放失败，返回false</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">boolean</span> <span class="token function">releaseLock</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> transactionId<span class="token punctuation">,</span> <span class="token class-name">PageId</span> pageId<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 有锁则逐级释放</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isHoldLock</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> pageId<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">TransactionId</span><span class="token punctuation">,</span> <span class="token class-name">PageLock</span><span class="token punctuation">></span></span> transactionIdPageLockConcurrentHashMap <span class="token operator">=</span> lockMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            transactionIdPageLockConcurrentHashMap<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>transactionIdPageLockConcurrentHashMap<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                lockMap<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="acquireLock"><a href="#acquireLock" class="headerlink" title="acquireLock"></a>acquireLock</h4><p>尝试在该page上获取一个锁，如果无法获取到一个锁，则直接返回一个false，自旋等待的过程在buffer pool中进行</p>
+<p>需保证线程安全，使用<code>synchronized</code>​关键字</p>
+<p>尝试获取一个锁，因此需要传入进行上锁的pageId，锁的类型，进行加锁的tid</p>
+<p>最简单的情况为当前的page上面没有锁，即通过pageId从lockMap中获取的结果为null，直接先创建一个pageLock，在创建一个pageLocks添加到lockMap当中，返回true，</p>
+<p>如果获取到的pageLocks不为null，则证明当前的page上面存在锁，因此需要判断锁的种类来判断是否能获取到锁，如果能则直接获取，获取不到则自选阻塞等待。</p>
+<p>先判断当前事务是否在该page上面加过锁，如果没有：</p>
+<ul>
+<li><p>如果<code>pageLocks.size()&gt;1</code>​则证明当前的page上面的全为共享锁，</p>
+<ul>
+<li>此时如果新加的锁也为共享锁，则可直接添加上去</li>
+<li>如果当前的锁为排他锁，则需要进行自选等待，等待设计的共享锁全部释放</li>
+</ul>
+</li>
+<li><p>如果<code>pageLocks.size()==1</code>​则该锁可能是共享锁，也可能是排他锁，需要遍历value进行判断：</p>
+<ul>
+<li>如果是共享锁，则可以直接添加</li>
+<li>如果是排他锁，直接拒绝</li>
+</ul>
+</li>
+</ul>
+<p>如果在该page上已经加过锁了，则需要考虑进行锁升级：</p>
+<ul>
+<li><p>首先获取之前page上的锁的类型，如果是共享锁，则可以考虑进行锁升级</p>
+<ul>
+<li>如果当前page上只有一个锁，则是当前事务之前加上去的共享锁，进行锁升级，将其的type设置为排他锁</li>
+<li>如果当前page上面不止一个锁，则证明还有其他的事务在该page上面持有共享锁，无法进行锁升级，直接返回false</li>
+</ul>
+</li>
+<li><p>如果该page上面的锁为排他锁，直接进行拒绝</p>
+</li>
+</ul>
+<p>‍</p>
+<p>除了上述的其他情况，则全为意外情况，证明锁获取失败，returnfalse</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">boolean</span> <span class="token function">acquiredLock</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> transactionId<span class="token punctuation">,</span> <span class="token class-name">PageId</span> pageId<span class="token punctuation">,</span> <span class="token keyword">int</span> type<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 先判断是否存在锁，如果不存在则可以直接申请持有一个锁</span>
+        <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">TransactionId</span><span class="token punctuation">,</span> <span class="token class-name">PageLock</span><span class="token punctuation">></span></span> locks <span class="token operator">=</span> lockMap<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>locks <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token comment">// 全局一个锁都无，可以直接申请持有</span>
+            <span class="token class-name">PageLock</span> pageLock <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PageLock</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">TransactionId</span><span class="token punctuation">,</span> <span class="token class-name">PageLock</span><span class="token punctuation">></span></span> lockConcurrentHashMap <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            lockConcurrentHashMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> pageLock<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            lockMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span> lockConcurrentHashMap<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// 判断当前事务之前是否在该page上持有锁</span>
+        <span class="token class-name">PageLock</span> pageLock <span class="token operator">=</span> locks<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>pageLock <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token comment">// 当前page上不存在该事务的锁，直接申请新的锁</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>locks<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token comment">// 如果 size() > 1则证明存在多个锁，且为多个共享锁，如果当前事务要申请共享锁，直接进行添加，排他锁则拒绝</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>SHARED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token class-name">PageLock</span> pageLock1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PageLock</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    locks<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> pageLock1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    lockMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span> locks<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>locks<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token comment">// 当前page上只有一个锁，可能为共享锁也可以为排他锁</span>
+                <span class="token class-name">PageLock</span> curLock <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+                <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">PageLock</span> lock <span class="token operator">:</span> locks<span class="token punctuation">.</span><span class="token function">values</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    curLock <span class="token operator">=</span> lock<span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+                <span class="token comment">// 获取锁用于判断类型</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>curLock<span class="token punctuation">.</span><span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>SHARED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token comment">// 如果是共享锁并且该事务也为共享锁则可以申请持有</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>SHARED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        <span class="token class-name">PageLock</span> newPageLock <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PageLock</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        locks<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> newPageLock<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        lockMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span> locks<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        <span class="token comment">// 当前事务为排他锁，拒绝</span>
+                        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span>
+
+                <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>curLock<span class="token punctuation">.</span><span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token comment">// page上的锁为排他锁，直接拒绝</span>
+                    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+
+            <span class="token punctuation">&#125;</span>
+
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>pageLock <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token comment">// 之前存在过锁，需要考虑锁的升级</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>pageLock<span class="token punctuation">.</span><span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>SHARED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>SHARED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token comment">// 新锁为共享锁，直接返回</span>
+                    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>type <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token comment">// 当前事务为排他锁，如果该page上没有其他事务持有的锁，则可以进行申请</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>locks<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        pageLock<span class="token punctuation">.</span><span class="token function">setType</span><span class="token punctuation">(</span><span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        locks<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>transactionId<span class="token punctuation">,</span> pageLock<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        lockMap<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span>locks<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>locks<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">></span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        <span class="token comment">// 其他事务持有了共享锁，存在冲突，不能进行锁的升级</span>
+                        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span>
+                <span class="token punctuation">&#125;</span>
+
+            <span class="token punctuation">&#125;</span>
+            <span class="token comment">// 之前为写锁，无论如何都无需进行升级，新事务为写锁则直接返回，新事务为共享锁则拒绝</span>
+            <span class="token keyword">return</span> pageLock<span class="token punctuation">.</span><span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="completeTranslation"><a href="#completeTranslation" class="headerlink" title="completeTranslation"></a>completeTranslation</h4><p>事务提交时，释放该事务持有的所有的锁，遍历page进行释放操作</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">void</span> <span class="token function">completeTranslation</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> tid<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 遍历所有的页，如果对应事务持有锁就会释放</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">PageId</span> pageId <span class="token operator">:</span> lockMap<span class="token punctuation">.</span><span class="token function">keySet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">releaseLock</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="Buffer-Pool"><a href="#Buffer-Pool" class="headerlink" title="Buffer Pool"></a>Buffer Pool</h3><p>在buffer pool当中，改写原本的<code>getPage()</code>​的基础上，增加获取锁，来保证线程安全问题，在真正获取一页之前先尝试对该页持有锁，如果能够成功锁，则可以继续完成之前lab2中实现的获取一页的操作</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token class-name">Page</span> <span class="token function">getPage</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> tid<span class="token punctuation">,</span> <span class="token class-name">PageId</span> pid<span class="token punctuation">,</span> <span class="token class-name">Permissions</span> perm<span class="token punctuation">)</span>
+            <span class="token keyword">throws</span> <span class="token class-name">TransactionAbortedException</span><span class="token punctuation">,</span> <span class="token class-name">DbException</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> type<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>perm <span class="token operator">==</span> <span class="token class-name">Permissions</span><span class="token punctuation">.</span>READ_ONLY<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            type <span class="token operator">=</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>SHARED<span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            type <span class="token operator">=</span> <span class="token class-name">PageLock</span><span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// 先判断事务的类型，来获取对应类型的锁</span>
+        <span class="token keyword">long</span> startTime <span class="token operator">=</span> <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 设置超时时间为500ms</span>
+        <span class="token keyword">boolean</span> isAcquired <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span>isAcquired<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            isAcquired <span class="token operator">=</span> lockManager<span class="token punctuation">.</span><span class="token function">acquiredLock</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> pid<span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">long</span> now <span class="token operator">=</span> <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>now <span class="token operator">-</span> startTime <span class="token operator">></span> <span class="token number">500</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">TransactionAbortedException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// some code goes here</span>
+        <span class="token comment">// 如果缓存池中没有</span>
+        <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span>pageStore<span class="token punctuation">.</span><span class="token function">containsKey</span><span class="token punctuation">(</span>pid<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token comment">// 获取</span>
+            <span class="token class-name">DbFile</span> dbFile <span class="token operator">=</span> <span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getDatabaseFile</span><span class="token punctuation">(</span>pid<span class="token punctuation">.</span><span class="token function">getTableId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Page</span> page <span class="token operator">=</span> dbFile<span class="token punctuation">.</span><span class="token function">readPage</span><span class="token punctuation">(</span>pid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment">// 是否超过大小</span>
+            <span class="token keyword">if</span><span class="token punctuation">(</span>pageStore<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">>=</span> numPages<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+                <span class="token comment">// 淘汰 (后面的 Exercise 书写)</span>
+                <span class="token function">evictPage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token comment">// 放入缓存</span>
+            pageStore<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pid<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> page<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Node</span> newNode <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span>page<span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>page<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            lruList<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>newNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// 从 缓存池 中获取</span>
+        <span class="token keyword">return</span> pageStore<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>pid<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><strong>unsafeReleasePage</strong></p>
+<p>直接释放对应的锁</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span>  <span class="token keyword">void</span> <span class="token function">unsafeReleasePage</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> tid<span class="token punctuation">,</span> <span class="token class-name">PageId</span> pid<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// some code goes here</span>
+        <span class="token comment">// not necessary for Exercise1|Exercise2</span>
+        lockManager<span class="token punctuation">.</span><span class="token function">releaseLock</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span>pid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="HeapFile"><a href="#HeapFile" class="headerlink" title="HeapFile"></a>HeapFile</h3><p>用于在进行<code>insertTuple</code>​时，HeapFile的<code>insertTuple</code>​方法会调用bufferpool当中的<code>getPage</code>​来获取一个page，因此同样会进行加锁操作，但是如果获取到了一个满的page，此时会虽然无法对其进行写操作，但是依旧会加锁，此时便需要将该满page上的锁进行释放，防止影响之后的操作，虽然释放锁的操作违反了严格两阶段锁协议，但是由于并未对其进行读写操作，因此释放锁时并不会造成其他影响。对HeapFile进行修改：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">HeapPageId</span> heapPageId <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HeapPageId</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">HeapPage</span> page <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">HeapPage</span><span class="token punctuation">)</span><span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getBufferPool</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getPage</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> heapPageId<span class="token punctuation">,</span> <span class="token class-name">Permissions</span><span class="token punctuation">.</span>READ_WRITE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>page<span class="token punctuation">.</span><span class="token function">getNumEmptySlots</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                page<span class="token punctuation">.</span><span class="token function">insertTuple</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                pages<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>page<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">return</span> pages<span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getBufferPool</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">unsafeReleasePage</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span>heapPageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="InsertTest-amp-DeleteTest"><a href="#InsertTest-amp-DeleteTest" class="headerlink" title="InsertTest &amp; DeleteTest"></a>InsertTest &amp; DeleteTest</h3><p>InsertTest和DeleteTest测试通过buffer pool进行插入元组的能力，buffer pool的操作最终会调用HeapFile来进行实现，但是HeapFile的获取page的方式为通过BufferPool的getPage方法，因此最后还是会获取到锁来保证并发安全。文档中说在完成exercise后对InsertTest 和DeleteTest进行<strong>Double Check</strong>，但是试了一下无法通过，后续看了看单元测试，</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Test</span> <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">testOneToEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> <span class="token class-name">IOException</span><span class="token punctuation">,</span> <span class="token class-name">DbException</span><span class="token punctuation">,</span> <span class="token class-name">TransactionAbortedException</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">validateInsert</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java">       <span class="token class-name">TransactionId</span> tid <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TransactionId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token class-name">SeqScan</span> ss <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SeqScan</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> source<span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token class-name">Insert</span> insOp <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Insert</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> ss<span class="token punctuation">,</span> destination<span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// ...</span>
+
+<span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getBufferPool</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">transactionComplete</span><span class="token punctuation">(</span>tid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getBufferPool</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">flushAllPages</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+       <span class="token class-name">SystemTestUtil</span><span class="token punctuation">.</span><span class="token function">matchTuples</span><span class="token punctuation">(</span>destination<span class="token punctuation">,</span> sourceTuples<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">matchTuples</span><span class="token punctuation">(</span><span class="token class-name">DbFile</span> f<span class="token punctuation">,</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">List</span><span class="token punctuation">&lt;</span><span class="token class-name">Integer</span><span class="token punctuation">></span><span class="token punctuation">></span></span> tuples<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> <span class="token class-name">DbException</span><span class="token punctuation">,</span> <span class="token class-name">TransactionAbortedException</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">TransactionId</span> tid <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">TransactionId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">matchTuples</span><span class="token punctuation">(</span>f<span class="token punctuation">,</span> tid<span class="token punctuation">,</span> tuples<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getBufferPool</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">transactionComplete</span><span class="token punctuation">(</span>tid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">matchTuples</span><span class="token punctuation">(</span><span class="token class-name">DbFile</span> f<span class="token punctuation">,</span> <span class="token class-name">TransactionId</span> tid<span class="token punctuation">,</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">List</span><span class="token punctuation">&lt;</span><span class="token class-name">Integer</span><span class="token punctuation">></span><span class="token punctuation">></span></span> tuples<span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> <span class="token class-name">DbException</span><span class="token punctuation">,</span> <span class="token class-name">TransactionAbortedException</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">SeqScan</span> scan <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SeqScan</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> f<span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">matchTuples</span><span class="token punctuation">(</span>scan<span class="token punctuation">,</span> tuples<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<ol>
+<li>首先创建一个事务从随机生成的一个HeapFile中读取数据，该事务再将其插入到一个空的HeapFile当中</li>
+<li>后续调用<code>TransactionComplete</code>​方法，来释放该事务涉及的锁，</li>
+<li>之后再由另一个事务来进行读操作，验证最后的结果</li>
+<li>但是由于完成了exercise2后并没有实现<code>TransactionComplete</code>​方法，因此导致最终超时中止事务</li>
+</ol>
+<p>在exercise4中实现了<code>TransaciontComplete</code>​之后InsertTest和DeleteTest均能够正确通过测试</p>
+<h2 id="Exercise3"><a href="#Exercise3" class="headerlink" title="Exercise3"></a>Exercise3</h2><p>实现NO-STEAL策略，在事务未提交时，该事务所涉及的所有的脏页均不能落盘，因此对之前实现的<code>evictPage</code>​方法进行修改：</p>
+<ol>
+<li>从lruList的尾部去除最长时间未被访问的节点，如果不是脏页则直接淘汰，如果为脏页则跳过，并且由于访问了一次，因此将其置于头部，如果不为脏页则进行淘汰</li>
+<li>最终遍历buffer pool当中所有的page，如果全为脏页，则抛出异常</li>
+</ol>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">private</span> <span class="token keyword">synchronized</span> <span class="token keyword">void</span> <span class="token function">evictPage</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">DbException</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// some code goes here</span>
+    <span class="token comment">// not necessary for Exercise1</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> numPages<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">LinkedNode</span> linkedNode <span class="token operator">=</span> <span class="token function">removeTail</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Page</span> page <span class="token operator">=</span> linkedNode<span class="token punctuation">.</span>page<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>page<span class="token punctuation">.</span><span class="token function">isDirty</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">addToHead</span><span class="token punctuation">(</span>linkedNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                <span class="token function">flushPage</span><span class="token punctuation">(</span>linkedNode<span class="token punctuation">.</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            pageStore<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>linkedNode<span class="token punctuation">.</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">DbException</span><span class="token punctuation">(</span><span class="token string">"all pages are dirty page"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="Exercise4"><a href="#Exercise4" class="headerlink" title="Exercise4"></a>Exercise4</h2><p>事务提交时执行<code>transactionComplete</code>​,分为两种，一种为一定会提交，另外一种为可能提交也可能终止，根据传入的参数进行决定</p>
+<p>根据<code>FORCE</code>​原则，在提交时需要将所有的脏页均进行刷盘，而如果进行终止，则需要从数据库中读取原本的数据将被该事务修改的数据进行恢复</p>
+<p>无论是提交还是终止，均需要释放所有该事务持有的锁</p>
+<p>因此，<code>transactionComplete</code>​需要完成的工作为：</p>
+<ul>
+<li><p>处理page：</p>
+<ul>
+<li>如果事务提交，则将该事务涉及到的所有的page进行刷盘</li>
+<li>如果事务中止，则从硬盘中读取page，将内存中脏页恢复到事务开始前的状态</li>
+</ul>
+</li>
+<li><p>释放该事务涉及到的所有锁</p>
+</li>
+</ul>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java">  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">transactionComplete</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> tid<span class="token punctuation">,</span> <span class="token keyword">boolean</span> commit<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token comment">// some code goes here</span>
+      <span class="token comment">// not necessary for Exercise1|Exercise2</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>commit<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+          <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+              <span class="token function">flushPages</span><span class="token punctuation">(</span>tid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+              e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">//偷个懒，只打印一下信息</span>
+          <span class="token punctuation">&#125;</span>
+      <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+          <span class="token function">restorePages</span><span class="token punctuation">(</span>tid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">&#125;</span>
+      lockManager<span class="token punctuation">.</span><span class="token function">completeTransaction</span><span class="token punctuation">(</span>tid<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><code>restorePages</code>​用于从硬盘当中重新读取page</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">void</span> <span class="token function">restorePages</span><span class="token punctuation">(</span><span class="token class-name">TransactionId</span> tid<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">LinkedNode</span> linkedNode <span class="token operator">:</span> pageStore<span class="token punctuation">.</span><span class="token function">values</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Page</span> page <span class="token operator">=</span> linkedNode<span class="token punctuation">.</span>page<span class="token punctuation">;</span>
+        <span class="token class-name">PageId</span> pageId <span class="token operator">=</span> linkedNode<span class="token punctuation">.</span>pageId<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>tid<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>page<span class="token punctuation">.</span><span class="token function">isDirty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">int</span> tableId <span class="token operator">=</span> pageId<span class="token punctuation">.</span><span class="token function">getTableId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">DbFile</span> databaseFile <span class="token operator">=</span> <span class="token class-name">Database</span><span class="token punctuation">.</span><span class="token function">getCatalog</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getDatabaseFile</span><span class="token punctuation">(</span>tableId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Page</span> pageFromDisk <span class="token operator">=</span> databaseFile<span class="token punctuation">.</span><span class="token function">readPage</span><span class="token punctuation">(</span>pageId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            linkedNode<span class="token punctuation">.</span>page <span class="token operator">=</span> pageFromDisk<span class="token punctuation">;</span>
+            pageStore<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>pageId<span class="token punctuation">,</span>linkedNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">moveToHead</span><span class="token punctuation">(</span>linkedNode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="Exercise5"><a href="#Exercise5" class="headerlink" title="Exercise5"></a>Exercise5</h2><p>暂时只采用了最简单实现方式，即超时放弃，如果一个page 500ms内没能够拿到锁，这直接抛出<code>TransactionAbortedException</code>​异常，避免死锁</p>
+<p>后续再考虑如何实现循环检测的方案</p>
+<p>和Exercise1 Exercise2一同实现了</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java">       <span class="token keyword">long</span> startTime <span class="token operator">=</span> <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>      
+<span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span>isAcquired<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+           isAcquired <span class="token operator">=</span> lockManager<span class="token punctuation">.</span><span class="token function">acquiredLock</span><span class="token punctuation">(</span>tid<span class="token punctuation">,</span> pid<span class="token punctuation">,</span> type<span class="token punctuation">)</span><span class="token punctuation">;</span>
+           <span class="token keyword">long</span> now <span class="token operator">=</span> <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+           <span class="token keyword">if</span> <span class="token punctuation">(</span>now <span class="token operator">-</span> startTime <span class="token operator">></span> <span class="token number">500</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+               <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">TransactionAbortedException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+           <span class="token punctuation">&#125;</span>
+       <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>lab4可以说是真正进入了数据库的深水区，实现了一个简单的并发管理，lockManager的实现还是有一定的难度，尤其是其中的<code>acquiredLock</code>​方法，需要考虑的情况还是有点复杂的。整体难度对于前三个lab还是有较大的差距。不得不说的是DBMS自身还是有相当的复杂性的，看445时感觉对MVCC的理解也较为透彻，但是真正动手实现一个单版本的两阶段严格锁协议也挺费劲的。</p>
+<p>后续再考虑能否将其改为MVCC模式，毕竟两阶段严格锁协议的并发度还是太低了，在一读一写的情况下直接就变为串行化了，读写不能同时进行，可以说是没有并发了。</p>
+<p>对于锁的粒度，看看是否能将page级别的锁升级为tuple级别，对于一个tuple进行加锁，进一步提高并发度，优先尝试使用tuple级别的锁，在实现上应该比MVCC能简单一点</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://fischer0522.github.io">Fischer</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fischer0522.github.io/2022/11/21/MIT-6-830-lab4/">https://fischer0522.github.io/2022/11/21/MIT-6-830-lab4/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fischer0522.github.io" target="_blank">Fischer的碎碎念</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></div><div class="post_share"><div class="social-share" data-image="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/11/21/MIT-6-830-lab3/"><img class="next-cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">MIT 6.830 lab3</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/67446310_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-10-01</div><div class="title">MIT 6.830 lab1</div></div></a></div><div><a href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-11-21</div><div class="title">MIT 6.830 lab2</div></div></a></div><div><a href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-11-21</div><div class="title">MIT 6.830 lab3</div></div></a></div><div><a href="/2022/08/08/%E2%80%9CRedis%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0%E2%80%9D/" title="Redis设计与实现"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-42-23.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-08</div><div class="title">Redis设计与实现</div></div></a></div><div><a href="/2022/08/08/MySQL45%E8%AE%B2/" title="MySQL45讲"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-08</div><div class="title">MySQL45讲</div></div></a></div><div><a href="/2022/08/08/%E4%BA%8B%E5%8A%A1/" title="MySQL事务"><img class="cover" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/69602151_p0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-08</div><div class="title">MySQL事务</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/70068866_p0.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Fischer</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Fischer0522"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Fischer0522" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:1809327837@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MIT-6-830-Lab4"><span class="toc-number">1.</span> <span class="toc-text">MIT 6.830 Lab4</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Exercise1-amp-Exercise2"><span class="toc-number">1.1.</span> <span class="toc-text">Exercise1 &amp; Exercise2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PageLock"><span class="toc-number">1.1.1.</span> <span class="toc-text">PageLock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LockManager"><span class="toc-number">1.1.2.</span> <span class="toc-text">LockManager</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#pageLocks"><span class="toc-number">1.1.2.1.</span> <span class="toc-text">pageLocks</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#isHoldLock"><span class="toc-number">1.1.2.2.</span> <span class="toc-text">isHoldLock</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#releaseLock"><span class="toc-number">1.1.2.3.</span> <span class="toc-text">releaseLock</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#acquireLock"><span class="toc-number">1.1.2.4.</span> <span class="toc-text">acquireLock</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#completeTranslation"><span class="toc-number">1.1.2.5.</span> <span class="toc-text">completeTranslation</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Buffer-Pool"><span class="toc-number">1.1.3.</span> <span class="toc-text">Buffer Pool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HeapFile"><span class="toc-number">1.1.4.</span> <span class="toc-text">HeapFile</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#InsertTest-amp-DeleteTest"><span class="toc-number">1.1.5.</span> <span class="toc-text">InsertTest &amp; DeleteTest</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exercise3"><span class="toc-number">1.2.</span> <span class="toc-text">Exercise3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exercise4"><span class="toc-number">1.3.</span> <span class="toc-text">Exercise4</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Exercise5"><span class="toc-number">1.4.</span> <span class="toc-text">Exercise5</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">1.5.</span> <span class="toc-text">Summary</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/71315620_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab4"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab4/" title="MIT 6.830 lab4">MIT 6.830 lab4</a><time datetime="2022-11-21T09:37:19.000Z" title="发表于 2022-11-21 17:37:19">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/72109603_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab3"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab3/" title="MIT 6.830 lab3">MIT 6.830 lab3</a><time datetime="2022-11-21T09:35:19.000Z" title="发表于 2022-11-21 17:35:19">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab2"/></a><div class="content"><a class="title" href="/2022/11/21/MIT-6-830-lab2/" title="MIT 6.830 lab2">MIT 6.830 lab2</a><time datetime="2022-11-21T09:30:44.000Z" title="发表于 2022-11-21 17:30:44">2022-11-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/" title="无题"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/Snipaste_2022-11-04_15-49-36.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2022/11/06/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%EF%BC%882%EF%BC%89/" title="无题">无题</a><time datetime="2022-11-06T06:14:38.596Z" title="发表于 2022-11-06 14:14:38">2022-11-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1"><img src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/67446310_p0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="MIT 6.830 lab1"/></a><div class="content"><a class="title" href="/2022/10/01/MIT%206.830%20lab1/" title="MIT 6.830 lab1">MIT 6.830 lab1</a><time datetime="2022-10-01T14:23:21.000Z" title="发表于 2022-10-01 22:23:21">2022-10-01</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2022 By Fischer</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

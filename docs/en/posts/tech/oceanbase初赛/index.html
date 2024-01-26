@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>OceanBase初赛 | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自">
+<meta name="author" content="Sulv">
+<link rel="canonical" href="http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
+<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
+<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
+<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="OceanBase初赛" />
+<meta property="og:description" content="由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-12-09T09:31:59+00:00" />
+<meta property="article:modified_time" content="2023-12-09T12:56:03+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="OceanBase初赛"/>
+<meta name="twitter:description" content="由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://itfischer.space/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "http://itfischer.space/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "OceanBase初赛",
+      "item": "http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OceanBase初赛",
+  "name": "OceanBase初赛",
+  "description": "由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自",
+  "keywords": [
+    
+  ],
+  "articleBody": "由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自己的一些实现和遇到的bug以及对应的修复方式。\n负责题目 负责题目：\ndate drop-table update join-tables null text big write big query update-mvcc 初赛附加题 共计210分 由于队友龙哥太猛了，一个人搞完了所有带嵌套子语句的题，并且做了好几个mid的题，所以留给我实现的内容也不太多，并且由于我未来研究生阶段主要做的是存储方向的，因此这次初赛当中我也主要负责存储相关的内容，如record-manager的相关改造，和新类型的支持。\n此外，在实现null和update-mvcc时，发现了Miniob目前存在的两个bug，和来哥沟通之后，也是提了pr把我的解决方案给合并到了主分支当中，也算是做一些开源贡献了。\n赛程安排 九月份就把去年ob的代码给拉下来了，当时主要在搞预推免的事，加上懒了，一直在本地吃灰。真正开始搞的时候大概是开赛前一周，当时双开了rcore,最后选择是献祭rcore全力搞ob，rcore写完rustlings之后便没有再推进。\n开赛前一周 纯坐牢，配环境就花了一天，sudo执行bash脚本编译出来的需要sudo才能启动，而vscode的调试模式又不支持sudo，(后来发现把bash脚本里面的下载第三方库的部分注释掉可以不sudo执行，呆)，无奈换了clion。后面又因为队友的一些语法在Mac支持不是很好，换成了linux作为开发机，之后花了一点时间缕清架构和执行流程，只做了date和drop-table。\n第一周 继续坐牢，依旧没写几个题，大多数时间花在了研究lex和bison(本科阶段没学过编译原理)，和expression的相关内容，只写完了join tables和接手了队友写了一半的update\n第二周 算是熟悉整个系统和sql解析了，进度上快了一些，写完了null,完善了update的多字段支持，和text，顺手搞了附加题\n第三周 花了两天时间搞了一下mvcc，通过所有测试，提前收队。\n思路分享 drop table 大概是最简单的一个题了，只需要把create table给逆向操作就可以了，官网也给出了详细的指导，大致思路分为三部分：\n删除xxx.table 表的元数据文件 删除xxx.data数据文件 删除xxx.index索引 除此之外做一些简单的异常处理就可以了，校验一下表名是否存在等。 Date 今年miniob的代码结构相比于22年要优化了不少，但是Date涉及到要改动的地方依旧不少，主要有：\n在lex和yacc当中添加对 date和日期格式的匹配支持 在value当中添加date类型和表示形式 考虑Date的具体存储方法 为 Date 添加初始化，校验，比较等功能 解析 主要需要添加两个类型的解析，一个是date关键字，一个是yyyy-mm-dd格式的字符串匹配，前者直接定义一个token即可，后者可以采用正则的形式来处理，对于日期字符串的正则匹配，需要注意的是范围需要从0000-00-00到9999-99-99都匹配上，否则如13月这种错误的日志就会匹配到普通字符串上，从而导致后期无法进行校验处理。其他的按照官方手册实现即可\n存储与表示\n在存储上，我选择了使用一个yyyymmdd的int32来进行存储这样只需要四个字节，比字符串要节省空间。\n在内存表示上，我选择了定义一个Date类，并将相关的相关的逻辑操作都封装在这里面，如类型转换，合法性校验，比较，to_string等。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 class Date { public: Date() = default; Date(const char *str); Date(int data); // Date(int year,int month,int day); bool isValid() const { return valid; } bool operator\u003c(const Date \u0026that) const; bool operator==(const Date \u0026that) const; int compare(const Date \u0026that) const; std::string to_string() const; int to_int() const; void parse_date_int(int date); bool isDateValid() const; bool valid{}; int year{}; int month{}; int day{}; std::string format(const std::string \u0026formatStr) const； }; Value 在value当中，添加了一个Date字段来存储一个Date类，并且把转换为int的date存放到num_value_当中，之后.data()用来传输数据和持久化时直接返回这个num_value_即可。\n到这date基本就实现完了，似乎今年miniob的代码重构了不少，往年说还需要更改B+树部分的今年都不需要了。\ntypecast 说Join之前先说一下typecast，今年typecast没有作为一个单独的题目出现，但是也并没有给提供很完善的实现，在实现join时发现了join对typecast强依赖，涉及到很多int和string，float和string之间的join。主要需要为string和其他的类型之间提供转换。\n在github的wiki当中给出了标准，照着实现就好\n字符串转数字\n如果字符串刚好是一个数字，则转换为对应的数字（如'1’转换为1，‘2.1’转换为2.1）; 如果字符串的前缀是一个数字，则转换前缀数字部分为数字（如'1a1’转换为1，‘2.1a’转换为2.1）; 如果字符串前缀不是任何合法的数字，则转换为0（不需要考虑前导符号 ‘+’ ‘-’）； 问题： 如果转换数字溢出怎么处理?（不考虑） 是否考虑十六进制/八进制?（不考虑） Join Tables 算是mid里面最简单的几个之一了，但是依赖不少其他的相关内容，如typecast和expression，今年的miniob已经实现了select tables，因此只需要再次基础上实现join即可。\n先从解析开始说，join主要分为三部分，左表，右表，和条件，通过inner join on来切分即可，并且由于可能存在多张表之间的join，因此这个解析为一个递归的过程，可以先递归的解析inner join 后面的内容，之后再将最初的左表添加到其中。在条件的解析上，队友定义了conditionTree的解析方式，可以很方便的解析多个condition，我这里就直接拿来用了。解析的格式如下：\n1 2 inner_join_list: | INNER JOIN table_name ON condition_tree inner_join_list 最终的解析结果可以得到n个table和n-1个conditon_tree，之后在select_stmt的create当中按照和filter_stmt相同的方法来创建一个join_stmt即可。\n最后改写一下join_operator当中的逻辑即可，这一部分反而是工作量最小的。 23年的数据量并不大，并不存在前两年的6表join的情况，因此只需要实现最基础的NLJ，甚至我们在重构expression的时候取消了谓词下推依旧可以通过测试。\nbug\n在调试过程中，发现了一个miniob当前存在的bug，join operator当中在匹配时，每当右表匹配完一轮之后都要调用table_scan的close()和open()函数，而在这其中，open()当中又会调用一个set schema的函数，在这其中，是采用push_back的方式进行初始化的，但是在close()当中又没有清空掉field数组，就导致，每次open，都会向里面重新添加一遍field，从而导致在进行多轮遍历之后，tuple里面会有几十个field之多，不过在物化的过程中，只会根据record去获取value，这样并不会影响正确性，但是会导致平白无故的添加一堆无用的数据，我在print tuple.to_string时都惊了，也可能正是因为不影响正确性，这个bug也没有被发现，正确的做法应该是在set_schema时先重置再添加\n1 2 3 4 5 6 7 8 9 void set_schema(const Table *table, const std::vector *fields) { table_ = table; this-\u003especes_.clear(); this-\u003especes_.reserve(fields-\u003esize()); for (const FieldMeta \u0026field : *fields) { speces_.push_back(new FieldExpr(table, \u0026field)); } } Update update比较简单，先删后增即可，注意在big query和big write当中需要支持update多个字段，其他的参照delete实现即可，应该是最简单operator了，用来熟悉一下整个sql的流程不错。\nbig write / query update加上多字段支持之后直接过掉big query和big write，直接+60，恰分恰爽了。\nnull 参考往年的思路，选择在sys_field后添加一个null_field来表示null(个人感觉单纯用一个magic number表示null也不是不行，单纯想过test应该是可以过的)。\nnull_field为一个长度为32的bitmap，可以表示后面32个field是否为null，完全足够，在存储的时候直接使用一个4个字节的chars进行存储即可。\nnull有这么2个问题：\nupdate时如果从index = 0开始物化value，会读到null，之后再make_record时就会把null又给扔进去当成了一个普通的field，导致record里面有两个null_field，需要给一个sys_field_num + null_field_num的一个offset，另外一种解决方法就是重写cell_at函数，在其中给一个offset，不对外暴露sys_field和null_field Null 的设置时机，刚从磁盘当中读取出来的 record 是不具有 null 属性的，需要在一个合适的时机通过 bitmap 来恢复其 null 属性，最开始定义在 project operator 里面，后面发现有很多依赖 null 的 operator 在 project operator 下面，因此把这个设置 null 的过程移动到了 RowTuple 到 set_record 和 cell_at 里面，在 set_record 时，从中解析出 bitmap，之后 cell_at 时根据 bitmap 去判断是否为 null，是否允许为 null 到逻辑也在这里处理，不过既然能正确写入，这里一般是不会出问题的 此外，null还需要Field和Value为其提供支持，添加字段来表示是否允许为null和是否为null，总之null需要改动的部分非常多，当时commit时看了一眼大概修改了20个文件。。麻了 今年null的测试依赖也很多，需要实现了update-select，和unique之后才能过，而unique又依赖multi index。\ntext 逻辑上比较简单，但是坑不少。\n逻辑上采用溢出页的方式处理比较简单，写入时按需额外去申请几个page用来存储text数据，record本身存储page_num，读取时再根据page_num去获取到真实的text内存。 今年的要求变了，text的最大长度变成了和MySQL一致的64KB，但是本身的PAGE_SIZE也从4KB变成了8KB，因此如果算上header的话，需要9个溢出页来进行存储，最长的情况为前8个page全部存满，最后一个page存部分。\n因此record当中的field就需要9个int来存储，整个field占36个字节，没有用上的page在存储时就向record里面添加INVALID_PAGE_NUM，读取的时候读取到INVALID_PAGE_NUM就截断即可。 但是实现的时候在长度上有两个问题，一个是obclient无法接受超过4KB的text，超长会截断，这个需要下载readline，之后重新编译，还有一个是发送网络请求时的buffer size为8KB，全文搜索长度，之后在后面加个0就行。\n在进行删除和更新上，需要首先删除溢出页当中的内容，之后再删除掉该条record，删除的话可以有两种思路，一是将该page通过init_empty_page进行初始化，之后加入到free_list当中，而是可以使用dispose将其删除，之后用来重新分配。不过我都没实现，谁让不检测呢 :)\nUpdate mvcc 先说说MVCC本身，多版本并发控制，但是严格意义上来说并不是一个完整的并发控制协议，MVCC最大的特点是保证了读写之间不冲突，写请求不会因为正在读而阻塞写入，而读请求可以根据自身版本去读取到对自己可见的版本数据，不会被正在执行的写入阻塞。\n之所以说MVCC并不是一个完整的并发控制，是因为MVCC并没有办法解决写写之间的冲突，因此需要其他的手段来加以辅助，常见的手段有基于时间戳或者基于锁的，Miniob当中的实现方式比较粗暴，只要有两个事务在更新同一个record，那么后一个事务在更新时就返回failture。\n而MVCC当中的版本是基于tid的，在开启了MVCC模式之后，每一条record会生成两个sys_field，分别存储begin和end，来标识一个事务的可见性，这里似乎并没有一个统一的标准，只要能满足MVCC协议本身的要求即可，在Miniob当中的设置如下：\nrecord通过begin和end 两个id进行状态管理，begin用于表示事务开始的时间，end为事务结束的时间，对于一条record,当一个事务开始时，新的record的begin设置为-trx_id，end为max_int32,表示事务写入但未提交，而删除时则将end设置为-trx_id，表示删除但未提交，写入操作提交时，将begin设置为trx_id，删除操作提交时将end设置为trx_id，最终会产生五种状态：\nbegin_xid end_xid 自身可见 其他事务可见 说明 -trx_id MAX 可见 不可见 由当前事务写入，但还未提交，对其他事务不可见 trx_id MAX 已提交 对新事务可见 写入并且已经提交，对之后的新事务可见 任意正数 trx_id 已提交 旧事务可见，新事务不可见 在当前事务中进行删除，并事务提交 任意正数 -trx_id 不可见 可见 在当前事务中进行删除，未提交 -trx_id -trx_id 不可见 不可见 由当前事务进行写入，并且又被当前事务删除，并且未提交 其中，已提交指的就是当前事务已经结束，自然不存在什么可见不可见的问题。而Miniob当中的隔离级别应当是serializable，因为未提交的事务的 begin \u003c 0，因此是永远无法读取到新写入的record，因此是不存在幻读情况的。\n对于record是否可见的判断，在visit_record当中提供了一段代码：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 if (begin_xid \u003e 0 \u0026\u0026 end_xid \u003e 0) { if (trx_id_ \u003e= begin_xid \u0026\u0026 trx_id_ \u003c= end_xid) { rc = RC::SUCCESS; } else { rc = RC::RECORD_INVISIBLE; } } else if (begin_xid \u003c 0) { // begin xid 小于0说明是刚插入而且没有提交的数据 rc = (-begin_xid == trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE; } else if (end_xid \u003c 0) { // end xid 小于0 说明是正在删除但是还没有提交的数据 if (readonly) { // 如果 -end_xid 就是当前事务的事务号，说明是当前事务删除的 rc = (-end_xid != trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE; } else { // 如果当前想要修改此条数据，并且不是当前事务删除的，简单的报错 // 这是事务并发处理的一种方式，非常简单粗暴。其它的并发处理方法，可以等待，或者让客户端重试 // 或者等事务结束后，再检测修改的数据是否有冲突 rc = (-end_xid != trx_id_) ? RC::LOCKED_CONCURRENCY_CONFLICT : RC::RECORD_INVISIBLE; } } 当前存在的问题\n简单来说，就是事务提交时，先插入再删除的记录行为没有得到正确的表达，产生了预期之外的表现\n缺少begin \u003c 0 \u0026\u0026 end \u003c 0的处理，导致当前事务中写入的记录无法删除 commit时存在问题，insert之后，delete的记录无法添加到operation里面，operation为一个set,set的逻辑是对于冲突的key拒绝进行添加，会导致即便修复了1, 在commit之后会出现begin = commit_id,end = -trx_id的情况，理论上这种情况不应该出现，因为delete的commit行为没有得到正确执行，如果delete的commit行为得到正确执行，就会变成begin \u003e 0 \u0026\u0026 end \u003e 0的情况，就可以按照版本去读取了。 对于上面说到的第一点，少了对begin \u003c 0 \u0026\u0026 end \u003c 0的判断，在这种情况下，为当前事务写入，又被当前事务删除，但是事务还未提交，此时应当对当前事务是不可见的，但是根据目前的条件结构，会返回SUCCESS，这样会导致在当前事务中进行delete但是仍可见的问题，或者当前事务中进行update，但是旧数据还存在的问题。需要补充一条逻辑，在这种情况下返回不可见\n如下面的例子：\n原本(4,4,‘a’)的record是由上一个事务写入的，并且提交(begin_xid \u003e 0)，此时更新就不会出现问题，而(4,761,‘a’)的record是当前事务写入的，还未提交，begin_xid \u003c 0,删除之后end_xid \u003c 0，上面漏了对这种情况的判断，从而导致其又可见。\n对于说到的第二点，表现形式就是如果当前的事务commit之后，这条记录就又可见了 下图是我用初始版的miniob做的测试，可以确认的确存在这个问题 修复方式 描述完产生的问题，再来说一下为什么会有这种问题和解决方式。 产生的原因主要有两个：\nset逻辑错误，原本想的是对于同一条record的操作，后面的覆盖前一条，最后提交时只会执行最后一条，但是c++当中的std::set对于重复key的插入操作会直接拒绝，导致没能够正确的覆盖 覆盖逻辑：因为采用覆盖的方式执行，因此对于在当前事务当中插入的数据，在commit时delete会覆盖掉insert的动作，就会导致一个问题：insert的commit动作没有正确得到执行，出现了begin \u003c 0 end \u003e 0的情况，在原本的tid校验当中没有判断，而commit前的begin \u003c 0 end \u003c 0的情况同样也没有判断 大概想了两版修复方式： 第一版比较复杂，逻辑上感觉更符合mvcc的含义：\n由当前事务写入的记录无法被删除：\n当前事务写入的记录为begin = -trx_id，end = MAX,之后由当前记录进行删除之后，变为begin = -trx_id,end = -trx_id，当前visit_record当中缺少对于这种情况的判断\n解决方案：添加对begin \u003c 0 \u0026\u0026 end \u003c 0的判断，意义是由当前事务写入，并由当前事务删除，状态为对所有事务都不可见\ncommit动作没有被正常执行\n当前事务使用rid作为key，使用std::unordered_set进行存储，保存当前事务的operation,留在提交时进行执行，同一个rid的operation应当后者覆盖前者，但是set对于已经存在了的key无法正确插入，无法正确覆盖。\n解决方案： 在进行delete操作时进行特判，如果原本存在对应的key的话(即当前事务进行了一次插入操作)，就删除原本的key，重新插入，以达到覆盖的效果\ninsert由于即便insert相同的record,rid也不一致，无需处理。 其他的事务进行的插入不是同一个set,不会产生影响 当前事务插入的其他的记录由于 rid 不一致，无需处理 垃圾回收问题：\n如果在当前事务中删除已经提交的事务写入的记录，不会出现任何问题，因为插入操作在进行提交时会将begin设置为commid_tid，从而有了正确的版本信息，之后delete时，只需要修改end = tid即可，而无论进行回滚还是提交，都可以保证一个正确的状态：\n提交：end = commid_tid，可以根据版本去正确读取 回滚：end = MAX，恢复到刚写入的状态 如果是当前事务写入又由当前事务提交，则存在一定问题，由于在同一个事务当中，同一条记录后面会覆盖前面，从而导致如果进行写入又删除的话，begin会保留-tid的状态，此时无论进行commit还是rollback都只会执行delete的operation，从而该条记录的begin会一直保持-tid，给垃圾回收和正确读取带来困扰。\n可以考虑：\n如果是提交操作，那么就将begin = end = tid，意义为当前事务写入又由当前事务删除，不会影响读取 如果是回滚操作，那么就调用table→delete_record进行真正的删除，由于该记录从未对外暴露过，因此删除不会影响其他事务的读取，并且在逻辑上也符合回滚的概念。 第二版的实现方式比较的取巧，针对问题出现的源头进行修复：就是在trx.delete_record加个特判，如果是自己写入的进行删除，就直接调用delete_record,并且也不添加到operation_里面，并且删除之前的insert操作的operation，由于是自己创建的record，并且又被自己删除，因此就当作其从来没有存在过。\n在这种情况下，既不影响回滚，也不影响gc，最终实现也是采用第二种方式 回到正题，update-mvcc这题其实是不怎么需要实现的，大多数人在完成了unique之后，update-mvcc是可以直接通过的，因为目前miniob已经给出了mvcc的insert和delete实现，组合一下即可。不过由于我们队unique index实现的是一个fake版本，在mvcc模式下并没有办法提供唯一性保证，而我又不想去重构，因此我们队分了两条线进行，队友去重构unique index，我特判表名然后实现一个内存当中的mvcc版的unique index，其实就是把visit_record当中的逻辑对着unique_index实现了一遍，不过最后是我先搞出来了hhh。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 RC Table::insert_record(Record \u0026record) { int decode_index_num; if (table_meta_.name() == mvcc_table_name_) { int index_offset = table_meta_.sys_field_num() + table_meta_.null_field_num(); memcpy(\u0026decode_index_num,record.data() + index_offset * 4,4); if (mvcc_unique_index_.contains(decode_index_num)) { if (is_duplicated(decode_index_num)) { return RC::INVALID_ARGUMENT; } } } else { // ... } } bool Table::is_duplicated(int index_num) { if (!mvcc_unique_index_.contains(index_num)) { return false; } auto current_index = mvcc_unique_index_[index_num]; int begin_tid = current_index.first; int end_tid = current_index.second; bool is_visible; bool is_conflict; if (begin_tid \u003e 0 \u0026\u0026 end_tid \u003e 0) { if (trx_-\u003eid() \u003e= begin_tid \u0026\u0026 trx_-\u003eid() \u003c= end_tid) { is_visible = true; } else { is_visible = false; } } else if (begin_tid \u003c 0) { if (-begin_tid == trx_-\u003eid() \u0026\u0026 end_tid \u003c 0) { is_visible = false; } else if (-begin_tid == trx_-\u003eid()) { is_visible = true; } else { is_visible = false; } } else if (end_tid \u003c 0) { // 由于unique index只需要管理插入，因此不存在read_only的情况 if (-end_tid == trx_-\u003eid()) { is_visible = false; } else { is_conflict = true; } } // 正在有其他的尝试插入，直接拒绝 // 如果存在一条先前可见的数据，也拒绝掉 if (is_conflict || is_visible) { return true; } return false; } 在完成了unique index之后还存在一个问题，就是mvcc模式下,update时，下层的table_scan会把新写入的record又给读出来，从而导致又insert一遍，再加上我最开始visit_record当中begin \u003c 0 end \u003c 0的bug没修，从而导致其会逃过unique的限制，表现结果就是一个update更新了两次。 问题的源头是table_scan会读取到新写入的record，不过当时没仔细看到底为什么，只是修了visit_record和在update当中加了一层限制，即如果原记录和新记录完全一致的话，就不进行更新，这样勉强算是把窟窿给堵上了，最后也是通过了测试。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 if (begin_xid == -trx_id_) { // fix：此处是为了修复由当前事务插入而又被当前事务删除时无法正确删除的问题： // 在当前事务中创建的记录从来未对外暴露过，未来方便今后添加垃圾回收功能，这里选择直接删除真实记录 // 就认为记录从来未存在过，此时无论是commit还是rollback都能得到正确的结果，并且需要清空之前的insert operation,避免事务结束时执行 auto delete_operation = Operation{Operation::Type::INSERT, table, record.rid()}; std::unordered_set::size_type delete_result = operations_.erase(delete_operation); ASSERT(delete_result == 1, \"failed to delete insert operation,begin_xid=%d, end_xid=%d, tid=%d, rid:%s\", begin_xid, end_xid, trx_id_, record.rid().to_string().c_str()); rc = table-\u003edelete_record(record); ASSERT(rc == RC::SUCCESS, \"failed to delete record in table.table id =%d, rid=%s, begin_xid=%d, end_xid=%d, current trx id = %d\", table.-\u003etable_id(), record.rid().to_string().c_str(), begin_xid, end_xid, trx_id_); return rc; } pair",
+  "wordCount" : "8998",
+  "inLanguage": "en",
+  "datePublished": "2023-12-09T09:31:59Z",
+  "dateModified": "2023-12-09T12:56:03Z",
+  "author":{
+    "@type": "Person",
+    "name": "Sulv"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://itfischer.space/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://itfischer.space/en/search" title="Search">
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      OceanBase初赛
+    </h1>
+    <div class="post-meta"><span title='2023-12-09 09:31:59 +0000 UTC'>2023-12-09</span>&nbsp;·&nbsp;18 min&nbsp;·&nbsp;Sulv
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e8%b4%9f%e8%b4%a3%e9%a2%98%e7%9b%ae" aria-label="负责题目">负责题目</a></li>
+                <li>
+                    <a href="#%e8%b5%9b%e7%a8%8b%e5%ae%89%e6%8e%92" aria-label="赛程安排">赛程安排</a><ul>
+                        
+                <li>
+                    <a href="#%e5%bc%80%e8%b5%9b%e5%89%8d%e4%b8%80%e5%91%a8" aria-label="开赛前一周">开赛前一周</a></li>
+                <li>
+                    <a href="#%e7%ac%ac%e4%b8%80%e5%91%a8" aria-label="第一周">第一周</a></li>
+                <li>
+                    <a href="#%e7%ac%ac%e4%ba%8c%e5%91%a8" aria-label="第二周">第二周</a></li>
+                <li>
+                    <a href="#%e7%ac%ac%e4%b8%89%e5%91%a8" aria-label="第三周">第三周</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e6%80%9d%e8%b7%af%e5%88%86%e4%ba%ab" aria-label="思路分享">思路分享</a><ul>
+                        
+                <li>
+                    <a href="#drop-table" aria-label="drop table">drop table</a></li>
+                <li>
+                    <a href="#date" aria-label="Date">Date</a></li>
+                <li>
+                    <a href="#value" aria-label="Value">Value</a></li>
+                <li>
+                    <a href="#typecast" aria-label="typecast">typecast</a></li>
+                <li>
+                    <a href="#join-tables" aria-label="Join Tables">Join Tables</a></li>
+                <li>
+                    <a href="#update" aria-label="Update">Update</a></li>
+                <li>
+                    <a href="#big-write--query" aria-label="big write / query">big write / query</a></li>
+                <li>
+                    <a href="#null" aria-label="null">null</a></li>
+                <li>
+                    <a href="#text" aria-label="text">text</a></li>
+                <li>
+                    <a href="#update-mvcc" aria-label="Update mvcc">Update mvcc</a><ul>
+                        
+                <li>
+                    <a href="#%e4%bf%ae%e5%a4%8d%e6%96%b9%e5%bc%8f" aria-label="修复方式">修复方式</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自己的一些实现和遇到的bug以及对应的修复方式。</p>
+<h2 id="负责题目">负责题目<a hidden class="anchor" aria-hidden="true" href="#负责题目">#</a></h2>
+<p>负责题目：</p>
+<ul>
+<li>date</li>
+<li>drop-table</li>
+<li>update</li>
+<li>join-tables</li>
+<li>null</li>
+<li>text</li>
+<li>big write</li>
+<li>big query</li>
+<li>update-mvcc</li>
+<li>初赛附加题
+共计210分</li>
+</ul>
+<p>由于队友龙哥太猛了，一个人搞完了所有带嵌套子语句的题，并且做了好几个mid的题，所以留给我实现的内容也不太多，并且由于我未来研究生阶段主要做的是存储方向的，因此这次初赛当中我也主要负责存储相关的内容，如record-manager的相关改造，和新类型的支持。</p>
+<p>此外，在实现null和update-mvcc时，发现了Miniob目前存在的两个bug，和来哥沟通之后，也是提了pr把我的解决方案给合并到了主分支当中，也算是做一些开源贡献了。</p>
+<h2 id="赛程安排">赛程安排<a hidden class="anchor" aria-hidden="true" href="#赛程安排">#</a></h2>
+<p>九月份就把去年ob的代码给拉下来了，当时主要在搞预推免的事，加上懒了，一直在本地吃灰。真正开始搞的时候大概是开赛前一周，当时双开了rcore,最后选择是献祭rcore全力搞ob，rcore写完rustlings之后便没有再推进。</p>
+<h3 id="开赛前一周">开赛前一周<a hidden class="anchor" aria-hidden="true" href="#开赛前一周">#</a></h3>
+<p>纯坐牢，配环境就花了一天，sudo执行bash脚本编译出来的需要sudo才能启动，而vscode的调试模式又不支持sudo，(后来发现把bash脚本里面的下载第三方库的部分注释掉可以不sudo执行，呆)，无奈换了clion。后面又因为队友的一些语法在Mac支持不是很好，换成了linux作为开发机，之后花了一点时间缕清架构和执行流程，只做了date和drop-table。</p>
+<h3 id="第一周">第一周<a hidden class="anchor" aria-hidden="true" href="#第一周">#</a></h3>
+<p>继续坐牢，依旧没写几个题，大多数时间花在了研究lex和bison(本科阶段没学过编译原理)，和expression的相关内容，只写完了join tables和接手了队友写了一半的update</p>
+<h3 id="第二周">第二周<a hidden class="anchor" aria-hidden="true" href="#第二周">#</a></h3>
+<p>算是熟悉整个系统和sql解析了，进度上快了一些，写完了null,完善了update的多字段支持，和text，顺手搞了附加题</p>
+<h3 id="第三周">第三周<a hidden class="anchor" aria-hidden="true" href="#第三周">#</a></h3>
+<p>花了两天时间搞了一下mvcc，通过所有测试，提前收队。</p>
+<h2 id="思路分享">思路分享<a hidden class="anchor" aria-hidden="true" href="#思路分享">#</a></h2>
+<h3 id="drop-table">drop table<a hidden class="anchor" aria-hidden="true" href="#drop-table">#</a></h3>
+<p>大概是最简单的一个题了，只需要把create table给逆向操作就可以了，官网也给出了详细的指导，大致思路分为三部分：</p>
+<ol>
+<li>删除<code>xxx.table</code> 表的元数据文件</li>
+<li>删除<code>xxx.data</code>数据文件</li>
+<li>删除<code>xxx.index</code>索引
+除此之外做一些简单的异常处理就可以了，校验一下表名是否存在等。</li>
+</ol>
+<h3 id="date">Date<a hidden class="anchor" aria-hidden="true" href="#date">#</a></h3>
+<p>今年miniob的代码结构相比于22年要优化了不少，但是Date涉及到要改动的地方依旧不少，主要有：</p>
+<ol>
+<li>在lex和yacc当中添加对 date和日期格式的匹配支持</li>
+<li>在value当中添加date类型和表示形式</li>
+<li>考虑Date的具体存储方法</li>
+<li>为 Date 添加初始化，校验，比较等功能</li>
+</ol>
+<p><strong>解析</strong>
+主要需要添加两个类型的解析，一个是<code>date</code>关键字，一个是<code>yyyy-mm-dd</code>格式的字符串匹配，前者直接定义一个token即可，后者可以采用正则的形式来处理，对于日期字符串的正则匹配，需要注意的是范围需要从<code>0000-00-00</code>到<code>9999-99-99</code>都匹配上，否则如13月这种错误的日志就会匹配到普通字符串上，从而导致后期无法进行校验处理。其他的按照官方手册实现即可</p>
+<p><strong>存储与表示</strong></p>
+<p>在存储上，我选择了使用一个yyyymmdd的int32来进行存储这样只需要四个字节，比字符串要节省空间。</p>
+<p>在内存表示上，我选择了定义一个Date类，并将相关的相关的逻辑操作都封装在这里面，如类型转换，合法性校验，比较，to_string等。</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">class</span> Date
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">public</span>:
+</span></span><span style="display:flex;"><span>  Date() = <span style="color:#fff;font-weight:bold">default</span>;
+</span></span><span style="display:flex;"><span>  Date(<span style="color:#fff;font-weight:bold">const</span> <span style="color:#fff;font-weight:bold">char</span> *str);
+</span></span><span style="display:flex;"><span>  Date(<span style="color:#fff;font-weight:bold">int</span> data);
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// Date(int year,int month,int day);
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span>        isValid() <span style="color:#fff;font-weight:bold">const</span> { <span style="color:#fff;font-weight:bold">return</span> valid; }
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span>        <span style="color:#fff;font-weight:bold">operator</span>&lt;(<span style="color:#fff;font-weight:bold">const</span> Date &amp;that) <span style="color:#fff;font-weight:bold">const</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span>        <span style="color:#fff;font-weight:bold">operator</span>==(<span style="color:#fff;font-weight:bold">const</span> Date &amp;that) <span style="color:#fff;font-weight:bold">const</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span>         compare(<span style="color:#fff;font-weight:bold">const</span> Date &amp;that) <span style="color:#fff;font-weight:bold">const</span>;
+</span></span><span style="display:flex;"><span>  std::string to_string() <span style="color:#fff;font-weight:bold">const</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span>         to_int() <span style="color:#fff;font-weight:bold">const</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">void</span>        parse_date_int(<span style="color:#fff;font-weight:bold">int</span> date);
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span>        isDateValid() <span style="color:#fff;font-weight:bold">const</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span>        valid{};
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span>         year{};
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span>         month{};
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span>         day{};
+</span></span><span style="display:flex;"><span>  std::string format(<span style="color:#fff;font-weight:bold">const</span> std::string &amp;formatStr) <span style="color:#fff;font-weight:bold">const</span><span style="color:#f00">；</span>
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="value">Value<a hidden class="anchor" aria-hidden="true" href="#value">#</a></h3>
+<p>在value当中，添加了一个Date字段来存储一个Date类，并且把转换为int的date存放到num_value_当中，之后.data()用来传输数据和持久化时直接返回这个num_value_即可。</p>
+<p>到这date基本就实现完了，似乎今年miniob的代码重构了不少，往年说还需要更改B+树部分的今年都不需要了。</p>
+<h3 id="typecast">typecast<a hidden class="anchor" aria-hidden="true" href="#typecast">#</a></h3>
+<p>说Join之前先说一下typecast，今年typecast没有作为一个单独的题目出现，但是也并没有给提供很完善的实现，在实现join时发现了join对typecast强依赖，涉及到很多int和string，float和string之间的join。主要需要为string和其他的类型之间提供转换。</p>
+<p>在github的wiki当中给出了标准，照着实现就好</p>
+<blockquote>
+<p><a href="https://github.com/oceanbase/miniob/wiki/OceanBase--%E6%95%B0%E6%8D%AE%E5%BA%93%E5%A4%A7%E8%B5%9B-2022-%E5%88%9D%E8%B5%9B%E8%B5%9B%E9%A2%98#%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%BD%AC%E6%95%B0%E5%AD%97">字符串转数字</a></p>
+</blockquote>
+<ul>
+<li>如果字符串刚好是一个数字，则转换为对应的数字（如'1&rsquo;转换为1，&lsquo;2.1&rsquo;转换为2.1）;</li>
+<li>如果字符串的前缀是一个数字，则转换前缀数字部分为数字（如'1a1&rsquo;转换为1，&lsquo;2.1a&rsquo;转换为2.1）;</li>
+<li>如果字符串前缀不是任何合法的数字，则转换为0（不需要考虑前导符号 &lsquo;+&rsquo; &lsquo;-&rsquo;）； <strong>问题：</strong></li>
+<li>如果转换数字溢出怎么处理?（不考虑）</li>
+<li>是否考虑十六进制/八进制?（不考虑）</li>
+</ul>
+<h3 id="join-tables">Join Tables<a hidden class="anchor" aria-hidden="true" href="#join-tables">#</a></h3>
+<p>算是mid里面最简单的几个之一了，但是依赖不少其他的相关内容，如typecast和expression，今年的miniob已经实现了select tables，因此只需要再次基础上实现join即可。</p>
+<p>先从解析开始说，join主要分为三部分，左表，右表，和条件，通过inner join on来切分即可，并且由于可能存在多张表之间的join，因此这个解析为一个递归的过程，可以先递归的解析inner join 后面的内容，之后再将最初的左表添加到其中。在条件的解析上，队友定义了conditionTree的解析方式，可以很方便的解析多个condition，我这里就直接拿来用了。解析的格式如下：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>inner_join_list:
+</span></span><span style="display:flex;"><span>| INNER JOIN table_name ON condition_tree inner_join_list
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>最终的解析结果可以得到n个table和n-1个conditon_tree，之后在select_stmt的create当中按照和filter_stmt相同的方法来创建一个join_stmt即可。</p>
+<p>最后改写一下join_operator当中的逻辑即可，这一部分反而是工作量最小的。
+23年的数据量并不大，并不存在前两年的6表join的情况，因此只需要实现最基础的NLJ，甚至我们在重构expression的时候取消了谓词下推依旧可以通过测试。</p>
+<p><strong>bug</strong></p>
+<p>在调试过程中，发现了一个miniob当前存在的bug，join operator当中在匹配时，每当右表匹配完一轮之后都要调用table_scan的close()和open()函数，而在这其中，open()当中又会调用一个set schema的函数，在这其中，是采用push_back的方式进行初始化的，但是在close()当中又没有清空掉field数组，就导致，每次open，都会向里面重新添加一遍field，从而导致在进行多轮遍历之后，tuple里面会有几十个field之多，不过在物化的过程中，只会根据record去获取value，这样并不会影响正确性，但是会导致平白无故的添加一堆无用的数据，我在print tuple.to_string时都惊了，也可能正是因为不影响正确性，这个bug也没有被发现，正确的做法应该是在set_schema时先重置再添加</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">void</span> set_schema(<span style="color:#fff;font-weight:bold">const</span> Table *table, <span style="color:#fff;font-weight:bold">const</span> std::vector&lt;FieldMeta&gt; *fields)
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    table_ = table;
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">this</span>-&gt;speces_.clear();
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">this</span>-&gt;speces_.reserve(fields-&gt;size());
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">const</span> FieldMeta &amp;field : *fields) {
+</span></span><span style="display:flex;"><span>      speces_.push_back(<span style="color:#fff;font-weight:bold">new</span> FieldExpr(table, &amp;field));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="update">Update<a hidden class="anchor" aria-hidden="true" href="#update">#</a></h3>
+<p>update比较简单，先删后增即可，注意在big query和big write当中需要支持update多个字段，其他的参照delete实现即可，应该是最简单operator了，用来熟悉一下整个sql的流程不错。</p>
+<h3 id="big-write--query">big write / query<a hidden class="anchor" aria-hidden="true" href="#big-write--query">#</a></h3>
+<p>update加上多字段支持之后直接过掉big query和big write，直接+60，恰分恰爽了。</p>
+<h3 id="null">null<a hidden class="anchor" aria-hidden="true" href="#null">#</a></h3>
+<p>参考往年的思路，选择在sys_field后添加一个null_field来表示null(个人感觉单纯用一个magic number表示null也不是不行，单纯想过test应该是可以过的)。</p>
+<p>null_field为一个长度为32的bitmap，可以表示后面32个field是否为null，完全足够，在存储的时候直接使用一个4个字节的chars进行存储即可。</p>
+<p>null有这么2个问题：</p>
+<ol>
+<li>update时如果从index = 0开始物化value，会读到null，之后再make_record时就会把null又给扔进去当成了一个普通的field，导致record里面有两个null_field，需要给一个sys_field_num + null_field_num的一个offset，另外一种解决方法就是重写cell_at函数，在其中给一个offset，不对外暴露sys_field和null_field</li>
+<li>Null 的设置时机，刚从磁盘当中读取出来的 record 是不具有 null 属性的，需要在一个合适的时机通过 bitmap 来恢复其 null 属性，最开始定义在 project operator 里面，后面发现有很多依赖 null 的 operator 在 project operator 下面，因此把这个设置 null 的过程移动到了 RowTuple 到 set_record 和 cell_at 里面，在 set_record 时，从中解析出 bitmap，之后 cell_at 时根据 bitmap 去判断是否为 null，是否允许为 null 到逻辑也在这里处理，不过既然能正确写入，这里一般是不会出问题的</li>
+</ol>
+<p>此外，null还需要Field和Value为其提供支持，添加字段来表示是否允许为null和是否为null，总之null需要改动的部分非常多，当时commit时看了一眼大概修改了20个文件。。麻了
+今年null的测试依赖也很多，需要实现了update-select，和unique之后才能过，而unique又依赖multi index。</p>
+<h3 id="text">text<a hidden class="anchor" aria-hidden="true" href="#text">#</a></h3>
+<p>逻辑上比较简单，但是坑不少。</p>
+<p>逻辑上采用溢出页的方式处理比较简单，写入时按需额外去申请几个page用来存储text数据，record本身存储page_num，读取时再根据page_num去获取到真实的text内存。
+今年的要求变了，text的最大长度变成了和MySQL一致的64KB，但是本身的PAGE_SIZE也从4KB变成了8KB，因此如果算上header的话，需要9个溢出页来进行存储，最长的情况为前8个page全部存满，最后一个page存部分。</p>
+<p>因此record当中的field就需要9个int来存储，整个field占36个字节，没有用上的page在存储时就向record里面添加INVALID_PAGE_NUM，读取的时候读取到INVALID_PAGE_NUM就截断即可。
+但是实现的时候在长度上有两个问题，一个是obclient无法接受超过4KB的text，超长会截断，这个需要下载readline，之后重新编译，还有一个是发送网络请求时的buffer size为8KB，全文搜索长度，之后在后面加个0就行。</p>
+<p>在进行删除和更新上，需要首先删除溢出页当中的内容，之后再删除掉该条record，删除的话可以有两种思路，一是将该page通过<code>init_empty_page</code>进行初始化，之后加入到free_list当中，而是可以使用dispose将其删除，之后用来重新分配。不过我都没实现，谁让不检测呢 :)</p>
+<h3 id="update-mvcc">Update mvcc<a hidden class="anchor" aria-hidden="true" href="#update-mvcc">#</a></h3>
+<p>先说说MVCC本身，多版本并发控制，但是严格意义上来说并不是一个完整的并发控制协议，MVCC最大的特点是保证了读写之间不冲突，写请求不会因为正在读而阻塞写入，而读请求可以根据自身版本去读取到对自己可见的版本数据，不会被正在执行的写入阻塞。</p>
+<p>之所以说MVCC并不是一个完整的并发控制，是因为MVCC并没有办法解决写写之间的冲突，因此需要其他的手段来加以辅助，常见的手段有基于时间戳或者基于锁的，Miniob当中的实现方式比较粗暴，只要有两个事务在更新同一个record，那么后一个事务在更新时就返回failture。</p>
+<p>而MVCC当中的版本是基于tid的，在开启了MVCC模式之后，每一条record会生成两个sys_field，分别存储begin和end，来标识一个事务的可见性，这里似乎并没有一个统一的标准，只要能满足MVCC协议本身的要求即可，在Miniob当中的设置如下：</p>
+<p>record通过begin和end 两个id进行状态管理，begin用于表示事务开始的时间，end为事务结束的时间，对于一条record,当一个事务开始时，新的record的begin设置为-trx_id，end为max_int32,表示事务写入但未提交，而删除时则将end设置为-trx_id，表示删除但未提交，写入操作提交时，将begin设置为trx_id，删除操作提交时将end设置为trx_id，最终会产生五种状态：</p>
+<table>
+<thead>
+<tr>
+<th>begin_xid</th>
+<th>end_xid</th>
+<th>自身可见</th>
+<th>其他事务可见</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-trx_id</td>
+<td>MAX</td>
+<td>可见</td>
+<td>不可见</td>
+<td>由当前事务写入，但还未提交，对其他事务不可见</td>
+</tr>
+<tr>
+<td>trx_id</td>
+<td>MAX</td>
+<td>已提交</td>
+<td>对新事务可见</td>
+<td>写入并且已经提交，对之后的新事务可见</td>
+</tr>
+<tr>
+<td>任意正数</td>
+<td>trx_id</td>
+<td>已提交</td>
+<td>旧事务可见，新事务不可见</td>
+<td>在当前事务中进行删除，并事务提交</td>
+</tr>
+<tr>
+<td>任意正数</td>
+<td>-trx_id</td>
+<td>不可见</td>
+<td>可见</td>
+<td>在当前事务中进行删除，未提交</td>
+</tr>
+<tr>
+<td>-trx_id</td>
+<td>-trx_id</td>
+<td>不可见</td>
+<td>不可见</td>
+<td>由当前事务进行写入，并且又被当前事务删除，并且未提交</td>
+</tr>
+</tbody>
+</table>
+<p>其中，已提交指的就是当前事务已经结束，自然不存在什么可见不可见的问题。而Miniob当中的隔离级别应当是serializable，因为未提交的事务的 begin &lt; 0，因此是永远无法读取到新写入的record，因此是不存在幻读情况的。</p>
+<p>对于record是否可见的判断，在visit_record当中提供了一段代码：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">if</span> (begin_xid &gt; <span style="color:#ff0;font-weight:bold">0</span> &amp;&amp; end_xid &gt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (trx_id_ &gt;= begin_xid &amp;&amp; trx_id_ &lt;= end_xid) {
+</span></span><span style="display:flex;"><span>    rc = RC::SUCCESS;
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>    rc = RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>} <span style="color:#fff;font-weight:bold">else</span> if (begin_xid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// begin xid 小于0说明是刚插入而且没有提交的数据
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  rc = (-begin_xid == trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>} <span style="color:#fff;font-weight:bold">else</span> if (end_xid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// end xid 小于0 说明是正在删除但是还没有提交的数据
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (readonly) {
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// 如果 -end_xid 就是当前事务的事务号，说明是当前事务删除的
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    rc = (-end_xid != trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// 如果当前想要修改此条数据，并且不是当前事务删除的，简单的报错
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#007f7f">// 这是事务并发处理的一种方式，非常简单粗暴。其它的并发处理方法，可以等待，或者让客户端重试
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#007f7f">// 或者等事务结束后，再检测修改的数据是否有冲突
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    rc = (-end_xid != trx_id_) ? RC::LOCKED_CONCURRENCY_CONFLICT : RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>当前存在的问题</strong></p>
+<p><strong>简单来说，就是事务提交时，先插入再删除的记录行为没有得到正确的表达，产生了预期之外的表现</strong></p>
+<ol>
+<li>缺少begin &lt; 0 &amp;&amp; end &lt; 0的处理，导致当前事务中写入的记录无法删除</li>
+<li>commit时存在问题，insert之后，delete的记录无法添加到operation里面，operation为一个set,set的逻辑是对于冲突的key拒绝进行添加，会导致即便修复了1, 在commit之后会出现begin = commit_id,end = -trx_id的情况，理论上这种情况不应该出现，因为delete的commit行为没有得到正确执行，如果delete的commit行为得到正确执行，就会变成begin &gt; 0 &amp;&amp; end &gt; 0的情况，就可以按照版本去读取了。
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124219.png" alt="image.png"  />
+
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124249.png" alt="image.png"  />
+
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124421.png" alt="image.png"  />
+
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105124430.png" alt="image.png"  />
+</li>
+</ol>
+<p>对于上面说到的第一点，少了对begin &lt; 0 &amp;&amp; end &lt; 0的判断，在这种情况下，为当前事务写入，又被当前事务删除，但是事务还未提交，此时应当对当前事务是不可见的，但是根据目前的条件结构，会返回SUCCESS，这样会导致在当前事务中进行delete但是仍可见的问题，或者当前事务中进行update，但是旧数据还存在的问题。需要补充一条逻辑，在这种情况下返回不可见</p>
+<p>如下面的例子：</p>
+<p>原本(4,4,&lsquo;a&rsquo;)的record是由上一个事务写入的，并且提交(begin_xid &gt; 0)，此时更新就不会出现问题，而(4,761,&lsquo;a&rsquo;)的record是当前事务写入的，还未提交，begin_xid &lt; 0,删除之后end_xid &lt; 0，上面漏了对这种情况的判断，从而导致其又可见。</p>
+<p>对于说到的第二点，表现形式就是如果当前的事务commit之后，这条记录就又可见了
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231105004447.png" alt="image.png"  />
+
+下图是我用初始版的miniob做的测试，可以确认的确存在这个问题
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/c6ff7993fbfb139743ff5b650a79a760.png" alt="c6ff7993fbfb139743ff5b650a79a760.png"  />
+</p>
+<h4 id="修复方式">修复方式<a hidden class="anchor" aria-hidden="true" href="#修复方式">#</a></h4>
+<p>描述完产生的问题，再来说一下为什么会有这种问题和解决方式。
+产生的原因主要有两个：</p>
+<ul>
+<li>set逻辑错误，原本想的是对于同一条record的操作，后面的覆盖前一条，最后提交时只会执行最后一条，但是c++当中的std::set对于重复key的插入操作会直接拒绝，导致没能够正确的覆盖</li>
+<li>覆盖逻辑：因为采用覆盖的方式执行，因此对于在当前事务当中插入的数据，在commit时delete会覆盖掉insert的动作，就会导致一个问题：insert的commit动作没有正确得到执行，出现了begin &lt; 0 end &gt; 0的情况，在原本的tid校验当中没有判断，而commit前的begin &lt; 0 end &lt; 0的情况同样也没有判断
+大概想了两版修复方式：</li>
+</ul>
+<p>第一版比较复杂，逻辑上感觉更符合mvcc的含义：</p>
+<p><strong>由当前事务写入的记录无法被删除：</strong></p>
+<p>当前事务写入的记录为begin = -trx_id，end = MAX,之后由当前记录进行删除之后，变为begin = -trx_id,end = -trx_id，当前visit_record当中缺少对于这种情况的判断</p>
+<p>解决方案：添加对begin &lt; 0 &amp;&amp; end &lt; 0的判断，意义是由当前事务写入，并由当前事务删除，状态为对所有事务都不可见</p>
+<p><strong>commit动作没有被正常执行</strong></p>
+<p>当前事务使用rid作为key，使用std::unordered_set进行存储，保存当前事务的operation,留在提交时进行执行，同一个rid的operation应当后者覆盖前者，但是set对于已经存在了的key无法正确插入，无法正确覆盖。</p>
+<p>解决方案：
+在进行delete操作时进行特判，如果原本存在对应的key的话(即当前事务进行了一次插入操作)，就删除原本的key，重新插入，以达到覆盖的效果</p>
+<ul>
+<li>insert由于即便insert相同的record,rid也不一致，无需处理。</li>
+<li>其他的事务进行的插入不是同一个set,不会产生影响</li>
+<li>当前事务插入的其他的记录由于 rid 不一致，无需处理</li>
+</ul>
+<p><strong>垃圾回收问题：</strong></p>
+<p>如果在当前事务中删除已经提交的事务写入的记录，不会出现任何问题，因为插入操作在进行提交时会将begin设置为commid_tid，从而有了正确的版本信息，之后delete时，只需要修改end = tid即可，而无论进行回滚还是提交，都可以保证一个正确的状态：</p>
+<ul>
+<li>提交：end = commid_tid，可以根据版本去正确读取</li>
+<li>回滚：end = MAX，恢复到刚写入的状态</li>
+</ul>
+<p>如果是当前事务写入又由当前事务提交，则存在一定问题，由于在同一个事务当中，同一条记录后面会覆盖前面，从而导致如果进行写入又删除的话，begin会保留-tid的状态，此时无论进行commit还是rollback都只会执行delete的operation，从而该条记录的begin会一直保持-tid，给垃圾回收和正确读取带来困扰。</p>
+<p>可以考虑：</p>
+<ul>
+<li>如果是提交操作，那么就将begin = end = tid，意义为当前事务写入又由当前事务删除，不会影响读取</li>
+<li>如果是回滚操作，那么就调用table→delete_record进行真正的删除，由于该记录从未对外暴露过，因此删除不会影响其他事务的读取，并且在逻辑上也符合回滚的概念。</li>
+</ul>
+<p>第二版的实现方式比较的取巧，针对问题出现的源头进行修复：就是在trx.delete_record加个特判，如果是自己写入的进行删除，就直接调用delete_record,并且也不添加到operation_里面，并且删除之前的insert操作的operation，由于是自己创建的record，并且又被自己删除，因此就当作其从来没有存在过。</p>
+<p>在这种情况下，既不影响回滚，也不影响gc，最终实现也是采用第二种方式
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231201164246.png" alt="image.png"  />
+</p>
+<p>回到正题，update-mvcc这题其实是不怎么需要实现的，大多数人在完成了unique之后，update-mvcc是可以直接通过的，因为目前miniob已经给出了mvcc的insert和delete实现，组合一下即可。不过由于我们队unique index实现的是一个fake版本，在mvcc模式下并没有办法提供唯一性保证，而我又不想去重构，因此我们队分了两条线进行，队友去重构unique index，我特判表名然后实现一个内存当中的mvcc版的unique index，其实就是把visit_record当中的逻辑对着unique_index实现了一遍，不过最后是我先搞出来了hhh。</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">54
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">55
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>RC Table::insert_record(Record &amp;record)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span> decode_index_num;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (table_meta_.name() == mvcc_table_name_) {
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">int</span> index_offset = table_meta_.sys_field_num() + table_meta_.null_field_num();
+</span></span><span style="display:flex;"><span>    memcpy(&amp;decode_index_num,record.data() + index_offset * <span style="color:#ff0;font-weight:bold">4</span>,<span style="color:#ff0;font-weight:bold">4</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> (mvcc_unique_index_.contains(decode_index_num)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#fff;font-weight:bold">if</span> (is_duplicated(decode_index_num)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">return</span> RC::INVALID_ARGUMENT;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">bool</span> Table::is_duplicated(<span style="color:#fff;font-weight:bold">int</span> index_num) {
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (!mvcc_unique_index_.contains(index_num)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> current_index = mvcc_unique_index_[index_num];
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span> begin_tid = current_index.first;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">int</span> end_tid = current_index.second;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span> is_visible;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">bool</span> is_conflict;
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (begin_tid &gt; <span style="color:#ff0;font-weight:bold">0</span> &amp;&amp; end_tid &gt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> (trx_-&gt;id() &gt;= begin_tid &amp;&amp; trx_-&gt;id() &lt;= end_tid) {
+</span></span><span style="display:flex;"><span>      is_visible = <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>      is_visible = <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> if (begin_tid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> (-begin_tid == trx_-&gt;id() &amp;&amp; end_tid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>      is_visible = <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> <span style="color:#fff;font-weight:bold">if</span> (-begin_tid == trx_-&gt;id()) {
+</span></span><span style="display:flex;"><span>      is_visible = <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>      is_visible = <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> if (end_tid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// 由于unique index只需要管理插入，因此不存在read_only的情况
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#fff;font-weight:bold">if</span> (-end_tid == trx_-&gt;id()) {
+</span></span><span style="display:flex;"><span>      is_visible = <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>      is_conflict = <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// 正在有其他的尝试插入，直接拒绝
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#007f7f">// 如果存在一条先前可见的数据，也拒绝掉
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (is_conflict || is_visible) {
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在完成了unique index之后还存在一个问题，就是mvcc模式下,update时，下层的table_scan会把新写入的record又给读出来，从而导致又insert一遍，再加上我最开始visit_record当中begin &lt; 0 end &lt; 0的bug没修，从而导致其会逃过unique的限制，表现结果就是一个update更新了两次。
+问题的源头是table_scan会读取到新写入的record，不过当时没仔细看到底为什么，只是修了visit_record和在update当中加了一层限制，即如果原记录和新记录完全一致的话，就不进行更新，这样勉强算是把窟窿给堵上了，最后也是通过了测试。</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (begin_xid == -trx_id_) {
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// fix：此处是为了修复由当前事务插入而又被当前事务删除时无法正确删除的问题：
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#007f7f">// 在当前事务中创建的记录从来未对外暴露过，未来方便今后添加垃圾回收功能，这里选择直接删除真实记录
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#007f7f">// 就认为记录从来未存在过，此时无论是commit还是rollback都能得到正确的结果，并且需要清空之前的insert operation,避免事务结束时执行
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#fff;font-weight:bold">auto</span> delete_operation = Operation{Operation::Type::INSERT, table, record.rid()};
+</span></span><span style="display:flex;"><span>    std::unordered_set&lt;Operation&gt;::size_type delete_result  = operations_.erase(delete_operation);
+</span></span><span style="display:flex;"><span>    ASSERT(delete_result == <span style="color:#ff0;font-weight:bold">1</span>, <span style="color:#0ff;font-weight:bold">&#34;failed to delete insert operation,begin_xid=%d, end_xid=%d, tid=%d, rid:%s&#34;</span>,
+</span></span><span style="display:flex;"><span>        begin_xid, end_xid, trx_id_, record.rid().to_string().c_str());
+</span></span><span style="display:flex;"><span>    rc = table-&gt;delete_record(record);
+</span></span><span style="display:flex;"><span>    ASSERT(rc == RC::SUCCESS, <span style="color:#0ff;font-weight:bold">&#34;failed to delete record in table.table id =%d, rid=%s, begin_xid=%d, end_xid=%d, current trx id = %d&#34;</span>,
+</span></span><span style="display:flex;"><span>        table.-&gt;table_id(), record.rid().to_string().c_str(), begin_xid, end_xid, trx_id_);
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> rc;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  pair&lt;OperationSet::iterator, <span style="color:#fff;font-weight:bold">bool</span>&gt; ret = operations_.insert(Operation(Operation::Type::DELETE, table, record.rid()));
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (!ret.second) {
+</span></span><span style="display:flex;"><span>    LOG_WARN(<span style="color:#0ff;font-weight:bold">&#34;failed to insert operation(deletion) into operation set: duplicate&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> RC::INTERNAL;
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></td></tr></table>
+</div>
+</div>
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://itfischer.space/en/posts/tech/pangu2.0/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>More Than Capacity: Performance-oriented Evolution of Pangu in Alibaba</span>
+  </a>
+  <a class="next" href="http://itfischer.space/en/posts/tech/spfresh/">
+    <span class="title">Next »</span>
+    <br>
+    <span>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on x"
+            href="https://x.com/intent/tweet/?text=OceanBase%e5%88%9d%e8%b5%9b&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f&amp;title=OceanBase%e5%88%9d%e8%b5%9b&amp;summary=OceanBase%e5%88%9d%e8%b5%9b&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f&title=OceanBase%e5%88%9d%e8%b5%9b">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on whatsapp"
+            href="https://api.whatsapp.com/send?text=OceanBase%e5%88%9d%e8%b5%9b%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on telegram"
+            href="https://telegram.me/share/url?text=OceanBase%e5%88%9d%e8%b5%9b&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share OceanBase初赛 on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=OceanBase%e5%88%9d%e8%b5%9b&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2foceanbase%25E5%2588%259D%25E8%25B5%259B%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

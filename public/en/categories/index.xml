@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on Fischer&#39;s Blog</title>
+    <link>http://itfischer.space/en/categories/</link>
+    <description>Recent content in Categories on Fischer&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 04 Jun 2023 23:14:02 +0000</lastBuildDate>
+    <atom:link href="http://itfischer.space/en/categories/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Database</title>
+      <link>http://itfischer.space/en/categories/database/</link>
+      <pubDate>Sun, 04 Jun 2023 23:14:02 +0000</pubDate>
+      <guid>http://itfischer.space/en/categories/database/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>OS</title>
+      <link>http://itfischer.space/en/categories/os/</link>
+      <pubDate>Sat, 27 May 2023 09:45:02 +0000</pubDate>
+      <guid>http://itfischer.space/en/categories/os/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>BusTub</title>
+      <link>http://itfischer.space/en/categories/bustub/</link>
+      <pubDate>Sun, 23 Apr 2023 21:21:13 +0000</pubDate>
+      <guid>http://itfischer.space/en/categories/bustub/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

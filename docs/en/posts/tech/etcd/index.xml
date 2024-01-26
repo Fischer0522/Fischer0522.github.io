@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>etcd on Fischer&#39;s Blog</title>
+    <link>http://itfischer.space/en/posts/tech/etcd/</link>
+    <description>Recent content in etcd on Fischer&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 12 Jun 2023 22:09:29 +0000</lastBuildDate>
+    <atom:link href="http://itfischer.space/en/posts/tech/etcd/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>etcd/raft</title>
+      <link>http://itfischer.space/en/posts/tech/etcd/etcd-raft/</link>
+      <pubDate>Mon, 12 Jun 2023 22:09:29 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/etcd/etcd-raft/</guid>
+      <description>raft-example etcd/raft整体架构 etcd/raft选举流程 etcd/raft日志复制</description>
+    </item>
+    <item>
+      <title>etcd/raft日志复制</title>
+      <link>http://itfischer.space/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</link>
+      <pubDate>Sun, 11 Jun 2023 10:48:19 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</guid>
+      <description>Raft日志 日志存储 Raft日志在存储上分为两部分，一部分为新写入或者新生成的日志，暂时存储于内存当中，还未来得及进行稳定存储。而另一部分则</description>
+    </item>
+    <item>
+      <title>etcd-raft整体架构</title>
+      <link>http://itfischer.space/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
+      <pubDate>Wed, 07 Jun 2023 09:31:59 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
+      <description>etcd-raft整体架构 引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-ma</description>
+    </item>
+    <item>
+      <title>etcd/raft选举流程</title>
+      <link>http://itfischer.space/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</link>
+      <pubDate>Wed, 07 Jun 2023 00:25:29 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</guid>
+      <description>Raft选举流程 引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-made-si</description>
+    </item>
+    <item>
+      <title>raft-example</title>
+      <link>http://itfischer.space/en/posts/tech/etcd/raft-example/</link>
+      <pubDate>Wed, 31 May 2023 20:28:32 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/etcd/raft-example/</guid>
+      <description>raft-example 在etcd当中，提供了一个raft-example，该程序并非构建了一个完整的Raft模块，而是对Raft模块的的基本使用。并在此基础上构</description>
+    </item>
+  </channel>
+</rss>

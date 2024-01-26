@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>02-MVCC | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根">
+<meta name="author" content="Sulv">
+<link rel="canonical" href="http://itfischer.space/en/posts/tech/toydb/02-mvcc/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
+<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
+<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
+<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="02-MVCC" />
+<meta property="og:description" content="基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://itfischer.space/en/posts/tech/toydb/02-mvcc/" /><meta property="article:section" content="posts" />
+
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="02-MVCC"/>
+<meta name="twitter:description" content="基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://itfischer.space/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "http://itfischer.space/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "toydb",
+      "item": "http://itfischer.space/en/posts/tech/toydb/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  4 ,
+      "name": "02-MVCC",
+      "item": "http://itfischer.space/en/posts/tech/toydb/02-mvcc/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "02-MVCC",
+  "name": "02-MVCC",
+  "description": "基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根",
+  "keywords": [
+    
+  ],
+  "articleBody": "基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根据事务的开始时间，去读取事务开始时刻之前的最新版本。\nMVCC概括起来就是两句话：\nWriters don’t block readers. Readers don’t block writers. 只读事务无需加锁就可以读取数据库某一时刻的快照，如果保留数据的所有历史版本，DBMS甚至能够支持读取任意历史版本的数据，即time-travel(这一点在toydb当中也得到了实现，即不实现gc，保留之前所有的版本，开发者还特意强调了这是一个feature而不是bug)\n并发控制 MVCC(Multi-Version Concurrency Control)的名字具有一定的误导性，虽然叫做并发控制，但是本身并不是一个完整的并发控制协议，正如上面所说的，MVCC只能解决R-W之间的冲突问题，但是对于W-W，单靠MVCC本身是无法解决的，需要引入其他的并发协议，根据并发协议的种类，又可以大致分为：\nMV2PL：使用2PL悲观锁的形式来解决W-W冲突问题 MVOCC：使用基础的时间戳或者创建private workspace的形式(事务分为read,write,validate三个过程)，二者其实有细微的区别的，但是本质都是乐观的形式，就归在一起了 还有最简单的形式,如果发现当前事务要修改的record正在被其他事务修改，就放弃并之后重试(又不是不能用 :) )，也算是一种乐观的实现方式吧 这里先看一个toydb当中给出的例子来理解一下，\n1 2 3 4 5 6 7 //! Time //! 5 //! 4 a4 //! 3 b3 x //! 2 //! 1 a1 c1 d1 //! a b c d Keys 在t1时刻，某个事务写入了a=a1,c=c1,d=d1并提交 在t3时刻，某个事务写入了b=b3,删除了d 在t4时刻，某个事务写入了a=a4 在t2时刻，开启了事务T1，那么他就能够读取到a=a1,c=c1,d=d1 在 t 5 时刻，开启了事务 T 2, 那么他就能够读取到 a=a 4, b=b 3,c=c1 事务的时间或者版本的概念是根据事务begin决定的，比如说T2读取的物理时间可能落后于T5，但是由于T2事务begin早于T5，所以他就能够读取到的数据的版本就早于T5(其实这个也是根据并发控制协议决定的，如果使用OCC的话，事务的时间就是validate的时间)。\n记录真正变成可见是根据提交的时刻决定的，在事务未提交前，该事务写入的数据对于自己是可见的，但是对于其他的事务不可见，在看一个例子：\n1 2 3 4 5 6 7 8 9 //! Active set: [2, 5] //! //! Time //! 5 (a5) //! 4 a4 //! 3 b3 x //! 2 (x) (e2) //! 1 a1 c1 d1 //! a b c d e Keys 事务T2写入的数据，但是并未提交，T2维护在Active set当中,删除c1和写入e2对于自身是可见的，但是对于后面开启的事务T5是不可见的。\nMVCC in Miniob 在介绍toydb的MVCC的实现之前，先看一下Miniob的MVCC实现,虽然存在变更无法一次性对外暴露的问题，但是实现的比较简单，很好理解：\nMVCC当中的版本是基于tid的，在开启了MVCC模式之后，每一条record会生成两个sys_field，分别存储begin和end，来标识一个事务的可见性，这里似乎并没有一个统一的标准，只要能满足MVCC协议本身的要求即可，在Miniob当中的设置如下：\nrecord通过begin和end 两个id进行状态管理，begin用于表示事务开始的时间，end为事务结束的时间，对于一条record：\n当一个事务开始时，新的record的begin设置为-trx_id，end为max_int32,表示事务写入但未提交，而删除时则将end设置为-trx_id，表示删除但未提交 写入操作提交时，将begin设置为trx_id，删除操作提交时将end设置为trx_id，最终会产生五种状态 begin_xid end_xid 自身可见 其他事务可见 说明 -trx_id MAX 可见 不可见 由当前事务写入，但还未提交，对其他事务不可见 trx_id MAX 已提交 对新事务可见 写入并且已经提交，对之后的新事务可见 任意正数 trx_id 已提交 旧事务可见，新事务不可见 在当前事务中进行删除，并事务提交 任意正数 -trx_id 不可见 可见 在当前事务中进行删除，未提交 -trx_id -trx_id 不可见 不可见 由当前事务进行写入，并且又被当前事务删除，并且未提交 其中，已提交指的就是当前事务已经结束，自然不存在什么可见不可见的问题。而Miniob当中的隔离级别应当是和toydb一样的快照隔离，因为未提交的事务的 begin \u003c 0，因此是永远无法读取到新写入的record，因此是不存在幻读情况的。\n对于record是否可见的判断，在visit_record当中提供了一段代码：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 if (begin_xid \u003e 0 \u0026\u0026 end_xid \u003e 0) { if (trx_id_ \u003e= begin_xid \u0026\u0026 trx_id_ \u003c= end_xid) { rc = RC::SUCCESS; } else { rc = RC::RECORD_INVISIBLE; } } else if (begin_xid \u003c 0) { // begin xid 小于0说明是刚插入而且没有提交的数据 rc = (-begin_xid == trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE; } else if (end_xid \u003c 0) { // end xid 小于0 说明是正在删除但是还没有提交的数据 if (readonly) { // 如果 -end_xid 就是当前事务的事务号，说明是当前事务删除的 rc = (-end_xid != trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE; } else { // 如果当前想要修改此条数据，并且不是当前事务删除的，简单的报错 // 这是事务并发处理的一种方式，非常简单粗暴。其它的并发处理方法，可以等待，或者让客户端重试 // 或者等事务结束后，再检测修改的数据是否有冲突 rc = (-end_xid != trx_id_) ? RC::LOCKED_CONCURRENCY_CONFLICT : RC::RECORD_INVISIBLE; } } 如果想进一步了解Miniob的事务模块的话，可以看这个：miniob-transaction.md 除此之外，23fall的15-455同样也提供了MVCC，基于MVOCC实现的，以单个Field为单位实现的多版本，笔者目前即没做也没细看，读者如果感兴趣的话可以看以下链接：Project #4 - Concurrency Control | CMU 15-445/645 :: Intro to Database Systems (Fall 2023)\n实现 首先补充点理论：\n在toydb当中，MVCC所提供的隔离级别为快照隔离，事务只能看到数据库的一个一致性快照，而这个快照是根据事务创建的时间决定的，即事务只能够看到事务创建前的最新的数据，以及由自己写入的新数据，目前还未提交的活跃事务之间相互隔离互不影响。 Toydb 并没有实现 GC 功能，会保存数据的所有版本，因此就可以支持 time travel query，即传入一个时间戳，然后获取一个那时的快照，进行只读请求 (由于基于旧版本进行写请求会扰乱当前数据库的状态，如进行 set x = x + 1，原本 x = 3，但是目前已经是 x = 5 了，因此 time travel 只支持只读事务)，开发者特意强调了这是一个 feature 而不是 bug，不过感觉多少有点欲盖弥彰了。 好了，接下来来看一下具体的实现，在toydb当中，事务的相关逻辑全部定义在src/storage/mvcc.rs当中，只有一个文件，其他的像是debug.rs，keycode.rs只是提供一些辅助支持，用到的时候再看看。\n在介绍MVCC以及事务是如何实现之前，先梳理一下定义的结构体和之间的关系\nTransaction 事务最基础的结构体为Transaction：\nEngine为一个Trait，在其中提供了基础的CRUD功能，而上一章介绍的Bitcask和Memory都实现了这个Trait，具体使用的哪个上层应用无需关心 TransactionState用于表示事务的状态 1 2 3 4 5 6 7 /// An MVCC transaction. pub struct Transaction { /// The underlying engine, shared by all transactions. engine: Arc",
+  "wordCount" : "9394",
+  "inLanguage": "en",
+  "datePublished": "0001-01-01T00:00:00Z",
+  "dateModified": "0001-01-01T00:00:00Z",
+  "author":{
+    "@type": "Person",
+    "name": "Sulv"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://itfischer.space/en/posts/tech/toydb/02-mvcc/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://itfischer.space/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://itfischer.space/en/search" title="Search">
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/toydb/">toydb</a></div>
+    <h1 class="post-title entry-hint-parent">
+      02-MVCC
+    </h1>
+    <div class="post-meta">19 min&nbsp;·&nbsp;Sulv
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e5%9f%ba%e7%a1%80%e7%90%86%e8%ae%ba" aria-label="基础理论">基础理论</a><ul>
+                        
+                <li>
+                    <a href="#%e5%b9%b6%e5%8f%91%e6%8e%a7%e5%88%b6" aria-label="并发控制">并发控制</a></li>
+                <li>
+                    <a href="#mvcc-in-miniob" aria-label="MVCC in Miniob">MVCC in Miniob</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%ae%9e%e7%8e%b0" aria-label="实现">实现</a><ul>
+                        
+                <li>
+                    <a href="#transaction" aria-label="Transaction">Transaction</a><ul>
+                        
+                <li>
+                    <a href="#transactionstate" aria-label="TransactionState">TransactionState</a></li>
+                <li>
+                    <a href="#mvcc" aria-label="MVCC">MVCC</a></li>
+                <li>
+                    <a href="#status" aria-label="Status">Status</a></li>
+                <li>
+                    <a href="#key" aria-label="Key">Key</a></li></ul>
+                </li>
+                <li>
+                    <a href="#mvcc-impl" aria-label="MVCC Impl">MVCC Impl</a><ul>
+                        
+                <li>
+                    <a href="#begin" aria-label="Begin">Begin</a></li>
+                <li>
+                    <a href="#begin_read_only" aria-label="Begin_read_only">Begin_read_only</a></li>
+                <li>
+                    <a href="#write--delete" aria-label="Write &amp;&amp; Delete">Write &amp;&amp; Delete</a></li>
+                <li>
+                    <a href="#get" aria-label="Get">Get</a></li>
+                <li>
+                    <a href="#commit--rollback" aria-label="Commit &amp;&amp; Rollback">Commit &amp;&amp; Rollback</a></li>
+                <li>
+                    <a href="#%e5%8e%9f%e5%ad%90%e6%80%a7%e5%8f%98%e6%9b%b4" aria-label="原子性变更">原子性变更</a></li></ul>
+                </li></ul>
+                </li>
+                <li>
+                    <a href="#summary" aria-label="Summary">Summary</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="基础理论">基础理论<a hidden class="anchor" aria-hidden="true" href="#基础理论">#</a></h2>
+<p>简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根据事务的开始时间，去读取事务开始时刻之前的最新版本。</p>
+<p>MVCC概括起来就是两句话：</p>
+<ul>
+<li>Writers don&rsquo;t block readers.</li>
+<li>Readers don&rsquo;t block writers.</li>
+</ul>
+<p>只读事务无需加锁就可以读取数据库某一时刻的快照，如果保留数据的所有历史版本，DBMS甚至能够支持读取任意历史版本的数据，即time-travel(这一点在toydb当中也得到了实现，即不实现gc，保留之前所有的版本，开发者还特意强调了这是一个feature而不是bug)</p>
+<h3 id="并发控制">并发控制<a hidden class="anchor" aria-hidden="true" href="#并发控制">#</a></h3>
+<p>MVCC(Multi-Version Concurrency Control)的名字具有一定的误导性，虽然叫做并发控制，但是本身并不是一个完整的并发控制协议，正如上面所说的，MVCC只能解决R-W之间的冲突问题，但是对于W-W，单靠MVCC本身是无法解决的，需要引入其他的并发协议，根据并发协议的种类，又可以大致分为：</p>
+<ul>
+<li>MV2PL：使用2PL悲观锁的形式来解决W-W冲突问题</li>
+<li>MVOCC：使用基础的时间戳或者创建private workspace的形式(事务分为read,write,validate三个过程)，二者其实有细微的区别的，但是本质都是乐观的形式，就归在一起了</li>
+<li>还有最简单的形式,如果发现当前事务要修改的record正在被其他事务修改，就放弃并之后重试(又不是不能用 :) )，也算是一种乐观的实现方式吧</li>
+</ul>
+<p>这里先看一个toydb当中给出的例子来理解一下，</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! Time
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 5
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 4  a4          
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 3      b3      x
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 2            
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 1  a1      c1  d1
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//!    a   b   c   d   Keys
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>在t1时刻，某个事务写入了a=a1,c=c1,d=d1并提交</li>
+<li>在t3时刻，某个事务写入了b=b3,删除了d</li>
+<li>在t4时刻，某个事务写入了a=a4</li>
+<li>在t2时刻，开启了事务T1，那么他就能够读取到a=a1,c=c1,d=d1</li>
+<li>在 t 5 时刻，开启了事务 T 2, 那么他就能够读取到 a=a 4, b=b 3,c=c1</li>
+</ul>
+<p>事务的时间或者版本的概念是根据事务begin决定的，比如说T2读取的物理时间可能落后于T5，但是由于T2事务begin早于T5，所以他就能够读取到的数据的版本就早于T5(其实这个也是根据并发控制协议决定的，如果使用OCC的话，事务的时间就是validate的时间)。</p>
+<p>记录真正变成可见是根据提交的时刻决定的，在事务未提交前，该事务写入的数据对于自己是可见的，但是对于其他的事务不可见，在看一个例子：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! Active set: [2, 5]
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//!
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! Time
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 5 (a5)
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 4  a4          
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 3      b3      x
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 2         (x)     (e2)
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//! 1  a1      c1  d1
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">//!    a   b   c   d   e   Keys
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>事务T2写入的数据，但是并未提交，T2维护在Active set当中,删除c1和写入e2对于自身是可见的，但是对于后面开启的事务T5是不可见的。</p>
+<h3 id="mvcc-in-miniob">MVCC in Miniob<a hidden class="anchor" aria-hidden="true" href="#mvcc-in-miniob">#</a></h3>
+<p>在介绍toydb的MVCC的实现之前，先看一下Miniob的MVCC实现,虽然存在变更无法一次性对外暴露的问题，但是实现的比较简单，很好理解：</p>
+<p>MVCC当中的版本是基于tid的，在开启了MVCC模式之后，每一条record会生成两个sys_field，分别存储begin和end，来标识一个事务的可见性，这里似乎并没有一个统一的标准，只要能满足MVCC协议本身的要求即可，在Miniob当中的设置如下：</p>
+<p>record通过begin和end 两个id进行状态管理，begin用于表示事务开始的时间，end为事务结束的时间，对于一条record：</p>
+<ul>
+<li>当一个事务开始时，新的record的begin设置为-trx_id，end为max_int32,表示事务写入但未提交，而删除时则将end设置为-trx_id，表示删除但未提交</li>
+<li>写入操作提交时，将begin设置为trx_id，删除操作提交时将end设置为trx_id，最终会产生五种状态</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>begin_xid</th>
+<th>end_xid</th>
+<th>自身可见</th>
+<th>其他事务可见</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-trx_id</td>
+<td>MAX</td>
+<td>可见</td>
+<td>不可见</td>
+<td>由当前事务写入，但还未提交，对其他事务不可见</td>
+</tr>
+<tr>
+<td>trx_id</td>
+<td>MAX</td>
+<td>已提交</td>
+<td>对新事务可见</td>
+<td>写入并且已经提交，对之后的新事务可见</td>
+</tr>
+<tr>
+<td>任意正数</td>
+<td>trx_id</td>
+<td>已提交</td>
+<td>旧事务可见，新事务不可见</td>
+<td>在当前事务中进行删除，并事务提交</td>
+</tr>
+<tr>
+<td>任意正数</td>
+<td>-trx_id</td>
+<td>不可见</td>
+<td>可见</td>
+<td>在当前事务中进行删除，未提交</td>
+</tr>
+<tr>
+<td>-trx_id</td>
+<td>-trx_id</td>
+<td>不可见</td>
+<td>不可见</td>
+<td>由当前事务进行写入，并且又被当前事务删除，并且未提交</td>
+</tr>
+</tbody>
+</table>
+<p>其中，已提交指的就是当前事务已经结束，自然不存在什么可见不可见的问题。而Miniob当中的隔离级别应当是和toydb一样的快照隔离，因为未提交的事务的 begin &lt; 0，因此是永远无法读取到新写入的record，因此是不存在幻读情况的。</p>
+<p>对于record是否可见的判断，在visit_record当中提供了一段代码：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">if</span> (begin_xid &gt; <span style="color:#ff0;font-weight:bold">0</span> &amp;&amp; end_xid &gt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (trx_id_ &gt;= begin_xid &amp;&amp; trx_id_ &lt;= end_xid) {
+</span></span><span style="display:flex;"><span>    rc = RC::SUCCESS;
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>    rc = RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>} <span style="color:#fff;font-weight:bold">else</span> if (begin_xid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// begin xid 小于0说明是刚插入而且没有提交的数据
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  rc = (-begin_xid == trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>} <span style="color:#fff;font-weight:bold">else</span> if (end_xid &lt; <span style="color:#ff0;font-weight:bold">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// end xid 小于0 说明是正在删除但是还没有提交的数据
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (readonly) {
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// 如果 -end_xid 就是当前事务的事务号，说明是当前事务删除的
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    rc = (-end_xid != trx_id_) ? RC::SUCCESS : RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// 如果当前想要修改此条数据，并且不是当前事务删除的，简单的报错
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#007f7f">// 这是事务并发处理的一种方式，非常简单粗暴。其它的并发处理方法，可以等待，或者让客户端重试
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#007f7f">// 或者等事务结束后，再检测修改的数据是否有冲突
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    rc = (-end_xid != trx_id_) ? RC::LOCKED_CONCURRENCY_CONFLICT : RC::RECORD_INVISIBLE;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果想进一步了解Miniob的事务模块的话，可以看这个：<a href="https://github.com/oceanbase/miniob/blob/main/docs/src/design/miniob-transaction.md">miniob-transaction.md</a>
+除此之外，23fall的15-455同样也提供了MVCC，基于MVOCC实现的，以单个Field为单位实现的多版本，笔者目前即没做也没细看，读者如果感兴趣的话可以看以下链接：<a href="https://15445.courses.cs.cmu.edu/fall2023/project4/">Project #4 - Concurrency Control | CMU 15-445/645 :: Intro to Database Systems (Fall 2023)</a></p>
+<h2 id="实现">实现<a hidden class="anchor" aria-hidden="true" href="#实现">#</a></h2>
+<p>首先补充点理论：</p>
+<ul>
+<li>在toydb当中，MVCC所提供的隔离级别为快照隔离，事务只能看到数据库的一个一致性快照，而这个快照是根据事务创建的时间决定的，即事务只能够看到事务创建前的最新的数据，以及由自己写入的新数据，目前还未提交的活跃事务之间相互隔离互不影响。</li>
+<li>Toydb 并没有实现 GC 功能，会保存数据的所有版本，因此就可以支持 time travel query，即传入一个时间戳，然后获取一个那时的快照，进行只读请求 (由于基于旧版本进行写请求会扰乱当前数据库的状态，如进行 set x = x + 1，原本 x = 3，但是目前已经是 x = 5 了，因此 time travel 只支持只读事务)，开发者特意强调了这是一个 feature 而不是 bug，不过感觉多少有点欲盖弥彰了。</li>
+</ul>
+<p>好了，接下来来看一下具体的实现，在toydb当中，事务的相关逻辑全部定义在<code>src/storage/mvcc.rs</code>当中，只有一个文件，其他的像是<code>debug.rs</code>，<code>keycode.rs</code>只是提供一些辅助支持，用到的时候再看看。</p>
+<p>在介绍MVCC以及事务是如何实现之前，先梳理一下定义的结构体和之间的关系</p>
+<h3 id="transaction">Transaction<a hidden class="anchor" aria-hidden="true" href="#transaction">#</a></h3>
+<p>事务最基础的结构体为<code>Transaction</code>：</p>
+<ul>
+<li>Engine为一个Trait，在其中提供了基础的CRUD功能，而上一章介绍的Bitcask和Memory都实现了这个Trait，具体使用的哪个上层应用无需关心</li>
+<li>TransactionState用于表示事务的状态</li>
+</ul>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// An MVCC transaction.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">struct</span> Transaction&lt;E: Engine&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The underlying engine, shared by all transactions.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    engine: Arc&lt;Mutex&lt;E&gt;&gt;,
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The transaction state.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    st: TransactionState,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="transactionstate">TransactionState<a hidden class="anchor" aria-hidden="true" href="#transactionstate">#</a></h4>
+<p>在注释当中，对于TransactionState的设计理念做了比较详细的说明，简而言之就是，事务状态的设计使得事务可以在不同的组件之间安全地传递，并且可以在不直接引用事务本身的情况下被引用，有助于简化事务管理。</p>
+<p>TransacationState当中提供了一个函数，用于判断给定的version对于当前事务是否可见，逻辑如下：</p>
+<ol>
+<li>如果version来自活跃事务，即处于active_set当中，那么代表为新写入的，不可见</li>
+<li>如果为只读事务，那么能看到小于version的(之前事务创建的)</li>
+<li>如果是普通事务，那么可以看到之前的和自身写入(&lt;=)</li>
+</ol>
+<blockquote>
+<p>A Transaction&rsquo;s state, which determines its write version and isolation. It is separate from Transaction to allow it to be passed around independently of the engine. There are two main motivations for this:</p>
+<ul>
+<li>It can be exported via Transaction.state(), (de)serialized, and later used to instantiate a new functionally equivalent Transaction via Transaction::resume(). This allows passing the transaction between the  storage engine and SQL engine (potentially running on a different node)  across the Raft state machine boundary.</li>
+<li>It can be borrowed independently of Engine, allowing references to it  in VisibleIterator, which would otherwise result in self-references.</li>
+</ul>
+</blockquote>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">38
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0f0;font-weight:bold">#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">struct</span> TransactionState {
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The version this transaction is running at. Only one read-write
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// transaction can run at a given version, since this identifies its
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// writes.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> version: Version,
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// If true, the transaction is read only.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> read_only: <span style="color:#fff;font-weight:bold">bool</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The set of concurrent active (uncommitted) transactions, as of the start
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// of this transaction. Their writes should be invisible to this
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// transaction even if they&#39;re writing at a lower version, since they&#39;re
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// not committed yet.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> active: HashSet&lt;Version&gt;,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">impl</span> TransactionState {
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Checks whether the given version is visible to this transaction.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">///
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// Future versions, and versions belonging to active transactions as of
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// the start of this transaction, are never isible.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">///
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// Read-write transactions see their own writes at their version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">///
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// Read-only queries only see versions below the transaction&#39;s version,
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// excluding the version itself. This is to ensure time-travel queries see
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// a consistent version both before and after any active transaction at
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// that version commits its writes. See the module documentation for
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// details.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">fn</span> is_visible(&amp;self, version: Version) -&gt; <span style="color:#fff;font-weight:bold">bool</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> self.active.get(&amp;version).is_some() {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">false</span>
+</span></span><span style="display:flex;"><span>        } <span style="color:#fff;font-weight:bold">else</span> <span style="color:#fff;font-weight:bold">if</span> self.read_only {
+</span></span><span style="display:flex;"><span>            version &lt; self.version
+</span></span><span style="display:flex;"><span>        } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>            version &lt;= self.version
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="mvcc">MVCC<a hidden class="anchor" aria-hidden="true" href="#mvcc">#</a></h4>
+<p>MVCC可以认为是一个<code>wrapper</code>，具体的逻辑是由上面的<code>Transaction</code>来实现的，调用<code>Transaction</code>当中对应的函数，在其中定义了一个存储引擎的shared_ptr，在调用时会传递给<code>Transaction</code>,为什么需要使用<code>Mutex</code>也在注释当中给出。</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">54
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">55
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">56
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">57
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">58
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">59
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">60
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// An MVCC-based transactional key-value engine. It wraps an underlying storage
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// engine that&#39;s used for raw key/value storage.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">///
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// While it supports any number of concurrent transactions, individual read or
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// write operations are executed sequentially, serialized via a mutex. There
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// are two reasons for this: the storage engine itself is not thread-safe,
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// requiring serialized access, and the Raft state machine that manages the
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// MVCC engine applies commands one at a time from the Raft log, which will
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// serialize them anyway.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">struct</span> MVCC&lt;E: Engine&gt; {
+</span></span><span style="display:flex;"><span>    engine: Arc&lt;Mutex&lt;E&gt;&gt;,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">impl</span>&lt;E: Engine&gt; MVCC&lt;E&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Creates a new MVCC engine with the given storage engine.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> new(engine: E) -&gt; Self {
+</span></span><span style="display:flex;"><span>        Self { engine: Arc::new(Mutex::new(engine)) }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Begins a new read-write transaction.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> begin(&amp;self) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Transaction&lt;E&gt;&gt; {
+</span></span><span style="display:flex;"><span>        Transaction::begin(self.engine.clone())
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Begins a new read-only transaction at the latest version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> begin_read_only(&amp;self) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Transaction&lt;E&gt;&gt; {
+</span></span><span style="display:flex;"><span>        Transaction::begin_read_only(self.engine.clone(), <span style="color:#fff;font-weight:bold">None</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Begins a new read-only transaction as of the given version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> begin_as_of(&amp;self, version: Version) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Transaction&lt;E&gt;&gt; {
+</span></span><span style="display:flex;"><span>        Transaction::begin_read_only(self.engine.clone(), <span style="color:#fff;font-weight:bold">Some</span>(version))
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Resumes a transaction from the given transaction state.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> resume(&amp;self, state: TransactionState) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Transaction&lt;E&gt;&gt; {
+</span></span><span style="display:flex;"><span>        Transaction::resume(self.engine.clone(), state)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Fetches the value of an unversioned key.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> get_unversioned(&amp;self, key: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>]) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;<span style="color:#fff;font-weight:bold">Option</span>&lt;<span style="color:#fff;font-weight:bold">Vec</span>&lt;<span style="color:#fff;font-weight:bold">u8</span>&gt;&gt;&gt; {
+</span></span><span style="display:flex;"><span>        self.engine.lock()?.get(&amp;Key::Unversioned(key.into()).encode()?)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Sets the value of an unversioned key.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> set_unversioned(&amp;self, key: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>], value: <span style="color:#fff;font-weight:bold">Vec</span>&lt;<span style="color:#fff;font-weight:bold">u8</span>&gt;) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;()&gt; {
+</span></span><span style="display:flex;"><span>        self.engine.lock()?.set(&amp;Key::Unversioned(key.into()).encode()?, value)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Returns the status of the MVCC and storage engines.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> status(&amp;self) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Status&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> engine = self.engine.lock()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> versions = <span style="color:#fff;font-weight:bold">match</span> engine.get(&amp;Key::NextVersion.encode()?)? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">Some</span>(<span style="color:#fff;font-weight:bold">ref</span> v) =&gt; bincode::deserialize::&lt;<span style="color:#fff;font-weight:bold">u64</span>&gt;(v)? - <span style="color:#ff0;font-weight:bold">1</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">None</span> =&gt; <span style="color:#ff0;font-weight:bold">0</span>,
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> active_txns = engine.scan_prefix(&amp;KeyPrefix::TxnActive.encode()?).count() <span style="color:#fff;font-weight:bold">as</span> <span style="color:#fff;font-weight:bold">u64</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">Ok</span>(Status { versions, active_txns, storage: engine.status()? })
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="status">Status<a hidden class="anchor" aria-hidden="true" href="#status">#</a></h4>
+<p>不怎么重要，看一下就好，作为函数返回值来表示当前事务的状态，其中的storage是存储引擎的storage，在上一章介绍过了</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// MVCC engine status.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span><span style="color:#0f0;font-weight:bold">#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">struct</span> Status {
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The total number of MVCC versions (i.e. read-write transactions).
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> versions: <span style="color:#fff;font-weight:bold">u64</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Number of currently active transactions.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> active_txns: <span style="color:#fff;font-weight:bold">u64</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The storage engine.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> storage: super::engine::Status,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="key">Key<a hidden class="anchor" aria-hidden="true" href="#key">#</a></h4>
+<p>能够借助kv存储引擎实现MVCC的核心，实现上采用enum，rust当中的枚举非常强大，在 Rust 中，枚举是一种数据类型，它可以有不同的值（称为变体），但在任何给定时刻只能有其中一个值。每个枚举变体可以关联不同类型和数量的数据。</p>
+<p>借助rust的enum，就可以在创建key时向其中传递一个值，既可以表示当前的动作或者状态，又可以获得这个动作需要的值。举个例子，在需要写入一个key的新的version时，那么就需要以当前的key + version来作为key，那么就可以很自然的使用enum来表示一个复合的key，之后encode进行存储：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// A versioned key/value pair.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    Version(
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(with = </span><span style="color:#0ff;font-weight:bold">&#34;serde_bytes&#34;</span><span style="color:#0f0;font-weight:bold">)]</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(borrow)]</span>
+</span></span><span style="display:flex;"><span>        Cow&lt;<span style="color:#007f7f">&#39;a</span>, [<span style="color:#fff;font-weight:bold">u8</span>]&gt;,
+</span></span><span style="display:flex;"><span>        Version,
+</span></span><span style="display:flex;"><span>    ),
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// 某处调用
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    session.set(&amp;Key::Version(key.into(),self.st.version).encode()?, bincode::serialize(&amp;value)?)
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>而对于next_version而言，并不需要额外的值，只需要key为next_version，而value为一个u64即可，那么就不定义附加的值：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The next available version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    NextVersion,
+</span></span><span style="display:flex;"><span>    <span style="color:#007f7f">// 某处调用
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    <span style="color:#fff;font-weight:bold">let</span> versions = <span style="color:#fff;font-weight:bold">match</span> engine.get(&amp;Key::NextVersion.encode()?)? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">Some</span>(<span style="color:#fff;font-weight:bold">ref</span> v) =&gt; bincode::deserialize::&lt;<span style="color:#fff;font-weight:bold">u64</span>&gt;(v)? - <span style="color:#ff0;font-weight:bold">1</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">None</span> =&gt; <span style="color:#ff0;font-weight:bold">0</span>,
+</span></span><span style="display:flex;"><span>        };
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Key的完整定义如下：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">37
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// MVCC keys, using the KeyCode encoding which preserves the ordering and
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// grouping of keys. Cow byte slices allow encoding borrowed values and
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold">/// decoding into owned values.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span><span style="color:#0f0;font-weight:bold">#[derive(Debug, Deserialize, Serialize)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">enum</span> Key&lt;<span style="color:#007f7f">&#39;a</span>&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// The next available version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    NextVersion,
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Active (uncommitted) transactions by version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    TxnActive(Version),
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// A snapshot of the active set at each version. Only written for
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// versions where the active set is non-empty (excluding itself).
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    TxnActiveSnapshot(Version),
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Keeps track of all keys written to by an active transaction (identified
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// by its version), in case it needs to roll back.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    TxnWrite(
+</span></span><span style="display:flex;"><span>        Version,
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(with = </span><span style="color:#0ff;font-weight:bold">&#34;serde_bytes&#34;</span><span style="color:#0f0;font-weight:bold">)]</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(borrow)]</span>
+</span></span><span style="display:flex;"><span>        Cow&lt;<span style="color:#007f7f">&#39;a</span>, [<span style="color:#fff;font-weight:bold">u8</span>]&gt;,
+</span></span><span style="display:flex;"><span>    ),
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// A versioned key/value pair.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    Version(
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(with = </span><span style="color:#0ff;font-weight:bold">&#34;serde_bytes&#34;</span><span style="color:#0f0;font-weight:bold">)]</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(borrow)]</span>
+</span></span><span style="display:flex;"><span>        Cow&lt;<span style="color:#007f7f">&#39;a</span>, [<span style="color:#fff;font-weight:bold">u8</span>]&gt;,
+</span></span><span style="display:flex;"><span>        Version,
+</span></span><span style="display:flex;"><span>    ),
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Unversioned non-transactional key/value pairs. These exist separately
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// from versioned keys, i.e. the unversioned key &#34;foo&#34; is entirely
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// independent of the versioned key &#34;foo@7&#34;. These are mostly used
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// for metadata.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    Unversioned(
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(with = </span><span style="color:#0ff;font-weight:bold">&#34;serde_bytes&#34;</span><span style="color:#0f0;font-weight:bold">)]</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0f0;font-weight:bold">#[serde(borrow)]</span>
+</span></span><span style="display:flex;"><span>        Cow&lt;<span style="color:#007f7f">&#39;a</span>, [<span style="color:#fff;font-weight:bold">u8</span>]&gt;,
+</span></span><span style="display:flex;"><span>    ),
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>此外，还有一个KeyPrefix用于进行前缀匹配，和Key差不多，这里就不做介绍了。</p>
+<h3 id="mvcc-impl">MVCC Impl<a hidden class="anchor" aria-hidden="true" href="#mvcc-impl">#</a></h3>
+<p>终于，要开始分析MVCC的实现了，这一部分其实就是<code>Transaction</code>的impl,在这一部分，笔者会把重点放在MVCC与存储引擎的交互上，即如何使用KV存储引擎来实现MVCC。</p>
+<p>像前面说的那样，toydb支持time travel的只读事务，因此在开启事务这块，提供了两个函数，分别对应read-write的事务和read-only的事务</p>
+<h4 id="begin">Begin<a hidden class="anchor" aria-hidden="true" href="#begin">#</a></h4>
+<p>begin用于开启一个read-write的事务，大致干了一下几件事：</p>
+<ol>
+<li>获取一个Version作为当前事务的tid,或者可以视为一个时间戳，之后+1写回，由于toydb并没有实现buffer pool + wal，因此这里的NextVersion是存储在存储引擎当中的，采用的是同步写入的方式(这里单指bitcask,使用memory的话就没有什么持久化可言了，不过在MVCC模块当中，只需要在意engine的trait，通常不太需要考虑底层)</li>
+<li>从存储引擎当中扫描，恢复出当前的active_set，这里active_set采用的是分布存储的，即没当开启一个事务后，就向存储引擎当中写入一条<code>Key::TxnActive</code>，带上自己的version，之后扫描出所有<code>Key::TxnActive</code>的key，恢复出active_set，个人认为这样设计的原因是bitcask本身是一个append-only的存储引擎，就算是将value设置为完整的active_set，那么每次写入也是追加写入，并且需要完整的写入整个active_set，写入量反而增大，不如采用分布存储，代价是读取时需要进行一个扫描，不过active_set只会在事务begin的时候进行读取，也无伤大雅</li>
+<li>根据active_set来生成一个snapshot，用于进行time-travel read，time travel需要做的是读取到给定时间戳(version)时数据库的完整状态，不能够简单的通过版本进行读取，因为有些key虽然是由给定version之前的事务写入的，但是事务未提交，那么该key就不可见，这也是snapshot存在的意义，用于恢复某一时间的事务隔离情况，判断数据的可见性</li>
+<li>将自己的version写入，补充active_set</li>
+</ol>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Begins a new transaction in read-write mode. This will allocate a new
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// version that the transaction can write at, add it to the active set, and
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// record its active snapshot for time-travel queries.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">fn</span> begin(engine: Arc&lt;Mutex&lt;E&gt;&gt;) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Self&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> session = engine.lock()?;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// Allocate a new version to write at.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#fff;font-weight:bold">let</span> version = <span style="color:#fff;font-weight:bold">match</span> session.get(&amp;Key::NextVersion.encode()?)? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">Some</span>(<span style="color:#fff;font-weight:bold">ref</span> v) =&gt; bincode::deserialize(v)?,
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">None</span> =&gt; <span style="color:#ff0;font-weight:bold">1</span>,
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>        session.set(&amp;Key::NextVersion.encode()?, bincode::serialize(&amp;(version + <span style="color:#ff0;font-weight:bold">1</span>))?)?;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// Fetch the current set of active transactions, persist it for
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// time-travel queries if non-empty, then add this txn to it.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#fff;font-weight:bold">let</span> active = Self::scan_active(&amp;<span style="color:#fff;font-weight:bold">mut</span> session)?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> !active.is_empty() {
+</span></span><span style="display:flex;"><span>            session.set(&amp;Key::TxnActiveSnapshot(version).encode()?, bincode::serialize(&amp;active)?)?
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        session.set(&amp;Key::TxnActive(version).encode()?, vec![])?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">drop</span>(session);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">Ok</span>(Self { engine, st: TransactionState { version, read_only: false, active } })
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="begin_read_only">Begin_read_only<a hidden class="anchor" aria-hidden="true" href="#begin_read_only">#</a></h4>
+<p><code>begin_read_only</code>用于进行read only的事务，如果传入了一个version,那么就进行time-travel，否则根据数据库最新的状态进行读取：</p>
+<ol>
+<li>获取数据库最新的version，如果传入了as_of就替换成传入的version，用于进行time travel(传入的version是不能大于数据库最新的version的)</li>
+<li>之后如果是time travel，就根据version去读取snapshot，来恢复active_set，否则和begin一样，去扫描获取最新的active_set</li>
+</ol>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Begins a new read-only transaction. If version is given it will see the
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// state as of the beginning of that version (ignoring writes at that
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// version). In other words, it sees the same state as the read-write
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// transaction at that version saw when it began.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">fn</span> begin_read_only(engine: Arc&lt;Mutex&lt;E&gt;&gt;, as_of: <span style="color:#fff;font-weight:bold">Option</span>&lt;Version&gt;) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;Self&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> session = engine.lock()?;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// Fetch the latest version.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> version = <span style="color:#fff;font-weight:bold">match</span> session.get(&amp;Key::NextVersion.encode()?)? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">Some</span>(<span style="color:#fff;font-weight:bold">ref</span> v) =&gt; bincode::deserialize(v)?,
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">None</span> =&gt; <span style="color:#ff0;font-weight:bold">1</span>,
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// If requested, create the transaction as of a past version, restoring
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// the active snapshot as of the beginning of that version. Otherwise,
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// use the latest version and get the current, real-time snapshot.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> active = HashSet::new();
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">Some</span>(as_of) = as_of {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">if</span> as_of &gt;= version {
+</span></span><span style="display:flex;"><span>                <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Err</span>(Error::Value(format!(<span style="color:#0ff;font-weight:bold">&#34;Version </span><span style="color:#0ff;font-weight:bold">{}</span><span style="color:#0ff;font-weight:bold"> does not exist&#34;</span>, as_of)));
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            version = as_of;
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">if</span> <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">Some</span>(value) = session.get(&amp;Key::TxnActiveSnapshot(version).encode()?)? {
+</span></span><span style="display:flex;"><span>                active = bincode::deserialize(&amp;value)?;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>            active = Self::scan_active(&amp;<span style="color:#fff;font-weight:bold">mut</span> session)?;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">drop</span>(session);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">Ok</span>(Self { engine, st: TransactionState { version, read_only: true, active } })
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="write--delete">Write &amp;&amp; Delete<a hidden class="anchor" aria-hidden="true" href="#write--delete">#</a></h4>
+<p>由于MVCC的append-only的特性(没有gc)，对于Write和Delete进行统一封装，Delete视为写入一个tombstone(MVCC层面的tombstone，调用的存储引擎还是set接口，不会在存储引擎当中删除)，底层都是通过<code>write_version</code>来实现的:</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Deletes a key.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> delete(&amp;self, key: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>]) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;()&gt; {
+</span></span><span style="display:flex;"><span>        self.write_version(key, <span style="color:#fff;font-weight:bold">None</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Sets a value for a key.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> set(&amp;self, key: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>], value: <span style="color:#fff;font-weight:bold">Vec</span>&lt;<span style="color:#fff;font-weight:bold">u8</span>&gt;) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;()&gt; {
+</span></span><span style="display:flex;"><span>        self.write_version(key, <span style="color:#fff;font-weight:bold">Some</span>(value))
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>write_version</strong></p>
+<p>在write_version当中，首先进行写入冲突的检查，即检查是否有其他的事务正在对当前的key进行写入操作，实现方法也很简单，扫描(key,active.min)到(key,u64::MAX)范围内的key，对于扫描出来的key当中最新的版本：</p>
+<ul>
+<li>如果对于当时事务可见，那么就证明为自身写入的，或者是比自己早并且已经提交的事务写入的，不存在冲突</li>
+<li>如果对当前事务不可见，那么就是其他的活跃事务写入的，证明有其他事务在并发写入，存在冲突(只要version存在于active_set当中就是不可见的，否则再根据version大小去判断)
+在判断没有冲突之后，分别写入一条<code>TrnWrite</code>和<code>Version</code>，<code>TxnWrite</code>用于标志当前的事务进行写入，用于进行回滚，而<code>Version</code>才是真正存储数据的key</li>
+</ul>
+<p>不过有个问题是，为了实现MVCC，即便是当前要删除的key不存在，也会去写入一条version，给存储引擎带来额外的负担</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">39
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Writes a new version for a key at the transaction&#39;s version. None writes
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// a deletion tombstone. If a write conflict is found (either a newer or
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// uncommitted version), a serialization error is returned.  Replacing our
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// own uncommitted write is fine.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">fn</span> write_version(&amp;self, key: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>], value: <span style="color:#fff;font-weight:bold">Option</span>&lt;<span style="color:#fff;font-weight:bold">Vec</span>&lt;<span style="color:#fff;font-weight:bold">u8</span>&gt;&gt;) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;()&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> self.st.read_only {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Err</span>(Error::ReadOnly);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> session = self.engine.lock()?;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// Check for write conflicts, i.e. if the latest key is invisible to us
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// (either a newer version, or an uncommitted version in our past). We
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// can only conflict with the latest key, since all transactions enforce
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// the same invariant.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#fff;font-weight:bold">let</span> from = Key::Version(
+</span></span><span style="display:flex;"><span>            key.into(),
+</span></span><span style="display:flex;"><span>            self.st.active.iter().min().copied().unwrap_or(self.st.version + <span style="color:#ff0;font-weight:bold">1</span>),
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>        .encode()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> to = Key::Version(key.into(), <span style="color:#fff;font-weight:bold">u64</span>::MAX).encode()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">Some</span>((key, _)) = session.scan(from..=to).last().transpose()? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">match</span> Key::decode(&amp;key)? {
+</span></span><span style="display:flex;"><span>                Key::Version(_, version) =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#fff;font-weight:bold">if</span> !self.st.is_visible(version) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Err</span>(Error::Serialization);
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                key =&gt; <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Err</span>(Error::Internal(format!(<span style="color:#0ff;font-weight:bold">&#34;Expected Key::Version got </span><span style="color:#0ff;font-weight:bold">{:?}</span><span style="color:#0ff;font-weight:bold">&#34;</span>, key))),
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// Write the new version and its write record.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">//
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// NB: TxnWrite contains the provided user key, not the encoded engine
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#007f7f">// key, since we can construct the engine key using the version.
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        session.set(&amp;Key::TxnWrite(self.st.version, key.into()).encode()?, vec![])?;
+</span></span><span style="display:flex;"><span>        session
+</span></span><span style="display:flex;"><span>            .set(&amp;Key::Version(key.into(), self.st.version).encode()?, bincode::serialize(&amp;value)?)
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="get">Get<a hidden class="anchor" aria-hidden="true" href="#get">#</a></h4>
+<p>Get的逻辑就很简单了，找到一个key的可能看见的版本(从0到自己写入的，version范围对应[0,self.version])，从新到旧遍历，找到第一个自己能够看见的版本，返回。要是全部遍历完都没有那就是不存在能够读取到的版本</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Fetches a key&#39;s value, or None if it does not exist.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> get(&amp;self, key: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>]) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;<span style="color:#fff;font-weight:bold">Option</span>&lt;<span style="color:#fff;font-weight:bold">Vec</span>&lt;<span style="color:#fff;font-weight:bold">u8</span>&gt;&gt;&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> session = self.engine.lock()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> from = Key::Version(key.into(), <span style="color:#ff0;font-weight:bold">0</span>).encode()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> to = Key::Version(key.into(), self.st.version).encode()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#007f7f">// 调用rev从新的key开始遍历
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> scan = session.scan(from..=to).rev();
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">while</span> <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">Some</span>((key, value)) = scan.next().transpose()? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">match</span> Key::decode(&amp;key)? {
+</span></span><span style="display:flex;"><span>                Key::Version(_, version) =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#fff;font-weight:bold">if</span> self.st.is_visible(version) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#fff;font-weight:bold">return</span> bincode::deserialize(&amp;value);
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                key =&gt; <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Err</span>(Error::Internal(format!(<span style="color:#0ff;font-weight:bold">&#34;Expected Key::Version got </span><span style="color:#0ff;font-weight:bold">{:?}</span><span style="color:#0ff;font-weight:bold">&#34;</span>, key))),
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">Ok</span>(<span style="color:#fff;font-weight:bold">None</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="commit--rollback">Commit &amp;&amp; Rollback<a hidden class="anchor" aria-hidden="true" href="#commit--rollback">#</a></h4>
+<p>对于read only事务，由于其对系统不会产生任何影响，也不会把自己添加到active_set当中，因此直接返回即可。</p>
+<p><strong>commit</strong></p>
+<p>commit需要做的有：</p>
+<ol>
+<li>扫描出来所有由当前事务写入的<code>Key::TxnWrite</code>，<code>TxnWrite</code>是用于事务回滚时撤销写入的，既然事务提交了就不需要了，所以全部删除</li>
+<li>将自己从active_set当中移除，删除掉<code>TxnActive(self.version)</code>即可，这也是active_set分布存储的好处，更改只需要操作一个key</li>
+</ol>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Commits the transaction, by removing it from the active set. This will
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// immediately make its writes visible to subsequent transactions. Also
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// removes its TxnWrite records, which are no longer needed.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> commit(self) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;()&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> self.st.read_only {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Ok</span>(());
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> session = self.engine.lock()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> remove = session
+</span></span><span style="display:flex;"><span>            .scan_prefix(&amp;KeyPrefix::TxnWrite(self.st.version).encode()?)
+</span></span><span style="display:flex;"><span>            .map(|r| r.map(|(k, _)| k))
+</span></span><span style="display:flex;"><span>            .collect::&lt;<span style="color:#fff;font-weight:bold">Result</span>&lt;<span style="color:#fff;font-weight:bold">Vec</span>&lt;_&gt;&gt;&gt;()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">for</span> key <span style="color:#fff;font-weight:bold">in</span> remove {
+</span></span><span style="display:flex;"><span>            session.delete(&amp;key)?
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        session.delete(&amp;Key::TxnActive(self.st.version).encode()?)
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>rollback</strong></p>
+<p>在事务执行过程中，无论是写入还是删除，每次都是写入一个version，同时写入一个<code>Key::TxnWrite</code>，用于标志事务对数据的更改，因此在回滚时，只需要当前事务之前写入的<code>Key::TxnWrite</code>全部读取出来，转换为<code>Key::Version</code>，然后删除这个key的对应version，就完成了undo的动作。之后再将自己从active_set当中移除即可。</p>
+<p>还是要提一下，这里的删除是mvcc层面的删除，只会删除相同user_key相同version的Key，不会像bitcask那样写入一个tombstone前面所有的key都不可达，分析mvcc就要屏蔽掉底层的存储引擎，只将其视为一个简单的kv存储。</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>    <span style="color:#0ff;font-weight:bold">/// Rolls back the transaction, by undoing all written versions and removing
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// it from the active set. The active set snapshot is left behind, since
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#0ff;font-weight:bold">/// this is needed for time travel queries at this version.
+</span></span></span><span style="display:flex;"><span><span style="color:#0ff;font-weight:bold"></span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> rollback(self) -&gt; <span style="color:#fff;font-weight:bold">Result</span>&lt;()&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">if</span> self.st.read_only {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Ok</span>(());
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> session = self.engine.lock()?;
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> rollback = <span style="color:#fff;font-weight:bold">Vec</span>::new();
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> scan = session.scan_prefix(&amp;KeyPrefix::TxnWrite(self.st.version).encode()?);
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">while</span> <span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">Some</span>((key, _)) = scan.next().transpose()? {
+</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">match</span> Key::decode(&amp;key)? {
+</span></span><span style="display:flex;"><span>                Key::TxnWrite(_, key) =&gt; {
+</span></span><span style="display:flex;"><span>                    rollback.push(Key::Version(key, self.st.version).encode()?) <span style="color:#007f7f">// the version
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>                }
+</span></span><span style="display:flex;"><span>                key =&gt; <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">Err</span>(Error::Internal(format!(<span style="color:#0ff;font-weight:bold">&#34;Expected TxnWrite, got </span><span style="color:#0ff;font-weight:bold">{:?}</span><span style="color:#0ff;font-weight:bold">&#34;</span>, key))),
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>            rollback.push(key); <span style="color:#007f7f">// the TxnWrite record
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">drop</span>(scan);
+</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">for</span> key <span style="color:#fff;font-weight:bold">in</span> rollback.into_iter() {
+</span></span><span style="display:flex;"><span>            session.delete(&amp;key)?;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        session.delete(&amp;Key::TxnActive(self.st.version).encode()?) <span style="color:#007f7f">// remove from active set
+</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>    }
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="原子性变更">原子性变更<a hidden class="anchor" aria-hidden="true" href="#原子性变更">#</a></h4>
+<p>到这里，MVCC的实现方式基本上已经分析完了，现在来说一下Miniob当中遗留的一个问题，就是事务在提交或者回滚时作出的更改没有办法被一次性读到。</p>
+<p>对于传统的2PL，通过加锁的方式，阻止其他事务进行读取，从而保证在释放锁时一次性的将更新暴露给其他的事务，而Miniob引入MVCC就是为了避免读写冲突，因此不会加锁，在写入的过程中，其他事务自然可以进行读取，从而读取到不应该存在的中间态。</p>
+<p>再来说一下toydb是怎样解决这个问题的，toydb同样没有引入复杂的并发控制，对于W-W冲突，解决方案也是简单的进行重试。但是在可见性上，toydb引入了额外的限制，即如果对应的version存在于active_set当中，那么就是不可见的(对其他事务).</p>
+<p>因此即便是将新的key非原子性的写入到存储引擎当中，只要不从active_set当中删除，那么就是不可见的。而更改active_set的这个动作是原子性的，因此就可以保证事务提交时作出的更改一次性的对外可见。</p>
+<p><strong>可重复读</strong></p>
+<p>事务在begin时，会从存储引擎当中读取并建立出active_set，并且之后在事务执行过程当中，都以这个active_set为准，因此即便是其他事务提交了，写入的记录对当前事务还是不可见的，就保证了可重复读的问题。</p>
+<p>这里的设计还是非常巧妙的，用简单的方法解决了问题，active_set既保证了原子性的提交，同时提供了可重复读</p>
+<h2 id="summary">Summary<a hidden class="anchor" aria-hidden="true" href="#summary">#</a></h2>
+<p>toydb借助一个kv存储实现了mvcc，对于MVCC而言笔者认为有几个关键的问题，toydb也分别给出了对应的解决方案：</p>
+<ul>
+<li>隔离级别：在toydb当中提供了快照隔离，在这种隔离级别下，保证了可重复读，并且避免了幻读的问题，但是代价是对于W-W冲突，会产生比较频繁的重试问题</li>
+<li>并发控制：这里的实现与Miniob一样，W-R冲突通过MVCC本身解决，W-W冲突采用了最简单的冲突重试</li>
+<li>原子性提交：记录写入并不是原子性的，但是active_set的更新是原子性的，通过active_set的更新保证记录能够一次性对外全部暴露出来</li>
+<li>垃圾回收：没有垃圾回收，这是 feature 而不是 bug:)，借助此特点，实现了任意时间的 time travel</li>
+</ul>
+<p>toydb当中Key的设计也是MVCC的重要支持，通过复合类型Key的形式，toydb实现了类似leveldb当中(user_key,sequence)的形式，但是得益于rust当中枚举类型的强大，不仅可以携带上版本信息，并且能够表示key的不同意义，如<code>TxnWrite</code>,<code>TxnActive</code>等。有了复合类型Key，便可以很轻松的借助kv存储引擎来实现MVCC。</p>
+<p>在整个MVCC模块当中，KV存储既用于存储实际的数据，即一个个version，同时还起到了log的作用，会记录Txn::Write用于进行事务回滚，并且还会存储NextVersion,active set这样的元数据 ，可谓是用处多多了，凡事涉及到存储或者持久化的内容，都丢进kv engine</p>
+<p>toydb的MVCC实现的非常简洁，真正与MVCC相关的逻辑只有400余行，除了上面分析的，还有一个Iterator的实现，用于支持范围扫描和前缀扫描，逻辑并不是很复杂，笔者就不额外展开了，此外toydb当中也提供了较为完善的测试，通过测试也可以更好的理解MVCC，rust的调试也很方便，无需任何配置，读者可自行阅读调试。</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://itfischer.space/en/posts/tech/toydb/01-bitcask/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>01-Bitcask</span>
+  </a>
+  <a class="next" href="http://itfischer.space/en/posts/tech/toydb/03-raft/">
+    <span class="title">Next »</span>
+    <br>
+    <span>03-Raft</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on x"
+            href="https://x.com/intent/tweet/?text=02-MVCC&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f&amp;title=02-MVCC&amp;summary=02-MVCC&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f&title=02-MVCC">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on whatsapp"
+            href="https://api.whatsapp.com/send?text=02-MVCC%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on telegram"
+            href="https://telegram.me/share/url?text=02-MVCC&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 02-MVCC on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=02-MVCC&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2ftoydb%2f02-mvcc%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

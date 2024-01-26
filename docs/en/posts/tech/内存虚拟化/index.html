@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>内存虚拟化 | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中">
+<meta name="author" content="Sulv">
+<link rel="canonical" href="http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
+<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
+<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
+<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="内存虚拟化" />
+<meta property="og:description" content="内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-05-27T09:45:02+00:00" />
+<meta property="article:modified_time" content="2023-05-27T17:05:16+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="内存虚拟化"/>
+<meta name="twitter:description" content="内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://itfischer.space/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "http://itfischer.space/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "内存虚拟化",
+      "item": "http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "内存虚拟化",
+  "name": "内存虚拟化",
+  "description": "内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中",
+  "keywords": [
+    
+  ],
+  "articleBody": "内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中划分了程序代码，栈、堆三个空间，栈用于保存函数的调用信息，分配空间给局部变量，用于传递参数的函数返回值，堆用于管理动态分配的内存。\n每个进程使用的内存为成为地址空间的虚拟内存，而不是直接使用物理内存， 首先可以保证易用性，每个进程对地址的使用可以从0KB开始，之后操作系统再将地址空间映射到物理内存的某个位置上。同时可以保证安全性和隔离性。每个进程的地址空间都会被映射到不同的物理内存范围上，除非使用特殊的手段，一个进程在运行期间无法访问到其他进程在物理内存上的映射。\n说一说分段内存管理 对于地址空间，如果不进行分段，则需要通过一个基址寄存器和一个范围寄存器将整个地址空间映射到物理内存的某个位置上，存在的问题是不灵活并且容易产生碎片，影响之后内存的分配。\n而分段的形式，则可以将整个地址空间分为多个段，可以是代码 + 栈 + 堆，也可以采用更加细致的分法，对于每一段，单独进行映射，从而减少内存碎片的问题。\n分段在技术上如何实现 原本地址空间作为整体进行映射只需要一对基址寄存器 + 范围寄存器，分段时可以采用多对寄存器，来对不同的段进行映射。\n在寻址时，首先根据地址的前几位找到对应的段，对于后面的几位，需要首先与该段的虚拟内存的段首进行计算，得出一个偏移量，之后再与基址寄存器当中的地址进行偏运算，得到真实的物理地址。\n此外，对于栈这种反向增长的段，需要通过一个标志位来表明其增长方向，和基址寄存器偏移运算时偏移量为负\n分段形式如何进行空闲内存管理 在分段内存管理下，可以将物理内存视为一个连续的大型的数组，每次分配就会从该数组当中分配走一部分连续的，大小不固定的一部分内存。而空闲空间是通过空闲链表(free_list_)进行管理的。最初链表当中只有一个元素，即完整的数组，如果从物理内存的开头进行分配，则最后空闲链表当中为一个大小变小了的元素，而如果在物理内存的中间进行分配，则会导致物理地址的空闲部分被分割成两份，空闲链表当中即存在两个元素，这样带来的问题，新的较大的内存无法得到分配，如原本30的内存地址在中间分配10的内存，空闲地址被分割成了10 10两个部分，对于15的分配需求则无法满足。\n对于上例当中中间的部分进行释放，则会得到10 10 10三段内存空间，此时则需要进行合并，将其合并成一个完整的空闲内存空间。\n如果因为当中存在大量的碎片而导致无法进行分配时，可以暂停所有进程的执行，进行一次重新的映射，将内存碎片进行合并。只不过暂停所有进程的执行的代价相当大。\n如何对已经分配出去内存进行回收 在通过malloc进行分配内存时，在寻找到一块空闲的物理内存之后，可以创建一个header，在其中保存一些相关的信息，其中至少包含分配的内存空间的大小，也有可能有一些额外的信息来帮助内存空间的释放。之后返回的指针指向header之后的地址。\n在通过free进行释放时，可以通过指针运算找到header的位置，之后将header和分配的内存一并释放\n段式内存分配的基本策略 固定分配（Fixed Allocation）：固定分配是最简单的内存分配策略，将内存按照固定大小的段进行划分。每个进程被分配一个或多个固定大小的段，这些段在进程的整个生命周期中保持不变。固定分配适用于不需要动态内存管理的环境。\n等分分配（Equal Allocation）：等分分配将可用内存均匀地划分为若干等大小的段，每个进程被分配一个等大小的段。这种分配策略适用于进程数目固定且相对均匀的场景。\n动态分配（Dynamic Allocation）：动态分配是一种灵活的分配策略，根据进程的需求动态分配内存段。动态分配可以采用以下几种策略：\n首次适应（First Fit）：在空闲分区列表中找到第一个大小足够的空闲分区。 最佳适应（Best Fit）：在空闲分区列表中找到最小的足够大小的空闲分区。 最差适应（Worst Fit）：在空闲分区列表中找到最大的足够大小的空闲分区。 下次适应：多维护一个指针，指向上一次查找结束的位置 快速适应（Quick Fit）：将内存划分为几个不同大小的分区，每个分区维护一个空闲链表。根据进程的大小选择相应的空闲链表进行分配。 伙伴分配（Buddy Allocation）：伙伴分配将可用内存划分为大小为2的幂次方的块，每个块的大小是上一个块大小的两倍。进程申请内存时，分配器会查找大小合适的空闲块，如果找到了比所需大小稍大的块，则会进行分割。如果没有合适的块，将进行内存合并以创建更大的块。\n说一下分页内存管理 相比于分段动态的确定分配内存的大小，分页采取的方式是先将物理内存和虚拟内存划分为多个基本单位，一个单位成为一个页(Page)。以页为单位进行虚拟内存和物理内存之间的映射，在地址空间当中，每个Page都有一个id，成为VPN(vitural page number)，而在物理空间当中，存在一个PFN(Physical Frame Number)，对于地址空间当中的一个Page，通过地址转换即可通过VPN得到PFN，从而找到物理内存的地址。\n寻址时，地址的前几位作为VPN，经过地址转换得到PFN，后几位作为偏移量找到对应的地址\n而VPN到PFN的映射的集合称为页表，由于每个进程的地址空间均为从0开始，因此每个进程都拥有一个独立的页表。\n页表的数据结构和存储？ 页表本身存储在内存当中，其本质即为一个数组，数组的下标即为VPN，数组的每个元素为一个Entry，称为PTE(Page Table Entry)其中除了存储物理页号PPN之外，还有一些标志位，如有效位，表明该映射是否有效，保护位，存在位，参考位等\n如何加速内存的访问过程？ 一次完整的内存访问过程需要：\n对地址右移运算得到前几位，求出VPN 计算出对应PTE在内存当中的位置 读取出对应的PTE，判断是否有效，如果有效则在其中获取出PPN 根据PPN + 偏移量计算出真实的物理地址，读取内容 整个过程中涉及到多次内存访问和计算，速度较慢，因此引入缓存机制，称为TLB(Transaction-loolaside-buffer) 对频繁发生虚拟内存到物理地址转换的硬件缓存。\n其采取全相联的方式，即只有一个组，一条地址映射可能存在TLB中的任意位置，而一条TLB的结构可以简单的表示为：VPN | PFN | 其他位​，其他位用于表示其是否为一个有效的转换以及读写等保护位\n在引入了TLB之后，整个内存访问的过程为：\n检查TLB当中是否存在一个相关映射 如果存在相关映射并且有效，那么直接获取到对应的PFN，去物理内存当中读取 如果不存在，则称为TLB未命中，按照之前的方法进行地址转换，并且将获取到的PFN生成一个Entry，添加到TLB当中，而当TLB已满时，可以采用随机或者LRU的方式从中淘汰掉某些Entry，继续添加 谁来处理TLB未命中？ 在之前的操作系统当中，通常通过硬件来处理TLB未命中，发生未命中时，硬件遍历页表找到正确的PTE，取出想要的地址映射，用其更新TLB\n更加现代的体系结构当中，通常通过软件来处理TLB未命中，发生TLB未命中时，硬件系统跑出一个异常，暂停当前的指令流，并且将特权级别提升至内核模式，跳转到对应的陷阱处理程序，该陷阱处理程序由操作系统提供，在其中通过特权指令更新TLB，从陷阱中返回，之后硬件重试指令则会TLB命中\n上下文切换时TLB的处理 由于每个进程均有一个页表，如果TLB也为当前进程所独占的话，每次上下文切换后，其中的映射则全部失效，又需要重新开始建立缓存，因此对应的解决方案为添加一个额外的标志位，称为地址空间标识符(ASID)，可以视为进程标识符(PID)，之后即可多个进程共享TLB。\n‍\n如何解决页表过大的问题？ 由于单级页表采用的管理方式为类似数组的形式，即一开始就确定好VPN和PFN的映射关系，如果存在了改映射，再单独使用有效位进行标识。再加上每个进程均会拥有一个页表，对于32位的地址空间，Page为4KB大小，假设一个Page Table Entry的大小为4个字节，则一个页表的大小为4M，假设当前有100个进程，页表则会占用400MB大小的内存。\n最简单的方式即为用更大的Page，Page的大小扩大N倍，即可使Page Table Entry的数量减少到1/N，占用空间缩减为原本的1/N 分段分页混合：分段是将进程的地址空间划分为多个段，每个段具有不同的大小和属性，如代码段、数据段、堆段和栈段等。每个段都有一个段表，用于映射段的逻辑地址到物理地址。由于段的大小可以根据需求进行调整，因此可以避免对整个进程地址空间的映射，节省了内存空间 多级页表：将Page Table分为Page大小的单元，如果该单元内存在有效的映射，则分配该页的Page Table，否则不分配，可以避免为无效的映射额外分配内存进行存储 展开说说多级页表 先以简单的二级多级页表为例，首先将Page Table按照Page的大小进行划分为一个个单元，之后确定一个二级索引，称为Page Directory，其中的每一个条目称为Page Directory Entry（PDE），PDE当中存储有效位和Page Table当中的某一个单元所在的物理内存的位置的PFN。\n当Page Table当中某一个单元其中存在有效的映射时，为其建立二级索引，即在Page Directory当中添加一个Entry，包含该单元的物理Page Frame Number，通过这样的形式，对于一个单元中全为无效映射的单元，不为其建立索引，也不为其在物理内存上分配空间，从而简约了内存。\n同时，页表也不需要连续存储，可以以Page大小为单位存储在内存的任意位置，之后通过二级索引即可找到。\n在进行寻址时，将虚拟地址划分为三段，第一段作为Page Directory索引找到对应的PDE，之后根据PDE当中的PFN去物理内存中读取到对应的Page Table单元，之后第二段作为Page Table的索引，找到对应的PTE，在其中获取到最终的PFN，在使用最后一段作为偏移量，和PFN一起确定最终的物理地址。\n而当页表过多时，即Page Directory也无法放入到一个Page当中，可以建立三级索引，此时将虚拟地址划分为4段，按照同样的方式进行索引寻找\n同时，多级页表也可以和TLB进行结合，TLB当中为单级形式，记录VPN和最终的PFN的映射，多级索引搜索过程中Page Table单元的PFN不存储于TLB当中，如果TLB未命中，再按照多级索引的方式进行搜索。\n介绍一下Swap 之前所假设的都为所有Page全部存储于内存当中，而当内存满了的时候，则需要将一部分没有使用到的内存交换到磁盘上进行存储，此时即可给进程提供一个假象，即当前的计算机上有无穷无尽的内存可供使用，永远不会因为内存不足而导致失败。\n在原本的基础上首先在磁盘上开辟一块空间，作为交换空间(Swap Space)，之后对于原本的原本的查找过程，此时则会存在当前的Page不存在于内存当中，已经被交换到了硬盘上，此时需要在Page Table Entry当中添加一位存在位，如果存在，则直接使用PTE当中的PFN在物理内存当中进行读取，如果不存在，此时则触发了一个Page Fault，需要首先将Page从硬盘当中交换到内存当中，之后在进行读取。\n说一说Page Fault Page Fault即为当前读取的Page被交换到了磁盘上，可以通过PTE当中的存在位进行判断，并且在PTE当中存储硬盘地址，用于进行读取，当磁盘完成IO之后，操作系统更新Page Table，将该页标记为存在，更新PTE的PFN字段，用于之后直接从物理内存当中进行读取，并且此时还会更新TLB进行缓存。\n当触发了Page Fault之后，操作系统通过某些算法淘汰一个Page，之后从磁盘当中进行读取，之后设置PFN和存在位。\n介绍一下内存缓冲淘汰策略 首先缓冲淘汰策略的衡量指标为缓存命中与未命中的处理时间求期望。\n提出的最理想的淘汰策略为：当缓存满时，淘汰未来最远的将来才会访问的Page，但是由于对于未来的情况无法估计，因此其只作为最优的情况用于性能评估，看其他的算法在性能上与其性能上的差距。\n真实可以实现的有FIFO与Random，以及LRU。其中LRU基于局部性原理（时间局部性与空间局部性）可以取得较好的性能。\n在LRU的基础上还有用于解决缓存污染问题的LRU-K和用于减少计算开销的近似LRU\n近似LRU：\n时钟算法：时钟算法使用一个环形缓冲区，每个页面有一个访问位，表示是否被访问过。算法维护一个指针，指向当前位置。当页面被访问时，访问位设置为1。当需要淘汰页面时，算法从当前位置开始查找，如果访问位为0，则选择淘汰该页面，并将指针移到下一个位置；如果访问位为1，则将访问位设为0，并将指针移到下一个位置，继续查找。这样，较长时间未被访问的页面会被淘汰，近似实现了LRU算法的效果。 二次机会算法：二次机会算法是对时钟算法的改进，它在每个页面的基础上添加了一个修改位，表示页面是否被修改过。算法维护一个指针，指向当前位置。当页面被访问时，访问位设置为1，修改位保持不变。当需要淘汰页面时，算法从当前位置开始查找，如果访问位和修改位都为0，则选择淘汰该页面，并将指针移到下一个位置；如果访问位为1，则将访问位设为0，并将指针移到下一个位置，继续查找。如果访问位为0而修改位为1，则将访问位设为1，并将指针移到下一个位置。这样，较长时间未被访问且未被修改的页面会被优先淘汰 ",
+  "wordCount" : "5479",
+  "inLanguage": "en",
+  "datePublished": "2023-05-27T09:45:02Z",
+  "dateModified": "2023-05-27T17:05:16Z",
+  "author":{
+    "@type": "Person",
+    "name": "Sulv"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://itfischer.space/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://itfischer.space/en/search" title="Search">
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      内存虚拟化
+    </h1>
+    <div class="post-meta"><span title='2023-05-27 09:45:02 +0000 UTC'>2023-05-27</span>&nbsp;·&nbsp;11 min&nbsp;·&nbsp;Sulv
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96" aria-label="内存虚拟化">内存虚拟化</a><ul>
+                        
+                <li>
+                    <a href="#%e7%ae%80%e5%8d%95%e8%b0%88%e4%b8%80%e8%b0%88%e5%af%b9%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96%e7%9a%84%e7%90%86%e8%a7%a3" aria-label="简单谈一谈对内存虚拟化的理解？">简单谈一谈对内存虚拟化的理解？</a></li>
+                <li>
+                    <a href="#%e8%af%b4%e4%b8%80%e8%af%b4%e5%88%86%e6%ae%b5%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86" aria-label="说一说分段内存管理">说一说分段内存管理</a></li>
+                <li>
+                    <a href="#%e5%88%86%e6%ae%b5%e5%9c%a8%e6%8a%80%e6%9c%af%e4%b8%8a%e5%a6%82%e4%bd%95%e5%ae%9e%e7%8e%b0" aria-label="分段在技术上如何实现">分段在技术上如何实现</a></li>
+                <li>
+                    <a href="#%e5%88%86%e6%ae%b5%e5%bd%a2%e5%bc%8f%e5%a6%82%e4%bd%95%e8%bf%9b%e8%a1%8c%e7%a9%ba%e9%97%b2%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86" aria-label="分段形式如何进行空闲内存管理">分段形式如何进行空闲内存管理</a></li>
+                <li>
+                    <a href="#%e5%a6%82%e4%bd%95%e5%af%b9%e5%b7%b2%e7%bb%8f%e5%88%86%e9%85%8d%e5%87%ba%e5%8e%bb%e5%86%85%e5%ad%98%e8%bf%9b%e8%a1%8c%e5%9b%9e%e6%94%b6" aria-label="如何对已经分配出去内存进行回收">如何对已经分配出去内存进行回收</a></li>
+                <li>
+                    <a href="#%e6%ae%b5%e5%bc%8f%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d%e7%9a%84%e5%9f%ba%e6%9c%ac%e7%ad%96%e7%95%a5" aria-label="段式内存分配的基本策略">段式内存分配的基本策略</a></li>
+                <li>
+                    <a href="#%e8%af%b4%e4%b8%80%e4%b8%8b%e5%88%86%e9%a1%b5%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86" aria-label="说一下分页内存管理">说一下分页内存管理</a></li>
+                <li>
+                    <a href="#%e9%a1%b5%e8%a1%a8%e7%9a%84%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84%e5%92%8c%e5%ad%98%e5%82%a8" aria-label="页表的数据结构和存储？">页表的数据结构和存储？</a></li>
+                <li>
+                    <a href="#%e5%a6%82%e4%bd%95%e5%8a%a0%e9%80%9f%e5%86%85%e5%ad%98%e7%9a%84%e8%ae%bf%e9%97%ae%e8%bf%87%e7%a8%8b" aria-label="如何加速内存的访问过程？">如何加速内存的访问过程？</a></li>
+                <li>
+                    <a href="#%e8%b0%81%e6%9d%a5%e5%a4%84%e7%90%86tlb%e6%9c%aa%e5%91%bd%e4%b8%ad" aria-label="谁来处理TLB未命中？">谁来处理TLB未命中？</a></li>
+                <li>
+                    <a href="#%e4%b8%8a%e4%b8%8b%e6%96%87%e5%88%87%e6%8d%a2%e6%97%b6tlb%e7%9a%84%e5%a4%84%e7%90%86" aria-label="上下文切换时TLB的处理">上下文切换时TLB的处理</a></li>
+                <li>
+                    <a href="#%e5%a6%82%e4%bd%95%e8%a7%a3%e5%86%b3%e9%a1%b5%e8%a1%a8%e8%bf%87%e5%a4%a7%e7%9a%84%e9%97%ae%e9%a2%98" aria-label="如何解决页表过大的问题？">如何解决页表过大的问题？</a></li>
+                <li>
+                    <a href="#%e5%b1%95%e5%bc%80%e8%af%b4%e8%af%b4%e5%a4%9a%e7%ba%a7%e9%a1%b5%e8%a1%a8" aria-label="展开说说多级页表">展开说说多级页表</a></li>
+                <li>
+                    <a href="#%e4%bb%8b%e7%bb%8d%e4%b8%80%e4%b8%8bswap" aria-label="介绍一下Swap">介绍一下Swap</a></li>
+                <li>
+                    <a href="#%e8%af%b4%e4%b8%80%e8%af%b4page-fault" aria-label="说一说Page Fault">说一说Page Fault</a></li>
+                <li>
+                    <a href="#%e4%bb%8b%e7%bb%8d%e4%b8%80%e4%b8%8b%e5%86%85%e5%ad%98%e7%bc%93%e5%86%b2%e6%b7%98%e6%b1%b0%e7%ad%96%e7%95%a5" aria-label="介绍一下内存缓冲淘汰策略">介绍一下内存缓冲淘汰策略</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="内存虚拟化">内存虚拟化<a hidden class="anchor" aria-hidden="true" href="#内存虚拟化">#</a></h1>
+<h2 id="简单谈一谈对内存虚拟化的理解">简单谈一谈对内存虚拟化的理解？<a hidden class="anchor" aria-hidden="true" href="#简单谈一谈对内存虚拟化的理解">#</a></h2>
+<p>计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中划分了程序代码，栈、堆三个空间，栈用于保存函数的调用信息，分配空间给局部变量，用于传递参数的函数返回值，堆用于管理动态分配的内存。</p>
+<p>每个进程使用的内存为成为地址空间的虚拟内存，而不是直接使用物理内存， 首先可以保证易用性，每个进程对地址的使用可以从0KB开始，之后操作系统再将地址空间映射到物理内存的某个位置上。同时可以保证安全性和隔离性。每个进程的地址空间都会被映射到不同的物理内存范围上，除非使用特殊的手段，一个进程在运行期间无法访问到其他进程在物理内存上的映射。</p>
+<h2 id="说一说分段内存管理">说一说分段内存管理<a hidden class="anchor" aria-hidden="true" href="#说一说分段内存管理">#</a></h2>
+<p>对于地址空间，如果不进行分段，则需要通过一个基址寄存器和一个范围寄存器将整个地址空间映射到物理内存的某个位置上，存在的问题是不灵活并且容易产生碎片，影响之后内存的分配。</p>
+<p>而分段的形式，则可以将整个地址空间分为多个段，可以是代码 + 栈 + 堆，也可以采用更加细致的分法，对于每一段，单独进行映射，从而减少内存碎片的问题。</p>
+<h2 id="分段在技术上如何实现">分段在技术上如何实现<a hidden class="anchor" aria-hidden="true" href="#分段在技术上如何实现">#</a></h2>
+<p>原本地址空间作为整体进行映射只需要一对基址寄存器 + 范围寄存器，分段时可以采用多对寄存器，来对不同的段进行映射。</p>
+<p>在寻址时，首先根据地址的前几位找到对应的段，对于后面的几位，需要首先与该段的虚拟内存的段首进行计算，得出一个偏移量，之后再与基址寄存器当中的地址进行偏运算，得到真实的物理地址。</p>
+<p>此外，对于栈这种反向增长的段，需要通过一个标志位来表明其增长方向，和基址寄存器偏移运算时偏移量为负</p>
+<h2 id="分段形式如何进行空闲内存管理">分段形式如何进行空闲内存管理<a hidden class="anchor" aria-hidden="true" href="#分段形式如何进行空闲内存管理">#</a></h2>
+<p>在分段内存管理下，可以将物理内存视为一个连续的大型的数组，每次分配就会从该数组当中分配走一部分连续的，大小不固定的一部分内存。而空闲空间是通过空闲链表(free_list_)进行管理的。最初链表当中只有一个元素，即完整的数组，如果从物理内存的开头进行分配，则最后空闲链表当中为一个大小变小了的元素，而如果在物理内存的中间进行分配，则会导致物理地址的空闲部分被分割成两份，空闲链表当中即存在两个元素，这样带来的问题，新的较大的内存无法得到分配，如原本30的内存地址在中间分配10的内存，空闲地址被分割成了10 10两个部分，对于15的分配需求则无法满足。</p>
+<p>对于上例当中中间的部分进行释放，则会得到10 10 10三段内存空间，此时则需要进行合并，将其合并成一个完整的空闲内存空间。</p>
+<p>如果因为当中存在大量的碎片而导致无法进行分配时，可以暂停所有进程的执行，进行一次重新的映射，将内存碎片进行合并。只不过暂停所有进程的执行的代价相当大。</p>
+<h2 id="如何对已经分配出去内存进行回收">如何对已经分配出去内存进行回收<a hidden class="anchor" aria-hidden="true" href="#如何对已经分配出去内存进行回收">#</a></h2>
+<p>在通过malloc进行分配内存时，在寻找到一块空闲的物理内存之后，可以创建一个header，在其中保存一些相关的信息，其中至少包含分配的内存空间的大小，也有可能有一些额外的信息来帮助内存空间的释放。之后返回的指针指向header之后的地址。</p>
+<p>在通过free进行释放时，可以通过指针运算找到header的位置，之后将header和分配的内存一并释放</p>
+<h2 id="段式内存分配的基本策略">段式内存分配的基本策略<a hidden class="anchor" aria-hidden="true" href="#段式内存分配的基本策略">#</a></h2>
+<ol>
+<li>
+<p><strong>固定分配（Fixed Allocation）</strong>：固定分配是最简单的内存分配策略，将内存按照固定大小的段进行划分。每个进程被分配一个或多个固定大小的段，这些段在进程的整个生命周期中保持不变。固定分配适用于不需要动态内存管理的环境。</p>
+</li>
+<li>
+<p><strong>等分分配（Equal Allocation）</strong>：等分分配将可用内存均匀地划分为若干等大小的段，每个进程被分配一个等大小的段。这种分配策略适用于进程数目固定且相对均匀的场景。</p>
+</li>
+<li>
+<p><strong>动态分配（Dynamic Allocation）</strong>：动态分配是一种灵活的分配策略，根据进程的需求动态分配内存段。动态分配可以采用以下几种策略：</p>
+<ul>
+<li>首次适应（First Fit）：在空闲分区列表中找到第一个大小足够的空闲分区。</li>
+<li>最佳适应（Best Fit）：在空闲分区列表中找到最小的足够大小的空闲分区。</li>
+<li>最差适应（Worst Fit）：在空闲分区列表中找到最大的足够大小的空闲分区。</li>
+<li>下次适应：多维护一个指针，指向上一次查找结束的位置</li>
+<li>快速适应（Quick Fit）：将内存划分为几个不同大小的分区，每个分区维护一个空闲链表。根据进程的大小选择相应的空闲链表进行分配。</li>
+</ul>
+</li>
+<li>
+<p><strong>伙伴分配（Buddy Allocation）</strong>：伙伴分配将可用内存划分为大小为2的幂次方的块，每个块的大小是上一个块大小的两倍。进程申请内存时，分配器会查找大小合适的空闲块，如果找到了比所需大小稍大的块，则会进行分割。如果没有合适的块，将进行内存合并以创建更大的块。</p>
+</li>
+</ol>
+<h2 id="说一下分页内存管理">说一下分页内存管理<a hidden class="anchor" aria-hidden="true" href="#说一下分页内存管理">#</a></h2>
+<p>相比于分段动态的确定分配内存的大小，分页采取的方式是先将物理内存和虚拟内存划分为多个基本单位，一个单位成为一个页(Page)。以页为单位进行虚拟内存和物理内存之间的映射，在地址空间当中，每个Page都有一个id，成为VPN(vitural page number)，而在物理空间当中，存在一个PFN(Physical Frame Number)，对于地址空间当中的一个Page，通过地址转换即可通过VPN得到PFN，从而找到物理内存的地址。</p>
+<p>寻址时，地址的前几位作为VPN，经过地址转换得到PFN，后几位作为偏移量找到对应的地址</p>
+<p>而VPN到PFN的映射的集合称为页表，由于每个进程的地址空间均为从0开始，因此每个进程都拥有一个独立的页表。</p>
+<h2 id="页表的数据结构和存储">页表的数据结构和存储？<a hidden class="anchor" aria-hidden="true" href="#页表的数据结构和存储">#</a></h2>
+<p>页表本身存储在内存当中，其本质即为一个数组，数组的下标即为VPN，数组的每个元素为一个Entry，称为PTE(Page Table Entry)其中除了存储物理页号PPN之外，还有一些标志位，如有效位，表明该映射是否有效，保护位，存在位，参考位等</p>
+<h2 id="如何加速内存的访问过程">如何加速内存的访问过程？<a hidden class="anchor" aria-hidden="true" href="#如何加速内存的访问过程">#</a></h2>
+<p>一次完整的内存访问过程需要：</p>
+<ol>
+<li>对地址右移运算得到前几位，求出VPN</li>
+<li>计算出对应PTE在内存当中的位置</li>
+<li>读取出对应的PTE，判断是否有效，如果有效则在其中获取出PPN</li>
+<li>根据PPN + 偏移量计算出真实的物理地址，读取内容</li>
+</ol>
+<p>整个过程中涉及到多次内存访问和计算，速度较慢，因此引入缓存机制，称为TLB(Transaction-loolaside-buffer) 对频繁发生虚拟内存到物理地址转换的硬件缓存。</p>
+<p>其采取全相联的方式，即只有一个组，一条地址映射可能存在TLB中的任意位置，而一条TLB的结构可以简单的表示为：<code>VPN | PFN | 其他位</code>​，其他位用于表示其是否为一个有效的转换以及读写等保护位</p>
+<p>在引入了TLB之后，整个内存访问的过程为：</p>
+<ol>
+<li>检查TLB当中是否存在一个相关映射</li>
+<li>如果存在相关映射并且有效，那么直接获取到对应的PFN，去物理内存当中读取</li>
+<li>如果不存在，则称为TLB未命中，按照之前的方法进行地址转换，并且将获取到的PFN生成一个Entry，添加到TLB当中，而当TLB已满时，可以采用随机或者LRU的方式从中淘汰掉某些Entry，继续添加</li>
+</ol>
+<h2 id="谁来处理tlb未命中">谁来处理TLB未命中？<a hidden class="anchor" aria-hidden="true" href="#谁来处理tlb未命中">#</a></h2>
+<p>在之前的操作系统当中，通常通过硬件来处理TLB未命中，发生未命中时，硬件遍历页表找到正确的PTE，取出想要的地址映射，用其更新TLB</p>
+<p>更加现代的体系结构当中，通常通过软件来处理TLB未命中，发生TLB未命中时，硬件系统跑出一个异常，暂停当前的指令流，并且将特权级别提升至内核模式，跳转到对应的陷阱处理程序，该陷阱处理程序由操作系统提供，在其中通过特权指令更新TLB，从陷阱中返回，之后硬件重试指令则会TLB命中</p>
+<h2 id="上下文切换时tlb的处理">上下文切换时TLB的处理<a hidden class="anchor" aria-hidden="true" href="#上下文切换时tlb的处理">#</a></h2>
+<p>由于每个进程均有一个页表，如果TLB也为当前进程所独占的话，每次上下文切换后，其中的映射则全部失效，又需要重新开始建立缓存，因此对应的解决方案为添加一个额外的标志位，称为地址空间标识符(ASID)，可以视为进程标识符(PID)，之后即可多个进程共享TLB。</p>
+<p>‍</p>
+<h2 id="如何解决页表过大的问题">如何解决页表过大的问题？<a hidden class="anchor" aria-hidden="true" href="#如何解决页表过大的问题">#</a></h2>
+<p>由于单级页表采用的管理方式为类似数组的形式，即一开始就确定好VPN和PFN的映射关系，如果存在了改映射，再单独使用有效位进行标识。再加上每个进程均会拥有一个页表，对于32位的地址空间，Page为4KB大小，假设一个Page Table Entry的大小为4个字节，则一个页表的大小为4M，假设当前有100个进程，页表则会占用400MB大小的内存。</p>
+<ul>
+<li>最简单的方式即为用更大的Page，Page的大小扩大N倍，即可使Page Table Entry的数量减少到1/N，占用空间缩减为原本的1/N</li>
+<li>分段分页混合：分段是将进程的地址空间划分为多个段，每个段具有不同的大小和属性，如代码段、数据段、堆段和栈段等。每个段都有一个段表，用于映射段的逻辑地址到物理地址。由于段的大小可以根据需求进行调整，因此可以避免对整个进程地址空间的映射，节省了内存空间</li>
+<li>多级页表：将Page Table分为Page大小的单元，如果该单元内存在有效的映射，则分配该页的Page Table，否则不分配，可以避免为无效的映射额外分配内存进行存储</li>
+</ul>
+<h2 id="展开说说多级页表">展开说说多级页表<a hidden class="anchor" aria-hidden="true" href="#展开说说多级页表">#</a></h2>
+<p>先以简单的二级多级页表为例，首先将Page Table按照Page的大小进行划分为一个个单元，之后确定一个二级索引，称为Page Directory，其中的每一个条目称为Page Directory Entry（PDE），PDE当中存储有效位和Page Table当中的某一个单元所在的物理内存的位置的PFN。</p>
+<p>当Page Table当中某一个单元其中存在有效的映射时，为其建立二级索引，即在Page Directory当中添加一个Entry，包含该单元的物理Page Frame Number，通过这样的形式，对于一个单元中全为无效映射的单元，不为其建立索引，也不为其在物理内存上分配空间，从而简约了内存。</p>
+<p>同时，页表也不需要连续存储，可以以Page大小为单位存储在内存的任意位置，之后通过二级索引即可找到。</p>
+<p>在进行寻址时，将虚拟地址划分为三段，第一段作为Page Directory索引找到对应的PDE，之后根据PDE当中的PFN去物理内存中读取到对应的Page Table单元，之后第二段作为Page Table的索引，找到对应的PTE，在其中获取到最终的PFN，在使用最后一段作为偏移量，和PFN一起确定最终的物理地址。</p>
+<p>而当页表过多时，即Page Directory也无法放入到一个Page当中，可以建立三级索引，此时将虚拟地址划分为4段，按照同样的方式进行索引寻找</p>
+<p>同时，多级页表也可以和TLB进行结合，TLB当中为单级形式，记录VPN和最终的PFN的映射，多级索引搜索过程中Page Table单元的PFN不存储于TLB当中，如果TLB未命中，再按照多级索引的方式进行搜索。</p>
+<h2 id="介绍一下swap">介绍一下Swap<a hidden class="anchor" aria-hidden="true" href="#介绍一下swap">#</a></h2>
+<p>之前所假设的都为所有Page全部存储于内存当中，而当内存满了的时候，则需要将一部分没有使用到的内存交换到磁盘上进行存储，此时即可给进程提供一个假象，即当前的计算机上有无穷无尽的内存可供使用，永远不会因为内存不足而导致失败。</p>
+<p>在原本的基础上首先在磁盘上开辟一块空间，作为交换空间(Swap Space)，之后对于原本的原本的查找过程，此时则会存在当前的Page不存在于内存当中，已经被交换到了硬盘上，此时需要在Page Table Entry当中添加一位存在位，如果存在，则直接使用PTE当中的PFN在物理内存当中进行读取，如果不存在，此时则触发了一个Page Fault，需要首先将Page从硬盘当中交换到内存当中，之后在进行读取。</p>
+<h2 id="说一说page-fault">说一说Page Fault<a hidden class="anchor" aria-hidden="true" href="#说一说page-fault">#</a></h2>
+<p>Page Fault即为当前读取的Page被交换到了磁盘上，可以通过PTE当中的存在位进行判断，并且在PTE当中存储硬盘地址，用于进行读取，当磁盘完成IO之后，操作系统更新Page Table，将该页标记为存在，更新PTE的PFN字段，用于之后直接从物理内存当中进行读取，并且此时还会更新TLB进行缓存。</p>
+<p>当触发了Page Fault之后，操作系统通过某些算法淘汰一个Page，之后从磁盘当中进行读取，之后设置PFN和存在位。</p>
+<h2 id="介绍一下内存缓冲淘汰策略">介绍一下内存缓冲淘汰策略<a hidden class="anchor" aria-hidden="true" href="#介绍一下内存缓冲淘汰策略">#</a></h2>
+<p>首先缓冲淘汰策略的衡量指标为缓存命中与未命中的处理时间求期望。</p>
+<p>提出的最理想的淘汰策略为：当缓存满时，淘汰未来最远的将来才会访问的Page，但是由于对于未来的情况无法估计，因此其只作为最优的情况用于性能评估，看其他的算法在性能上与其性能上的差距。</p>
+<p>真实可以实现的有FIFO与Random，以及LRU。其中LRU基于局部性原理（时间局部性与空间局部性）可以取得较好的性能。</p>
+<p>在LRU的基础上还有用于解决缓存污染问题的LRU-K和用于减少计算开销的近似LRU</p>
+<p>近似LRU：</p>
+<ol>
+<li><strong>时钟算法</strong>：时钟算法使用一个环形缓冲区，每个页面有一个访问位，表示是否被访问过。算法维护一个指针，指向当前位置。当页面被访问时，访问位设置为1。当需要淘汰页面时，算法从当前位置开始查找，如果访问位为0，则选择淘汰该页面，并将指针移到下一个位置；如果访问位为1，则将访问位设为0，并将指针移到下一个位置，继续查找。这样，较长时间未被访问的页面会被淘汰，近似实现了LRU算法的效果。</li>
+<li><strong>二次机会算法</strong>：二次机会算法是对时钟算法的改进，它在每个页面的基础上添加了一个修改位，表示页面是否被修改过。算法维护一个指针，指向当前位置。当页面被访问时，访问位设置为1，修改位保持不变。当需要淘汰页面时，算法从当前位置开始查找，如果访问位和修改位都为0，则选择淘汰该页面，并将指针移到下一个位置；如果访问位为1，则将访问位设为0，并将指针移到下一个位置，继续查找。如果访问位为0而修改位为1，则将访问位设为1，并将指针移到下一个位置。这样，较长时间未被访问且未被修改的页面会被优先淘汰</li>
+</ol>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://itfischer.space/en/posts/tech/etcd/raft-example/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>raft-example</span>
+  </a>
+  <a class="next" href="http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/">
+    <span class="title">Next »</span>
+    <br>
+    <span>CPU虚拟化</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on x"
+            href="https://x.com/intent/tweet/?text=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f&amp;title=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96&amp;summary=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f&title=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on whatsapp"
+            href="https://api.whatsapp.com/send?text=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on telegram"
+            href="https://telegram.me/share/url?text=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 内存虚拟化 on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=%e5%86%85%e5%ad%98%e8%99%9a%e6%8b%9f%e5%8c%96&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E5%2586%2585%25E5%25AD%2598%25E8%2599%259A%25E6%258B%259F%25E5%258C%2596%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Life on Fischer&#39;s Blog</title>
+    <link>http://itfischer.space/en/posts/life/</link>
+    <description>Recent content in Life on Fischer&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <atom:link href="http://itfischer.space/en/posts/life/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>http://itfischer.space/en/posts/life/2023%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93%E8%AE%B0%E5%BF%86%E8%BF%B7%E8%8C%AB%E4%B8%8E%E6%88%90%E9%95%BF/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/life/2023%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93%E8%AE%B0%E5%BF%86%E8%BF%B7%E8%8C%AB%E4%B8%8E%E6%88%90%E9%95%BF/</guid>
+      <description>今天是2023年的最后一天，大概半个月前就萌生了写一篇年度总结的想法，不过一直因为一些其他的事情拖到了最后一天，现在看大概是写不完了。鉴于我</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://itfischer.space/en/posts/life/cs%E7%A7%91%E7%A0%94%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%93%BE%E5%88%86%E4%BA%AB/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/life/cs%E7%A7%91%E7%A0%94%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%93%BE%E5%88%86%E4%BA%AB/</guid>
+      <description>差生文具多系列 CS方向，个人科研 + 开发工具链分享，主要涉及到文献阅读、代码编辑、笔记等内容 文献阅读 Zotero 集文件管理、阅读、记录为一体，基本可以解</description>
+    </item>
+  </channel>
+</rss>

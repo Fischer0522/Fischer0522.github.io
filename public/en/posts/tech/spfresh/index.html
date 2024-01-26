@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的A">
+<meta name="author" content="Sulv">
+<link rel="canonical" href="http://itfischer.space/en/posts/tech/spfresh/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
+<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
+<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
+<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="SPFresh: Incremental In-Place Update for Billion-Scale Vector Search" />
+<meta property="og:description" content="SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的A" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://itfischer.space/en/posts/tech/spfresh/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-11-09T09:31:59+00:00" />
+<meta property="article:modified_time" content="2023-11-09T12:56:03+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="SPFresh: Incremental In-Place Update for Billion-Scale Vector Search"/>
+<meta name="twitter:description" content="SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的A"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://itfischer.space/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "http://itfischer.space/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "SPFresh: Incremental In-Place Update for Billion-Scale Vector Search",
+      "item": "http://itfischer.space/en/posts/tech/spfresh/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "SPFresh: Incremental In-Place Update for Billion-Scale Vector Search",
+  "name": "SPFresh: Incremental In-Place Update for Billion-Scale Vector Search",
+  "description": "SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的A",
+  "keywords": [
+    
+  ],
+  "articleBody": "SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的ANNS算法，无论是基于图的还是基于簇(cluster)的，通常采用的是重建索引的方式，即积累一段时间的新向量，到达一定程度后重新构建整个索引。但这样带来的问题就是会消耗大量的资源，并且构建索引的过程也会给查询带来延迟。\n这种原地更新是有必要的，在目前的场景下，VDBMS会接收到大量的增量信息，而如果每次都采用重建索引的方式就会带来大量的额外开销。\n目前无论是基于图的，还是簇的，都会在内存当中维护一个\"shortcut\"，对于图来说，可以是向量的量化形式(DiskANN)，而对于簇的形式，则使用的是质心(SPANN)。在进行搜索时首先使用 shortcut 进行初步搜索，之后再去进行进一步的搜索。因此 shortcut 的质量就会决定最终的搜索结果，如果 shortcut 不能够很好的代表对应的详细数据，如质心无法正确表示 posting list，那最后的搜索质量就会下降，即发生了数据分布倾斜。\n在SPFresh当中，提出了LIRE,a Lightweight Incremental RE-balancing protocol，其核心思想就是利用已经存在的有着良好分区特性的索引。对这类索引的更新只会在小范围影响自己和邻居，因此需要做的就是平衡好此次更新涉及到的这一个小范围。\n目前有三个挑战：\n为了保持较短的搜索延迟，LIRE需要及时拆分和合并分区来维持分区的均匀分布 为了保持较高的搜索精度，LIRE 需要识别导致索引中数据不平衡的最小向量集。应重新分配这些向量以保持高索引质量。 LIRE 的实现应该是轻量级的 对应的解决措施：\n主动拆分和合并分区来维持分区大小的均匀分布 定义了两个基本准则来保证re-balance之后的分区不会违反NPA(rule of nearest neighbor posting assignment) 通过前馈管道的形式进行解耦成两阶段，将reassign的过程从更新的路径上移走 使用基于SSD的user-space的存储引擎来绕过传统存储堆栈，优化存储性能 Background 向量搜索和ANNS在很多地方都已经提及了，这里就不详细描述了，贴一张图 向量索引组织形式\n这里讨论了两个比较主流的索引组织形式，分别是基于图的(Fine-grained graph-based vector indices)和基于簇的(Coarse-grained cluster-based vector indices)，在架构上都是内存-磁盘的混合架构。\nFine-grained graph-based vector indices\n基于图的细粒度向量索引，在一张图当中，使用顶点来代表向量，使用边来表示两个向量的距离，如果两个向量足够近的话，就使用一条边来连接。在进行K临近搜索时，使用贪心算法遍历图，优先搜索距离最近的邻居。\n部分算法的实现选择全部基于内存来实现，这样做的代价就是会带来大量的内存开销。一小部分算法会选择使用内存-磁盘的混合架构，如DiskANN，DiskANN采用的解决方案是在内存当中存储使用PQ量化压缩之后的顶点，以便节省内存开销，并且用于作为一级索引来加速查询。\nCoarse-grained cluster-based vector indices\n基于簇的粗粒度向量索引,将相近的向量管理在同一个簇当中，同一个簇当中的向量使用全连接图，而不同簇之间不存在边。\n比较有代表性的就是SPANN，SPANN在内存当中存储簇的质心，先搜索出K临近的质心，之后再去搜索质心对应的簇，找到符合要求的向量。从而在实现高搜索性能的同时，保证了较低的内存开销。\n相比于局部敏感性哈希和kmeans，SPANN在创建簇时对簇进行了大小上的平衡(基于分层的实现)，并且采用的是重建索引的方式来完成更新(out-of-place)，(在目前的改进方案中，不需要使用out-of-place，但是为了防止数据倾斜的发生，依旧需要周期性的重建索引)代价就是重建索引的高开销，包括时间和空间，时间上不必多说，空间上需要在更新期维护一个副索引，搜索时需要两个索引都进行搜索(就像redis的渐进式rehash，维护了两个哈希表，搜索时检测两个哈希表) 但是如果直接使用in-placed的更新方法，直接在某个簇内追加向量，那么就必然会导致最后的数据分区倾斜的问题，这也是in-place更新方式最先需要解决的。\n设计目标\n在维护大规模索引时保证低资源开销 搜索和更新都实现高吞吐量和低延迟 新向量可以高概率被检索到。 为此，设计了SPFresh，在索引数据结构中进行原地、增量式的更新，以适应数据分布的偏移\nLIRE Protocol Design LIRE基于 SPANN，SPANN的相关内容如下[[SPANN]]\nLIRE: Lightweight Incremental RE-balancing 能够形成良好分区的关键时遵循nearest partition assignment(NPA)：每个向量应该放入最近的posting list中，以便对应的质心能够很好表示该簇当中所有的向量。如下图，A在达到一定大小之后需要分裂，黄色的向量距离最近的质心是B，而B中绿色的向量距离最近的是A2.因此就不能简单的将A拆分为两个分区，而是应该视为对A以及周边簇中所有向量的重新分配。 为了保证不违反NPA原则，LIRE定义了五种基本操作：Insert,Delete,Merge,Split,Reassign\nInsert \u0026 Delete\nInsert遵循原本的SPANN的设计，直接将vector插入到对应的簇当中，删除的话可以保证该向量之后都对用户不可见，但没必要真正删除掉，使用一个🪦标记一下即可，等到后续再延迟删除。 Insert和Delete是外部接口，其他作为内部借口由insert delete触发调用\nSplit\n当posting list的长度超出限制，就将其分割成两个较小的部分，这一步会导致违反NPA，因此需要reassign操作。在最初会首先清除当中已经被删除的向量，而如果此时长度还是超出阈值，则进行split。\nMerge\n当posting list过小时，就需要对其进行合并，合并的实际过程是删除当前的posting list和对应的质心，将所有的向量添加到周围临近的posting list当中。这一步同样有可能违反NPA，因此也需要进行reassign\nReassign\n重分配的过程涉及到操作磁盘上的posting list，所以应当尽可能的缩小涉及的范围。对于merge操作，只需要对于被删除中心对应的向量即可。但是由于split创建了两个新的质心，因此就复杂的多，为了不违反NPA原则，定义了两个必要条件(假定距离使用欧几里得距离进行讨论),如果满足其中之一，则需要考虑进行重分配：\n$$D(v,A_o)\\le D(v,A_i) ,\\forall i\\in 1,2$$D为距离函数，$A_o$代表旧的被分割的质心，$A_i$为新创建的质心，这一条意味着如果原本的质心为离向量v最近的质心，并不代表新创建的两个质心为离v最近的质心，周围可能存在更近的质心，样例即为上图。相反的，如果新建的质心距离更短，那么就无需担心(不等条件传递，$D(v,A_i)\\le D(v,A_0)) \\le D(v,B)$ $$D(v,Ai) \\le D(v,A_o) , \\exists i \\in 1,2$$这种情况下,对于B而言需要考虑对其中的元素进行重分配，道理同样是不等条件传递，可能诞生新的更近质心。 由于需要对分裂和周边的postling list的所有向量进行检测，开销是巨大的，为了最小化开销，LIRE 仅通过选择几个 $A_o$ 的最近的postling list来检查附近的postling list进行重新分配检查，在此基础上应用两个条件检查来生成最终的重新分配集。第 5 节中的实验表明，只需少量附近的postling list进行两个必要的条件检查就足以维持索引质量。 Split-Reassign Convergence 在这一部分进行证明：虽然合并和分割的过程会出现级联现象，但是最终会收敛到一个稳定的状态。\n首先merge操作在到达最低阈值之后就会停止，显而易见。\n对于insert操作，假设insert会引发一系列的更改，记为$C_i,C_{i+1},…,C_{i + N}$,证明收敛性就是证明N是一个有限数。对于集合C而言，有以下的特点：\n$|C| \\le |V|$,V代表整个数据集，C为质心集合，显而易见c的数量 小于等于v的数量 $|C_{i+1}| = |C_i| + 1$: 每次分裂都会删除一个旧的集合，生成两个新的集合，因此每次分裂就是多处一个集合 基于属性二递推有：$|C_{i + N}| = |C_i| = N$，根据属性一，所以有$N \\le V - |C_i|$，因此，既然V是一个有限数，那么N同样是个有限数。\nSPFresh Design and Implementation Overall Architecture 整体架构如图：分别有一个轻量的in-place updater，一个低开销的Local Rebuilder和一个快速存储的Block Controller Updater\n将新的向量添加到对应的posting list的后面，并且维护一个map来记录被删除的向量，即墓碑机制，还用于追踪每个向量的副本。通过增加版本号，它将旧副本标记为已删除。\n如果内存中的版本号大于磁盘上的版本号，则向量已过时，可借此进行GC，使用版本号可以推迟和批量进行GC，从而控制向量清除的I/O开销。实际数据的删除是在local rebuilder部分异步进行的。 向量插入完成后，更新程序会检查posting list的长度，如果长度超过分割限制，则将分割作业发送到local rebuilder\nLocal Rebuilder\n在其中维护了一个任务队列，当中存储split merge reassign任务，然后分发任务给多个后线程去执行。\nsplit由updater触发，当发现长度超过阈值时，并且会根据vector map去删除已经删除的向量。 merge 由Searher触发，当发现长度小于最低阈值时 reassign由split和merge触发 当merge和split完成之后，SPFresh就会去更新内存当中的SPTAG index Block Controller\n存储posting list，提供读写服务，使用SPDK来提供一种直接操作SSD block的接口，来避免使用一些存储引擎导致的读/写放大\nLocal Rebuilder Design 设计local rebuilder的目的就是为了将merge，split，reassign等操作从updater的执行流程当中移除，避免不必要的阻塞，目前update分成了两部分，前端的Updater和后端的Local Rebuilder。\n平衡算法：split过程当中，Local Rebuilder 利用SPANN当中提出的中的多约束平衡聚类算法来生成高质量的质心和平衡的posting list(SPANN当中认为这个算法在N过大的情况下效果不好，使用的是分层平衡，由于只是分成两个，不存在SPANN当中面临的N过大的问题，没必要使用分层)。\nvector map\n前文当中提到了使用一个vector map来记录版本信息，这里详细说一下。\n首先，在SPANN当中指出，为了提升召回率，对于边界上的向量会存储多个备份在不同的postling list(A,B,C)当中。但是在reassign的时候，由于SPFresh希望减少reassign过程的开销，不会处理所以的邻居，例如，在A当中删除某个索引，触发了merge，指波及到了A B D，那么C当中的副本应该被删除但是没删除，后续有可能在找到质心C时又读取到这个向量。\n因此，这这里引入了版本控制，一方面是为了GC，即真正删除的可以通过map找到并清除，另一方面就是为了处理这种漏网之鱼：reassign向量时，我们会在版本映射中增加其版本号，并将原始向量数据及其新版本号附加到目标posting list中\nConcurrent Rebuild 读取postling list不需要锁。因此，识别用于reassign的向量是无锁的，因为它仅搜索索引并检查两个必要条件 在进行reassign的过程当中，是有可能出现将向量添加到一个被删除的postling list当中，此时终止掉ressign并对该向量重新执行。在我们的实验中，只有不到 0.001% 的插入请求遇到了拆分导致的posting缺失问题。因此，中止和重新执行的开销很小。 在reassign过程当中，通过对版本号使用CAS原语来保证并发安全，如果失败同样是放弃并重新执行 Block Controller Design Block Controller基于SPDK实现，最大的特点是直接操作SSD 的block，而不是使用如LSM-Tree等存储引擎，避免无意义的开销\n存储数据布局\n如下图，由三部分组成 Block Mapping、Free Block Pool、Concurrent I/O Request Queue。 Block Mapping存储一个posting ID和SSD block metadata的一个映射，包含偏移量和长度。\nposting采用的是一组tuple的形式进行组织，形式为,大致会占用3-4个block\nConcurrent I/O Request Queue 使用 SPDK的循环buffer实现的，发送异步的读写请求来达到高吞吐和低延迟。\n对于posting的操作提供了 GET ParallelGET APPEND PUT四个接口。 这里说一说APPEND，APPEND采用的是追加写的方式，只会操作涉及到的最后一个block，以此减少读/写放大的问题。 APPEND首先分配一个新的block，如果posting当中最后一个block不为空就先读进来，然后将新的向量添加到末尾，之后写回到磁盘上，顺带更新内存当中的映射关系 Crash Recovery 这里使用的是snapshot + WAL的形式，快照包含质心索引，updater当中的version map，Block Controller当中的block mapping 和block pool。\nEvaluation 这里简单说一下实现的思路和验证的目标。\n模拟每天大约 1% 的数据删除和插入，由于各类算法的不同，把更新操作需要满足的 QPS 作为指标，提供不同线程数做后台任务，如merge split rebuild index等，然后提供相同的线程数来做查询，比较查询的 QPS 以及 recall，内存占用等，结果如下。 这里花了一部分阐述查询尾延和准确性的问题，SPFresh基于SPANN，在SPANN当中，一段时间的写入会导致数据分区倾斜的问题，因此无论是P99.9的尾延，还是准确率，在一段时间后与SPFresh之间出现了的差距。 另外一个就是验证了在不同的更新策略下，召回率和延迟之间的一个trade-off,而这一部分出现不同的性能表现同样是因为数据分区倾斜 Reassign Range\n在文章的前半部分说明了为了防止在reassign的过程当中造成过大的开销，会限制参与reassign的邻居数量，在实验部分也给出了参数选择的依据，可以看到在64到128时，性能提升微乎其微，因此最终选择64作为参数(不过感觉64也挺大的)\n",
+  "wordCount" : "5631",
+  "inLanguage": "en",
+  "datePublished": "2023-11-09T09:31:59Z",
+  "dateModified": "2023-11-09T12:56:03Z",
+  "author":{
+    "@type": "Person",
+    "name": "Sulv"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://itfischer.space/en/posts/tech/spfresh/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://itfischer.space/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://itfischer.space/en/search" title="Search">
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      SPFresh: Incremental In-Place Update for Billion-Scale Vector Search
+    </h1>
+    <div class="post-meta"><span title='2023-11-09 09:31:59 +0000 UTC'>2023-11-09</span>&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Sulv
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#spfresh-incremental-in-place-update-for-billion-scale-vector-search" aria-label="SPFresh: Incremental In-Place Update for Billion-Scale Vector Search">SPFresh: Incremental In-Place Update for Billion-Scale Vector Search</a><ul>
+                        
+                <li>
+                    <a href="#introduction" aria-label="Introduction">Introduction</a></li>
+                <li>
+                    <a href="#background" aria-label="Background">Background</a></li>
+                <li>
+                    <a href="#lire-protocol-design" aria-label="LIRE Protocol Design">LIRE Protocol Design</a><ul>
+                        
+                <li>
+                    <a href="#lire-lightweight-incremental-re-balancing" aria-label="LIRE: Lightweight Incremental RE-balancing">LIRE: Lightweight Incremental RE-balancing</a></li>
+                <li>
+                    <a href="#split-reassign-convergence" aria-label="Split-Reassign Convergence">Split-Reassign Convergence</a></li></ul>
+                </li>
+                <li>
+                    <a href="#spfresh-design-and-implementation" aria-label="SPFresh Design and Implementation">SPFresh Design and Implementation</a><ul>
+                        
+                <li>
+                    <a href="#overall-architecture" aria-label="Overall Architecture">Overall Architecture</a></li>
+                <li>
+                    <a href="#local-rebuilder-design" aria-label="Local Rebuilder Design">Local Rebuilder Design</a><ul>
+                        
+                <li>
+                    <a href="#concurrent-rebuild" aria-label="Concurrent Rebuild">Concurrent Rebuild</a></li></ul>
+                </li>
+                <li>
+                    <a href="#block-controller-design" aria-label="Block Controller Design">Block Controller Design</a></li>
+                <li>
+                    <a href="#crash-recovery" aria-label="Crash Recovery">Crash Recovery</a></li></ul>
+                </li>
+                <li>
+                    <a href="#evaluation" aria-label="Evaluation">Evaluation</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="spfresh-incremental-in-place-update-for-billion-scale-vector-search">SPFresh: Incremental In-Place Update for Billion-Scale Vector Search<a hidden class="anchor" aria-hidden="true" href="#spfresh-incremental-in-place-update-for-billion-scale-vector-search">#</a></h1>
+<h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的ANNS算法，无论是基于图的还是基于簇(cluster)的，通常采用的是重建索引的方式，即积累一段时间的新向量，到达一定程度后重新构建整个索引。但这样带来的问题就是会消耗大量的资源，并且构建索引的过程也会给查询带来延迟。</p>
+<p>这种原地更新是有必要的，在目前的场景下，VDBMS会接收到大量的增量信息，而如果每次都采用重建索引的方式就会带来大量的额外开销。</p>
+<p>目前无论是基于图的，还是簇的，都会在内存当中维护一个&quot;shortcut&quot;，对于图来说，可以是向量的量化形式(DiskANN)，而对于簇的形式，则使用的是质心(SPANN)。在进行搜索时首先使用 shortcut 进行初步搜索，之后再去进行进一步的搜索。因此 shortcut 的质量就会决定最终的搜索结果，如果 shortcut 不能够很好的代表对应的详细数据，如质心无法正确表示 posting list，那最后的搜索质量就会下降，即发生了数据分布倾斜。</p>
+<p>在SPFresh当中，提出了LIRE,a Lightweight Incremental RE-balancing protocol，其核心思想就是利用已经存在的有着良好分区特性的索引。对这类索引的更新只会在小范围影响自己和邻居，因此需要做的就是平衡好此次更新涉及到的这一个小范围。</p>
+<p><strong>目前有三个挑战：</strong></p>
+<ol>
+<li>为了保持较短的搜索延迟，LIRE需要及时拆分和合并分区来维持分区的均匀分布</li>
+<li>为了保持较高的搜索精度，LIRE 需要识别导致索引中数据不平衡的最小向量集。应重新分配这些向量以保持高索引质量。</li>
+<li>LIRE 的实现应该是轻量级的</li>
+</ol>
+<p><strong>对应的解决措施：</strong></p>
+<ol>
+<li>主动拆分和合并分区来维持分区大小的均匀分布</li>
+<li>定义了两个基本准则来保证re-balance之后的分区不会违反NPA(rule of nearest neighbor posting assignment)</li>
+<li>通过前馈管道的形式进行解耦成两阶段，将reassign的过程从更新的路径上移走</li>
+<li>使用基于SSD的user-space的存储引擎来绕过传统存储堆栈，优化存储性能</li>
+</ol>
+<h2 id="background">Background<a hidden class="anchor" aria-hidden="true" href="#background">#</a></h2>
+<p>向量搜索和ANNS在很多地方都已经提及了，这里就不详细描述了，贴一张图
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231123155349.png" alt="image.png"  />
+
+<strong>向量索引组织形式</strong></p>
+<p>这里讨论了两个比较主流的索引组织形式，分别是基于图的(Fine-grained graph-based vector indices)和基于簇的(Coarse-grained cluster-based vector indices)，在架构上都是内存-磁盘的混合架构。</p>
+<p><strong>Fine-grained graph-based vector indices</strong></p>
+<p>基于图的细粒度向量索引，在一张图当中，使用顶点来代表向量，使用边来表示两个向量的距离，如果两个向量足够近的话，就使用一条边来连接。在进行K临近搜索时，使用贪心算法遍历图，优先搜索距离最近的邻居。</p>
+<p>部分算法的实现选择全部基于内存来实现，这样做的代价就是会带来大量的内存开销。一小部分算法会选择使用内存-磁盘的混合架构，如DiskANN，DiskANN采用的解决方案是在内存当中存储使用PQ量化压缩之后的顶点，以便节省内存开销，并且用于作为一级索引来加速查询。</p>
+<p><strong>Coarse-grained cluster-based vector indices</strong></p>
+<p>基于簇的粗粒度向量索引,将相近的向量管理在同一个簇当中，同一个簇当中的向量使用全连接图，而不同簇之间不存在边。</p>
+<p>比较有代表性的就是SPANN，SPANN在内存当中存储簇的质心，先搜索出K临近的质心，之后再去搜索质心对应的簇，找到符合要求的向量。从而在实现高搜索性能的同时，保证了较低的内存开销。</p>
+<p>相比于局部敏感性哈希和kmeans，SPANN在创建簇时对簇进行了大小上的平衡(基于分层的实现)，并且采用的是重建索引的方式来完成更新(out-of-place)，(在目前的改进方案中，不需要使用out-of-place，但是为了防止数据倾斜的发生，依旧需要周期性的重建索引)代价就是重建索引的高开销，包括时间和空间，时间上不必多说，空间上需要在更新期维护一个副索引，搜索时需要两个索引都进行搜索(就像redis的渐进式rehash，维护了两个哈希表，搜索时检测两个哈希表)
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231123163253.png" alt="image.png"  />
+
+但是如果直接使用in-placed的更新方法，直接在某个簇内追加向量，那么就必然会导致最后的数据分区倾斜的问题，这也是in-place更新方式最先需要解决的。</p>
+<p><strong>设计目标</strong></p>
+<ol>
+<li>在维护大规模索引时保证低资源开销</li>
+<li>搜索和更新都实现高吞吐量和低延迟</li>
+<li>新向量可以高概率被检索到。</li>
+</ol>
+<p>为此，设计了SPFresh，在索引数据结构中进行原地、增量式的更新，以适应数据分布的偏移</p>
+<h2 id="lire-protocol-design">LIRE Protocol Design<a hidden class="anchor" aria-hidden="true" href="#lire-protocol-design">#</a></h2>
+<p>LIRE基于 SPANN，SPANN的相关内容如下[[SPANN]]</p>
+<h3 id="lire-lightweight-incremental-re-balancing">LIRE: Lightweight Incremental RE-balancing<a hidden class="anchor" aria-hidden="true" href="#lire-lightweight-incremental-re-balancing">#</a></h3>
+<p>能够形成良好分区的关键时遵循nearest partition assignment(NPA)：每个向量应该放入最近的posting list中，以便对应的质心能够很好表示该簇当中所有的向量。如下图，A在达到一定大小之后需要分裂，黄色的向量距离最近的质心是B，而B中绿色的向量距离最近的是A2.因此就不能简单的将A拆分为两个分区，而是应该视为对A以及周边簇中所有向量的重新分配。
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231123170254.png" alt="image.png"  />
+</p>
+<p>为了保证不违反NPA原则，LIRE定义了五种基本操作：Insert,Delete,Merge,Split,Reassign</p>
+<p><strong>Insert &amp; Delete</strong></p>
+<p>Insert遵循原本的SPANN的设计，直接将vector插入到对应的簇当中，删除的话可以保证该向量之后都对用户不可见，但没必要真正删除掉，使用一个🪦标记一下即可，等到后续再延迟删除。
+Insert和Delete是外部接口，其他作为内部借口由insert delete触发调用</p>
+<p><strong>Split</strong></p>
+<p>当posting list的长度超出限制，就将其分割成两个较小的部分，这一步会导致违反NPA，因此需要reassign操作。在最初会首先清除当中已经被删除的向量，而如果此时长度还是超出阈值，则进行split。</p>
+<p><strong>Merge</strong></p>
+<p>当posting list过小时，就需要对其进行合并，合并的实际过程是删除当前的posting list和对应的质心，将所有的向量添加到周围临近的posting list当中。这一步同样有可能违反NPA，因此也需要进行reassign</p>
+<p><strong>Reassign</strong></p>
+<p>重分配的过程涉及到操作磁盘上的posting list，所以应当尽可能的缩小涉及的范围。对于merge操作，只需要对于被删除中心对应的向量即可。但是由于split创建了两个新的质心，因此就复杂的多，为了不违反NPA原则，定义了两个必要条件(假定距离使用欧几里得距离进行讨论),如果满足其中之一，则需要考虑进行重分配：</p>
+<ol>
+<li>$$D(v,A_o)\le D(v,A_i) ,\forall i\in 1,2$$D为距离函数，$A_o$代表旧的被分割的质心，$A_i$为新创建的质心，这一条意味着如果原本的质心为离向量v最近的质心，并不代表新创建的两个质心为离v最近的质心，周围可能存在更近的质心，样例即为上图。相反的，如果新建的质心距离更短，那么就无需担心(不等条件传递，$D(v,A_i)\le D(v,A_0)) \le D(v,B)$</li>
+<li>$$D(v,Ai) \le D(v,A_o) , \exists i \in 1,2$$这种情况下,对于B而言需要考虑对其中的元素进行重分配，道理同样是不等条件传递，可能诞生新的更近质心。
+由于需要对分裂和周边的postling list的所有向量进行检测，开销是巨大的，为了最小化开销，LIRE 仅通过选择几个 $A_o$ 的最近的postling list来检查附近的postling list进行重新分配检查，在此基础上应用两个条件检查来生成最终的重新分配集。第 5 节中的实验表明，只需少量附近的postling list进行两个必要的条件检查就足以维持索引质量。</li>
+</ol>
+<h3 id="split-reassign-convergence">Split-Reassign Convergence<a hidden class="anchor" aria-hidden="true" href="#split-reassign-convergence">#</a></h3>
+<p>在这一部分进行证明：虽然合并和分割的过程会出现级联现象，但是最终会收敛到一个稳定的状态。</p>
+<p>首先merge操作在到达最低阈值之后就会停止，显而易见。</p>
+<p>对于insert操作，假设insert会引发一系列的更改，记为$C_i,C_{i+1},&hellip;,C_{i + N}$,证明收敛性就是证明N是一个有限数。对于集合C而言，有以下的特点：</p>
+<ul>
+<li>$|C| \le |V|$,V代表整个数据集，C为质心集合，显而易见c的数量 小于等于v的数量</li>
+<li>$|C_{i+1}| = |C_i| + 1$: 每次分裂都会删除一个旧的集合，生成两个新的集合，因此每次分裂就是多处一个集合</li>
+</ul>
+<p>基于属性二递推有：$|C_{i + N}| = |C_i| = N$，根据属性一，所以有$N \le V - |C_i|$，因此，既然V是一个有限数，那么N同样是个有限数。</p>
+<h2 id="spfresh-design-and-implementation">SPFresh Design and Implementation<a hidden class="anchor" aria-hidden="true" href="#spfresh-design-and-implementation">#</a></h2>
+<h3 id="overall-architecture">Overall Architecture<a hidden class="anchor" aria-hidden="true" href="#overall-architecture">#</a></h3>
+<p>整体架构如图：分别有一个轻量的in-place updater，一个低开销的Local Rebuilder和一个快速存储的Block Controller
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231123212922.png" alt="image.png"  />
+
+<strong>Updater</strong></p>
+<p>将新的向量添加到对应的posting list的后面，并且维护一个map来记录被删除的向量，即墓碑机制，还用于追踪每个向量的副本。通过增加版本号，它将旧副本标记为已删除。</p>
+<p>如果内存中的版本号大于磁盘上的版本号，则向量已过时，可借此进行GC，使用版本号可以推迟和批量进行GC，从而控制向量清除的I/O开销。实际数据的删除是在local rebuilder部分异步进行的。
+向量插入完成后，更新程序会检查posting list的长度，如果长度超过分割限制，则将分割作业发送到local rebuilder</p>
+<p><strong>Local Rebuilder</strong></p>
+<p>在其中维护了一个任务队列，当中存储split merge reassign任务，然后分发任务给多个后线程去执行。</p>
+<ul>
+<li>split由updater触发，当发现长度超过阈值时，并且会根据vector map去删除已经删除的向量。</li>
+<li>merge 由Searher触发，当发现长度小于最低阈值时</li>
+<li>reassign由split和merge触发
+当merge和split完成之后，SPFresh就会去更新内存当中的SPTAG index</li>
+</ul>
+<p><strong>Block Controller</strong></p>
+<p>存储posting list，提供读写服务，使用SPDK来提供一种直接操作SSD block的接口，来避免使用一些存储引擎导致的读/写放大</p>
+<h3 id="local-rebuilder-design">Local Rebuilder Design<a hidden class="anchor" aria-hidden="true" href="#local-rebuilder-design">#</a></h3>
+<p>设计local rebuilder的目的就是为了将merge，split，reassign等操作从updater的执行流程当中移除，避免不必要的阻塞，目前update分成了两部分，前端的Updater和后端的Local Rebuilder。</p>
+<p><strong>平衡算法</strong>：split过程当中，Local Rebuilder 利用SPANN当中提出的中的多约束平衡聚类算法来生成高质量的质心和平衡的posting list(SPANN当中认为这个算法在N过大的情况下效果不好，使用的是分层平衡，由于只是分成两个，不存在SPANN当中面临的N过大的问题，没必要使用分层)。</p>
+<p><strong>vector map</strong></p>
+<p>前文当中提到了使用一个vector map来记录版本信息，这里详细说一下。</p>
+<p>首先，在SPANN当中指出，为了提升召回率，对于边界上的向量会存储多个备份在不同的postling list(A,B,C)当中。但是在reassign的时候，由于SPFresh希望减少reassign过程的开销，不会处理所以的邻居，例如，在A当中删除某个索引，触发了merge，指波及到了A B D，那么C当中的副本应该被删除但是没删除，后续有可能在找到质心C时又读取到这个向量。</p>
+<p>因此，这这里引入了版本控制，一方面是为了GC，即真正删除的可以通过map找到并清除，另一方面就是为了处理这种漏网之鱼：reassign向量时，我们会在版本映射中增加其版本号，并将原始向量数据及其新版本号附加到目标posting list中</p>
+<h4 id="concurrent-rebuild">Concurrent Rebuild<a hidden class="anchor" aria-hidden="true" href="#concurrent-rebuild">#</a></h4>
+<ul>
+<li>读取postling list不需要锁。因此，识别用于reassign的向量是无锁的，因为它仅搜索索引并检查两个必要条件</li>
+<li>在进行reassign的过程当中，是有可能出现将向量添加到一个被删除的postling list当中，此时终止掉ressign并对该向量重新执行。在我们的实验中，只有不到 0.001% 的插入请求遇到了拆分导致的posting缺失问题。因此，中止和重新执行的开销很小。</li>
+<li>在reassign过程当中，通过对版本号使用CAS原语来保证并发安全，如果失败同样是放弃并重新执行</li>
+</ul>
+<h3 id="block-controller-design">Block Controller Design<a hidden class="anchor" aria-hidden="true" href="#block-controller-design">#</a></h3>
+<p>Block Controller基于SPDK实现，最大的特点是直接操作SSD 的block，而不是使用如LSM-Tree等存储引擎，避免无意义的开销</p>
+<p><strong>存储数据布局</strong></p>
+<p>如下图，由三部分组成 Block Mapping、Free Block Pool、Concurrent I/O Request Queue。
+Block Mapping存储一个posting ID和SSD block metadata的一个映射，包含偏移量和长度。</p>
+<p>posting采用的是一组tuple的形式进行组织，形式为<code>&lt;vector id, version number, raw vector&gt;</code>,大致会占用3-4个block</p>
+<p>Concurrent I/O Request Queue 使用 SPDK的循环buffer实现的，发送异步的读写请求来达到高吞吐和低延迟。</p>
+<p>对于posting的操作提供了 GET ParallelGET APPEND PUT四个接口。
+这里说一说APPEND，APPEND采用的是追加写的方式，只会操作涉及到的最后一个block，以此减少读/写放大的问题。
+APPEND首先分配一个新的block，如果posting当中最后一个block不为空就先读进来，然后将新的向量添加到末尾，之后写回到磁盘上，顺带更新内存当中的映射关系
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231124000021.png" alt="image.png"  />
+</p>
+<h3 id="crash-recovery">Crash Recovery<a hidden class="anchor" aria-hidden="true" href="#crash-recovery">#</a></h3>
+<p>这里使用的是snapshot + WAL的形式，快照包含质心索引，updater当中的version map，Block Controller当中的block mapping 和block pool。</p>
+<h2 id="evaluation">Evaluation<a hidden class="anchor" aria-hidden="true" href="#evaluation">#</a></h2>
+<p>这里简单说一下实现的思路和验证的目标。</p>
+<p>模拟每天大约 1% 的数据删除和插入，由于各类算法的不同，把更新操作需要满足的 QPS 作为指标，提供不同线程数做后台任务，如merge split rebuild index等，然后提供相同的线程数来做查询，比较查询的 QPS 以及 recall，内存占用等，结果如下。
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231124003350.png" alt="image.png"  />
+
+这里花了一部分阐述查询尾延和准确性的问题，SPFresh基于SPANN，在SPANN当中，一段时间的写入会导致数据分区倾斜的问题，因此无论是P99.9的尾延，还是准确率，在一段时间后与SPFresh之间出现了的差距。
+另外一个就是验证了在不同的更新策略下，召回率和延迟之间的一个trade-off,而这一部分出现不同的性能表现同样是因为数据分区倾斜
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231124004707.png" alt="image.png"  />
+</p>
+<p><strong>Reassign Range</strong></p>
+<p>在文章的前半部分说明了为了防止在reassign的过程当中造成过大的开销，会限制参与reassign的邻居数量，在实验部分也给出了参数选择的依据，可以看到在64到128时，性能提升微乎其微，因此最终选择64作为参数(不过感觉64也挺大的)</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>OceanBase初赛</span>
+  </a>
+  <a class="next" href="http://itfischer.space/en/posts/tech/manu/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Manu: A Cloud Native Vector Database Management System</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on x"
+            href="https://x.com/intent/tweet/?text=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f&amp;title=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search&amp;summary=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f&title=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on whatsapp"
+            href="https://api.whatsapp.com/send?text=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on telegram"
+            href="https://telegram.me/share/url?text=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share SPFresh: Incremental In-Place Update for Billion-Scale Vector Search on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=SPFresh%3a%20Incremental%20In-Place%20Update%20for%20Billion-Scale%20Vector%20Search&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fspfresh%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

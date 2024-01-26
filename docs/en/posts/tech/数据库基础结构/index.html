@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>数据库基础结构 | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当">
+<meta name="author" content="Sulv">
+<link rel="canonical" href="http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
+<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
+<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
+<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="数据库基础结构" />
+<meta property="og:description" content="数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-06-03T09:45:02+00:00" />
+<meta property="article:modified_time" content="2023-06-03T17:05:16+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="数据库基础结构"/>
+<meta name="twitter:description" content="数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://itfischer.space/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "http://itfischer.space/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "数据库基础结构",
+      "item": "http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "数据库基础结构",
+  "name": "数据库基础结构",
+  "description": "数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当",
+  "keywords": [
+    
+  ],
+  "articleBody": "数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当你向数据库要数据时，它应当把数据返回给你。\n因此，最简单的数据库可以使用两条bash脚本来完成，在ddia当中也给出了例子：\n1 2 3 4 5 6 7 8 #!/bin/bash db_set () { echo \"$1,$2\" \u003e\u003e database } db_get () { grep \"^$1,\" database | sed -e \"s/^$1,//\" | tail -n 1 } 存储时，则对其进行追加写入，将新数据添加到文件的末尾，因此对于重复的key，永远在末尾为最新的数据，因此在读取时，则读取指定key的最后一个数据作为结果。\n不妨思考一下这个最简单的数据库有什么又存在什么问题，可以得到最终的答案\n首先该数据库采用的为基于日志结构的，可以提供持久化存储，作为数据库的最基本功能\n之后由于所有数据全部存储于硬盘之上，每次读取都涉及到较高的磁盘IO，因此需要通过buffer pool manager来将数据存储于内存当中进行缓存以提高性能 每次读取都需要遍历所有数据，可以通过构建索引进行优化，如bitcask在内存当中构建一个hashmap或者构建B+树 在末尾追加会在磁盘当中产生大量冗余，因此需要优化存储，最简单的方式为采用bitcask进行定期压缩，或者直接采用LSM-Tree结构进行存储。以上两种为采用基于日志的结构的，此外，还可以采用基于Page的HeapPage进行存储 对于某些业务，需要提供事务的支持，即事务的ACID 为防止数据丢失并且优化写入速度，即将随机写入转换为顺序写入，引入日志系统 对多线程的访问提供支持，相关数据结构需要保证线程安全，并且对于事务也需要提供Lock Manager的支持 以上为KV类型的，如果需要实现关系型数据库，那么则需要实现关系模型，和SQL的执行引擎和优化器 为什么需要Buffer Pool？ 说明了数据从硬盘到内存当中最后为CPU所用的过程，而操作系统作为之上的最底层，为了防止过分频繁的访问，OS本身也会对操作系统的Page进行缓存（OS的Page区分于DBMS的Page），即page Cache\n当通过系统调用read()​进行读取时，内核首先会从page cache当中去寻找是否存在缓存，如果不存在缓存，则申请页帧空间，进行IO操作，之后将其存放到page cache当中，进行缓存，之后再将其拷贝到程序的缓存当中，读取结束\n这样存在的问题是一份数据在page cache当中进行了一次缓存的同时，还在程序当中进行一次缓存，缓存两次导致CPU cache命中率不高。因此提出的内存映射机制（linux当中为 mmap）\n在使用mmap调用时，系统并不马上为其分配内存空间，而仅仅是添加一个VMA(Virtual Memory Area)到该进程中，当程序访问到目标空间时，产生缺页中断。在缺页中断中，从page cache中查找要访问的文件块，若未命中，则启动磁盘I/O从磁盘中加载到page cache，然后将文件块在page cache中的物理页映射到进程mmap地址空间。数据在内存当中只会存在一份，并且之后当程序退出或者关闭文件时，page cache当中的数据并不会清除，如果物理内存足够的情况下，会一直保存在内存当中，供之后的进行去读取。\n由此可见，OS对于数据已经提供了一定的缓存能力，但是我们仍需要在DBMS当中提供一个Buffer Pool去手动管理内存，原因如下：\nOS对于数据库当中的内容一无所知，即OS并不知道当前的那些Page对于数据库来说是较为重要，不能被淘汰的，想象这样一个场景，遍历table1从中获取到age最大的那一行数据，而在遍历读取page的过程当中，OS判定系统的物理内存不足，需要进行淘汰，但是把之前加载到内存当中的page进行淘汰。导致整个SQL执行出现问题。 使用Buffer Pool进行手动管理，可以明确pin​住某些page，在Buffer Pool进行淘汰时则不会选择其进行淘汰。 同时Buffer Pool高度自定义性，整个Buffer Pool的大小，以及单个page的大小，不再受限于OS 如何管理Buffer pool当中的Page？ OS相关的page淘汰策略都可以拿来直接使用，如FIFO、Random、LRU、RR等，此外还可以使用LRU-K的淘汰策略，\n简单介绍一下LRU-K？ LRU-K将缓冲区分为历史队列和缓冲队列，一个page首先加入到历史队列当中，在淘汰前访问了k次，那么就将其移动到缓冲队列当中。并且引入了K- distance的概念，即前K次的距离，可以简单使用逻辑时间戳来表示，在历史队列当中的K- distance为正无穷，而在缓冲队列当中的Page的K- distance即为前K次访问的距离（即时间戳的差值）在淘汰时选择K- distance最大的进行淘汰\n通过LRU-K，可以避免由于全表遍历而导致的缓存污染问题\nLRU-K的缺点？ ChatGPT：\nLRU-K（Least Recently Used K）是一种缓存淘汰策略，它根据最近使用的频率来确定要淘汰的缓存项。虽然 LRU-K 在某些情况下表现良好，但也存在一些缺点：\n内存消耗：LRU-K 需要维护额外的数据结构（如计数器或时间戳数组）来跟踪最近使用的频率。这会增加额外的内存消耗，并可能影响缓存系统的整体性能。 算法复杂性：相比于简单的 LRU 算法，LRU-K 需要更多的逻辑和计算来跟踪和更新每个缓存项的使用频率。这增加了算法的复杂性，可能导致实现和维护的困难。 参数选择：选择适当的 K 值是 LRU-K 的一个挑战。K 值的选择需要综合考虑系统的特性和工作负载。选择过小的 K 值可能导致频繁的缓存项淘汰，而选择过大的 K 值可能导致缓存命中率下降。 不适用于突发访问模式：当出现突发访问模式时，LRU-K 的性能可能下降。如果有一组热点数据在短时间内被频繁访问，而其他数据很少被访问，LRU-K 可能无法准确识别这种热点数据，并导致它们被提前淘汰。 综上所述，虽然 LRU-K 在某些场景下可以改善缓存命中率，但它也存在一些不足之处。在选择缓存淘汰策略时，需要考虑系统的特性、工作负载以及对内存消耗和算法复杂性的容忍度。\nBuffer Pool当中的Page Table有什么作用？ 此处可以对比OS的内存映射和读取进行理解，在OS当中，首先数据是真实存储于物理内存当中，将物理内存划分为多个Page大小的槽位，每个槽位可以存储一个Page，而该槽位通过PFN（Phyical frame number）来表示。\n当程序访问虚拟内存当中的数据时，虚拟内存当中的数据会属于某一个Page，用VPN（virtual page number）进行表示。\n因此在读取数据时，就需要一个从VPN到PFN到一个映射，这个工作就交给Page Table来完成，其最简单的组织方式为一个数组，当中存储所有可能的映射（有效无效都存在），而如果采用多级页表的方式，其组织形式就是一个哈希表，key为VPN，val为PFN\n在buffer pool 当中同理，首先创建一个Page*[]用于存储内存当中所有的Page，对应OS当中的物理内存，该数组的下标即为一个frame_id（对应PFN），对于上层获取数据而言，要拿到一个Page则需要通过page_id（对应VPN），此处的page table同样完成page_id -\u003e frame_id的映射关系。\n数据在磁盘上有什么组织形式？ 主要分为两种组织形式，分别为基于Page的和基于日志的\nPage\n基于Page的主要方式以Page为基本数据单位，当中的数据主体为Tuple，此外还有一些元数据用于辅助读取，之后多个Page组成一个File，一个File可对应一个一张表。基于Page的最常见的为HeapFile-Page的组织形式。HeapPage承载Tuple，多个HeapPage构成一个HeapFIle。\n首先，在HeapFile-Page的情况下为乱序存储的，即按顺序插入tuple a 和b，并不保证b存储于a之前。\n因此在一个Page当中，只要能够找到空余空间，就可以将数据存储于其中，在这种规则下，HeapPage的结构为一个byte[]数组的header，用于表示该slot上是否为空余，之后则是一个Tuple[]数组，用于存储具体的tuple，在6.830当中，header[]的长度设置为8，即一个HeapPage当中可以存储256个tuple\n之后HeapPage即可组成HeapFile，对于HeapPage的管理方式，最简单的方式即为不管理，当需要一个page时就根据pageId和pageSize计算出偏移量去偏移读取，也可通过一个Page Directory进行管理，本质上为一个page_id-\u003eoffset的偏移量，有点类似于Bitcask\n基于日志\nBitcask\n基于日志最经典的就是Bitcask模型，硬盘上为只进行顺序写入的文件，在内存当中再维护一个哈希表记录偏移，简单的以k-v类型为例，在写入时只进行追加写入，insert和update delete合并为一个put操作，insert update只需要向其中写入最新的数据，并更新索引，delete操作则写入一个墓碑标志，用于进行压缩，并且删除索引。在读取时只需要根据索引进行读取即可。\n由于一直顺序写入会导致当中存储很多陈旧数据，此时就涉及到一个压缩操作，即将顺序扫描原本的db文件，并只保存最新的值\n存储单元通常如下\nLSM-Tree​\n首先对于一个段或者level，内部key需要按照顺序维护，这也是与Bitcask存储模型的最大的不同。\n在存储上分为内存和磁盘两部分，所有的请求首先会写入到内存当中，在内存中进行管理，为了维护有序结构，在内存中可以使用跳表或者B+树等方式管理key，当内存当中的key到达上限时，在将其顺序写入到磁盘上，即可保证磁盘当中内容的有序性。\n在写入之后，内存当中只需要保存稀疏的一个索引结构即可，不必保存所有的key。\n在磁盘上即为SSTable，其中分为两种数据块，一种为存储数据，另一种为索引块，标明各个块的key的范围。\n读写操作\n写：就像上面所说的那样，先写入到内存当中，之后再刷盘进行持久化，形成一个有序数据块。 读：由于是追加写入，为了获取到最新的key，先尝试从内存中进行获取，如果没有则去读取最新的对应范围的数据块，如果获取不到再去寻找更陈旧的数据块，在第一次获取时则完成搜索，否则继续直至完成搜索。而对于范围查询，可以并行的查询多个符合范围的component 合并\n为了解决磁盘当中component积累导致的读性能下降的问题，需要将多个component合并，以去除重复的key，从而减少查询的次数。主要有两种方案：\nlevel：在L层级的一个component会接受从L-1层级来的合并，直至达到该层的上限，之后向L+1层去进行合并 tiers：一层当中会有T个component，当满了需要合并时，T个component合并成一个并放入到下一层。 L+1层能够容纳的key的数量为L层的T倍，并且对于插入删除数量相等的均衡情况，层数维持不变。\nlevel策略下会通过频繁的合并以减少component的数量，对读请求较为友好，tiers策略下合并较少(一层满了T个之后才会合并)，因此对于写请求较为友好。\n索引 谈一谈索引和常见的索引形式 数据库索引是一种用于提高数据库查询性能的数据结构。它类似于书籍的目录，通过按照特定字段或字段组合对数据库表中的数据进行排序和组织，从而加快对数据的检索速度。\n较为常见的索引类型为hashtable 和 B+ Tree，在形式上分为聚簇索引和非聚簇索引\n对于聚簇索引索引，则存在一个主键，默认为主键创建索引，之后主键的索引上存储真实的数据，通过在主键索引上搜索即可找到对应的Tuple，这样的好处是当需要通过主键进行搜索时，可以通过对索引的一次访问就找到数据，而对于二级索引，其中存储的为key -\u003e 主键，即通过二级索引只能找到一个主键索引的标志，之后再通过这个标识去主键索引当中读取，这个过程称为回表。 对于非聚簇索引，不存在主键、二级索引的概念，所有的索引所存储的都是一个key -\u003e offset，这个offset通常为一个组合，当中可能包含table_id page_id offset，拿到这个offset之后再去HeapFile-Page当中偏移读取。 说一说B+树 不想说了。。。移步Bustub Lab2\n简单介绍一下哈希表 这里不针对哈希索引，只是说一下哈希表这种数据结构，主要分为静态哈希和动态哈希\n静态哈希\n静态哈希的本质上为一个数组，通过哈希函数 % len的方式找到一个数组下标，该下标就对应着真实的存储位置。\n对于哈希冲突问题，根据不同的解决方式可以继续细分：\n最基础的即为线性探测，即向下一个哈希槽移动，在删除时将由于冲突向下移动的均向原来的位置移动一格，或者设置一个墓碑，令该哈希槽不可用\n罗宾汉哈希\n罗宾汉劫富济贫，缩小贫富差距，因此引入一个权重，来标识距离原本计算出来的槽的距离，最终的目标是令所有的所有的key的权重（距离）较为平均\n下图蓝色标识原本计算出的槽的位置，val[i]标识最终的位置具体最初计算出的位置的距离\nD[1]",
+  "wordCount" : "5646",
+  "inLanguage": "en",
+  "datePublished": "2023-06-03T09:45:02Z",
+  "dateModified": "2023-06-03T17:05:16Z",
+  "author":{
+    "@type": "Person",
+    "name": "Sulv"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://itfischer.space/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://itfischer.space/en/search" title="Search">
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      数据库基础结构
+    </h1>
+    <div class="post-meta"><span title='2023-06-03 09:45:02 +0000 UTC'>2023-06-03</span>&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Sulv
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84" aria-label="数据库基础结构">数据库基础结构</a><ul>
+                        
+                <li>
+                    <a href="#%e6%95%b0%e6%8d%ae%e5%ba%93%e7%bb%93%e6%9e%84" aria-label="数据库结构">数据库结构</a><ul>
+                        
+                <li>
+                    <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81dbms" aria-label="为什么需要DBMS？">为什么需要DBMS？</a></li>
+                <li>
+                    <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81buffer-pool" aria-label="为什么需要Buffer Pool？">为什么需要Buffer Pool？</a></li>
+                <li>
+                    <a href="#%e5%a6%82%e4%bd%95%e7%ae%a1%e7%90%86buffer-pool%e5%bd%93%e4%b8%ad%e7%9a%84page" aria-label="如何管理Buffer pool当中的Page？">如何管理Buffer pool当中的Page？</a></li>
+                <li>
+                    <a href="#%e7%ae%80%e5%8d%95%e4%bb%8b%e7%bb%8d%e4%b8%80%e4%b8%8blru-k" aria-label="简单介绍一下LRU-K？">简单介绍一下LRU-K？</a></li>
+                <li>
+                    <a href="#lru-k%e7%9a%84%e7%bc%ba%e7%82%b9" aria-label="LRU-K的缺点？">LRU-K的缺点？</a></li>
+                <li>
+                    <a href="#buffer-pool%e5%bd%93%e4%b8%ad%e7%9a%84page-table%e6%9c%89%e4%bb%80%e4%b9%88%e4%bd%9c%e7%94%a8" aria-label="Buffer Pool当中的Page Table有什么作用？">Buffer Pool当中的Page Table有什么作用？</a></li>
+                <li>
+                    <a href="#%e6%95%b0%e6%8d%ae%e5%9c%a8%e7%a3%81%e7%9b%98%e4%b8%8a%e6%9c%89%e4%bb%80%e4%b9%88%e7%bb%84%e7%bb%87%e5%bd%a2%e5%bc%8f" aria-label="数据在磁盘上有什么组织形式？">数据在磁盘上有什么组织形式？</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e7%b4%a2%e5%bc%95" aria-label="索引">索引</a><ul>
+                        
+                <li>
+                    <a href="#%e8%b0%88%e4%b8%80%e8%b0%88%e7%b4%a2%e5%bc%95%e5%92%8c%e5%b8%b8%e8%a7%81%e7%9a%84%e7%b4%a2%e5%bc%95%e5%bd%a2%e5%bc%8f" aria-label="谈一谈索引和常见的索引形式">谈一谈索引和常见的索引形式</a></li>
+                <li>
+                    <a href="#%e8%af%b4%e4%b8%80%e8%af%b4b%e6%a0%91" aria-label="说一说B&#43;树">说一说B+树</a></li>
+                <li>
+                    <a href="#%e7%ae%80%e5%8d%95%e4%bb%8b%e7%bb%8d%e4%b8%80%e4%b8%8b%e5%93%88%e5%b8%8c%e8%a1%a8" aria-label="简单介绍一下哈希表">简单介绍一下哈希表</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="数据库基础结构">数据库基础结构<a hidden class="anchor" aria-hidden="true" href="#数据库基础结构">#</a></h1>
+<h2 id="数据库结构">数据库结构<a hidden class="anchor" aria-hidden="true" href="#数据库结构">#</a></h2>
+<h3 id="为什么需要dbms">为什么需要DBMS？<a hidden class="anchor" aria-hidden="true" href="#为什么需要dbms">#</a></h3>
+<p>一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当你向数据库要数据时，它应当把数据返回给你。</p>
+<p>因此，最简单的数据库可以使用两条bash脚本来完成，在ddia当中也给出了例子：</p>
+<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#0f0;font-weight:bold">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#0f0;font-weight:bold"></span>db_set () {
+</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">echo</span> <span style="color:#0ff;font-weight:bold">&#34;</span>$1<span style="color:#0ff;font-weight:bold">,</span>$2<span style="color:#0ff;font-weight:bold">&#34;</span> &gt;&gt; database
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>db_get () {
+</span></span><span style="display:flex;"><span>  grep <span style="color:#0ff;font-weight:bold">&#34;^</span>$1<span style="color:#0ff;font-weight:bold">,&#34;</span> database | sed -e <span style="color:#0ff;font-weight:bold">&#34;s/^</span>$1<span style="color:#0ff;font-weight:bold">,//&#34;</span> | tail -n <span style="color:#ff0;font-weight:bold">1</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>存储时，则对其进行追加写入，将新数据添加到文件的末尾，因此对于重复的key，永远在末尾为最新的数据，因此在读取时，则读取指定key的最后一个数据作为结果。</p>
+<p>不妨思考一下这个最简单的数据库有什么又存在什么问题，可以得到最终的答案</p>
+<p>首先该数据库采用的为基于日志结构的，可以提供持久化存储，作为数据库的最基本功能</p>
+<ul>
+<li>之后由于所有数据全部存储于硬盘之上，每次读取都涉及到较高的磁盘IO，因此需要通过buffer pool manager来将数据存储于内存当中进行缓存以提高性能</li>
+<li>每次读取都需要遍历所有数据，可以通过构建索引进行优化，如bitcask在内存当中构建一个hashmap或者构建B+树</li>
+<li>在末尾追加会在磁盘当中产生大量冗余，因此需要优化存储，最简单的方式为采用bitcask进行定期压缩，或者直接采用LSM-Tree结构进行存储。以上两种为采用基于日志的结构的，此外，还可以采用基于Page的HeapPage进行存储</li>
+<li>对于某些业务，需要提供事务的支持，即事务的ACID</li>
+<li>为防止数据丢失并且优化写入速度，即将随机写入转换为顺序写入，引入日志系统</li>
+<li>对多线程的访问提供支持，相关数据结构需要保证线程安全，并且对于事务也需要提供Lock Manager的支持</li>
+<li>以上为KV类型的，如果需要实现关系型数据库，那么则需要实现关系模型，和SQL的执行引擎和优化器</li>
+</ul>
+<h3 id="为什么需要buffer-pool">为什么需要Buffer Pool？<a hidden class="anchor" aria-hidden="true" href="#为什么需要buffer-pool">#</a></h3>
+<p>说明了数据从硬盘到内存当中最后为CPU所用的过程，而操作系统作为之上的最底层，为了防止过分频繁的访问，OS本身也会对操作系统的Page进行缓存（OS的Page区分于DBMS的Page），即page Cache</p>
+<p>当通过系统调用<code>read()</code>​进行读取时，内核首先会从page cache当中去寻找是否存在缓存，如果不存在缓存，则申请页帧空间，进行IO操作，之后将其存放到page cache当中，进行缓存，之后再将其拷贝到程序的缓存当中，读取结束</p>
+<p>这样存在的问题是一份数据在page cache当中进行了一次缓存的同时，还在程序当中进行一次缓存，缓存两次导致CPU cache命中率不高。因此提出的内存映射机制（linux当中为 mmap）</p>
+<p>在使用mmap调用时，系统并不马上为其分配内存空间，而仅仅是添加一个VMA(Virtual Memory Area)到该进程中，当程序访问到目标空间时，产生缺页中断。在缺页中断中，从page cache中查找要访问的文件块，若未命中，则启动磁盘I/O从磁盘中加载到page cache，然后将文件块在page cache中的物理页映射到进程mmap地址空间。数据在内存当中只会存在一份，并且之后当程序退出或者关闭文件时，page cache当中的数据并不会清除，如果物理内存足够的情况下，会一直保存在内存当中，供之后的进行去读取。</p>
+<p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/image-20230324165932-uvs9bji.png" alt=""  />
+</p>
+<p>由此可见，OS对于数据已经提供了一定的缓存能力，但是我们仍需要在DBMS当中提供一个Buffer Pool去手动管理内存，原因如下：</p>
+<ul>
+<li>OS对于数据库当中的内容一无所知，即OS并不知道当前的那些Page对于数据库来说是较为重要，不能被淘汰的，想象这样一个场景，遍历table1从中获取到age最大的那一行数据，而在遍历读取page的过程当中，OS判定系统的物理内存不足，需要进行淘汰，但是把之前加载到内存当中的page进行淘汰。导致整个SQL执行出现问题。</li>
+<li>使用Buffer Pool进行手动管理，可以明确<code>pin</code>​住某些page，在Buffer Pool进行淘汰时则不会选择其进行淘汰。</li>
+<li>同时Buffer Pool高度自定义性，整个Buffer Pool的大小，以及单个page的大小，不再受限于OS</li>
+</ul>
+<h3 id="如何管理buffer-pool当中的page">如何管理Buffer pool当中的Page？<a hidden class="anchor" aria-hidden="true" href="#如何管理buffer-pool当中的page">#</a></h3>
+<p>OS相关的page淘汰策略都可以拿来直接使用，如FIFO、Random、LRU、RR等，此外还可以使用LRU-K的淘汰策略，</p>
+<h3 id="简单介绍一下lru-k">简单介绍一下LRU-K？<a hidden class="anchor" aria-hidden="true" href="#简单介绍一下lru-k">#</a></h3>
+<p>LRU-K将缓冲区分为历史队列和缓冲队列，一个page首先加入到历史队列当中，在淘汰前访问了k次，那么就将其移动到缓冲队列当中。并且引入了K- distance的概念，即前K次的距离，可以简单使用逻辑时间戳来表示，在历史队列当中的K- distance为正无穷，而在缓冲队列当中的Page的K- distance即为前K次访问的距离（即时间戳的差值）在淘汰时选择K- distance最大的进行淘汰</p>
+<p>通过LRU-K，可以避免由于全表遍历而导致的缓存污染问题</p>
+<h3 id="lru-k的缺点">LRU-K的缺点？<a hidden class="anchor" aria-hidden="true" href="#lru-k的缺点">#</a></h3>
+<p>ChatGPT：</p>
+<p>LRU-K（Least Recently Used K）是一种缓存淘汰策略，它根据最近使用的频率来确定要淘汰的缓存项。虽然 LRU-K 在某些情况下表现良好，但也存在一些缺点：</p>
+<ol>
+<li>内存消耗：LRU-K 需要维护额外的数据结构（如计数器或时间戳数组）来跟踪最近使用的频率。这会增加额外的内存消耗，并可能影响缓存系统的整体性能。</li>
+<li>算法复杂性：相比于简单的 LRU 算法，LRU-K 需要更多的逻辑和计算来跟踪和更新每个缓存项的使用频率。这增加了算法的复杂性，可能导致实现和维护的困难。</li>
+<li>参数选择：选择适当的 K 值是 LRU-K 的一个挑战。K 值的选择需要综合考虑系统的特性和工作负载。选择过小的 K 值可能导致频繁的缓存项淘汰，而选择过大的 K 值可能导致缓存命中率下降。</li>
+<li>不适用于突发访问模式：当出现突发访问模式时，LRU-K 的性能可能下降。如果有一组热点数据在短时间内被频繁访问，而其他数据很少被访问，LRU-K 可能无法准确识别这种热点数据，并导致它们被提前淘汰。</li>
+</ol>
+<p>综上所述，虽然 LRU-K 在某些场景下可以改善缓存命中率，但它也存在一些不足之处。在选择缓存淘汰策略时，需要考虑系统的特性、工作负载以及对内存消耗和算法复杂性的容忍度。</p>
+<h3 id="buffer-pool当中的page-table有什么作用">Buffer Pool当中的Page Table有什么作用？<a hidden class="anchor" aria-hidden="true" href="#buffer-pool当中的page-table有什么作用">#</a></h3>
+<p>此处可以对比OS的内存映射和读取进行理解，在OS当中，首先数据是真实存储于物理内存当中，将物理内存划分为多个Page大小的槽位，每个槽位可以存储一个Page，而该槽位通过PFN（Phyical frame number）来表示。</p>
+<p>当程序访问虚拟内存当中的数据时，虚拟内存当中的数据会属于某一个Page，用VPN（virtual page number）进行表示。</p>
+<p>因此在读取数据时，就需要一个从VPN到PFN到一个映射，这个工作就交给Page Table来完成，其最简单的组织方式为一个数组，当中存储所有可能的映射（有效无效都存在），而如果采用多级页表的方式，其组织形式就是一个哈希表，key为VPN，val为PFN</p>
+<p>在buffer pool 当中同理，首先创建一个Page*[]用于存储内存当中所有的Page，对应OS当中的物理内存，该数组的下标即为一个frame_id（对应PFN），对于上层获取数据而言，要拿到一个Page则需要通过page_id（对应VPN），此处的page table同样完成page_id -&gt; frame_id的映射关系。</p>
+<h3 id="数据在磁盘上有什么组织形式">数据在磁盘上有什么组织形式？<a hidden class="anchor" aria-hidden="true" href="#数据在磁盘上有什么组织形式">#</a></h3>
+<p>主要分为两种组织形式，分别为基于Page的和基于日志的</p>
+<p><strong>Page</strong></p>
+<p>基于Page的主要方式以Page为基本数据单位，当中的数据主体为Tuple，此外还有一些元数据用于辅助读取，之后多个Page组成一个File，一个File可对应一个一张表。基于Page的最常见的为HeapFile-Page的组织形式。HeapPage承载Tuple，多个HeapPage构成一个HeapFIle。</p>
+<p>首先，在HeapFile-Page的情况下为乱序存储的，即按顺序插入tuple a 和b，并不保证b存储于a之前。</p>
+<p>因此在一个Page当中，只要能够找到空余空间，就可以将数据存储于其中，在这种规则下，HeapPage的结构为一个byte[]数组的header，用于表示该slot上是否为空余，之后则是一个Tuple[]数组，用于存储具体的tuple，在6.830当中，header[]的长度设置为8，即一个HeapPage当中可以存储256个tuple</p>
+<p>之后HeapPage即可组成HeapFile，对于HeapPage的管理方式，最简单的方式即为不管理，当需要一个page时就根据pageId和pageSize计算出偏移量去偏移读取，也可通过一个Page Directory进行管理，本质上为一个page_id-&gt;offset的偏移量，有点类似于Bitcask</p>
+<p><strong>基于日志</strong></p>
+<p><strong>Bitcask</strong></p>
+<p>基于日志最经典的就是Bitcask模型，硬盘上为只进行顺序写入的文件，在内存当中再维护一个哈希表记录偏移，简单的以k-v类型为例，在写入时只进行追加写入，insert和update delete合并为一个put操作，insert update只需要向其中写入最新的数据，并更新索引，delete操作则写入一个墓碑标志，用于进行压缩，并且删除索引。在读取时只需要根据索引进行读取即可。</p>
+<p>由于一直顺序写入会导致当中存储很多陈旧数据，此时就涉及到一个压缩操作，即将顺序扫描原本的db文件，并只保存最新的值</p>
+<p>存储单元通常如下</p>
+<p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/image-20230405215108-cjvokl9.png" alt=""  />
+</p>
+<p><strong>LSM-Tree</strong>​</p>
+<p>首先对于一个段或者level，内部key需要按照顺序维护，这也是与Bitcask存储模型的最大的不同。</p>
+<p>在存储上分为内存和磁盘两部分，所有的请求首先会写入到内存当中，在内存中进行管理，为了维护有序结构，在内存中可以使用跳表或者B+树等方式管理key，当内存当中的key到达上限时，在将其顺序写入到磁盘上，即可保证磁盘当中内容的有序性。</p>
+<p>在写入之后，内存当中只需要保存稀疏的一个索引结构即可，不必保存所有的key。</p>
+<p>在磁盘上即为SSTable，其中分为两种数据块，一种为存储数据，另一种为索引块，标明各个块的key的范围。</p>
+<p><strong>读写操作</strong></p>
+<ul>
+<li>写：就像上面所说的那样，先写入到内存当中，之后再刷盘进行持久化，形成一个有序数据块。</li>
+<li>读：由于是追加写入，为了获取到最新的key，先尝试从内存中进行获取，如果没有则去读取最新的对应范围的数据块，如果获取不到再去寻找更陈旧的数据块，在第一次获取时则完成搜索，否则继续直至完成搜索。而对于范围查询，可以并行的查询多个符合范围的component</li>
+</ul>
+<p><strong>合并</strong></p>
+<p>为了解决磁盘当中component积累导致的读性能下降的问题，需要将多个component合并，以去除重复的key，从而减少查询的次数。主要有两种方案：</p>
+<ul>
+<li>level：在L层级的一个component会接受从L-1层级来的合并，直至达到该层的上限，之后向L+1层去进行合并</li>
+<li>tiers：一层当中会有T个component，当满了需要合并时，T个component合并成一个并放入到下一层。</li>
+</ul>
+<p>L+1层能够容纳的key的数量为L层的T倍，并且对于插入删除数量相等的均衡情况，层数维持不变。</p>
+<p>level策略下会通过频繁的合并以减少component的数量，对读请求较为友好，tiers策略下合并较少(一层满了T个之后才会合并)，因此对于写请求较为友好。</p>
+<p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/image-20230406231322-eprmscm.png" alt=""  />
+</p>
+<h2 id="索引">索引<a hidden class="anchor" aria-hidden="true" href="#索引">#</a></h2>
+<h3 id="谈一谈索引和常见的索引形式">谈一谈索引和常见的索引形式<a hidden class="anchor" aria-hidden="true" href="#谈一谈索引和常见的索引形式">#</a></h3>
+<p>数据库索引是一种用于提高数据库查询性能的数据结构。它类似于书籍的目录，通过按照特定字段或字段组合对数据库表中的数据进行排序和组织，从而加快对数据的检索速度。</p>
+<p>较为常见的索引类型为hashtable 和 B+ Tree，在形式上分为聚簇索引和非聚簇索引</p>
+<ul>
+<li>对于聚簇索引索引，则存在一个主键，默认为主键创建索引，之后主键的索引上存储真实的数据，通过在主键索引上搜索即可找到对应的Tuple，这样的好处是当需要通过主键进行搜索时，可以通过对索引的一次访问就找到数据，而对于二级索引，其中存储的为key -&gt; 主键，即通过二级索引只能找到一个主键索引的标志，之后再通过这个标识去主键索引当中读取，这个过程称为回表。</li>
+<li>对于非聚簇索引，不存在主键、二级索引的概念，所有的索引所存储的都是一个key -&gt; offset，这个offset通常为一个组合，当中可能包含table_id page_id offset，拿到这个offset之后再去HeapFile-Page当中偏移读取。</li>
+</ul>
+<h3 id="说一说b树">说一说B+树<a hidden class="anchor" aria-hidden="true" href="#说一说b树">#</a></h3>
+<p>不想说了。。。移步Bustub Lab2</p>
+<h3 id="简单介绍一下哈希表">简单介绍一下哈希表<a hidden class="anchor" aria-hidden="true" href="#简单介绍一下哈希表">#</a></h3>
+<p>这里不针对哈希索引，只是说一下哈希表这种数据结构，主要分为静态哈希和动态哈希</p>
+<p><strong>静态哈希</strong></p>
+<p>静态哈希的本质上为一个数组，通过哈希函数 % len的方式找到一个数组下标，该下标就对应着真实的存储位置。</p>
+<p>对于哈希冲突问题，根据不同的解决方式可以继续细分：</p>
+<ul>
+<li>
+<p>最基础的即为线性探测，即向下一个哈希槽移动，在删除时将由于冲突向下移动的均向原来的位置移动一格，或者设置一个墓碑，令该哈希槽不可用</p>
+</li>
+<li>
+<p>罗宾汉哈希</p>
+<p>罗宾汉劫富济贫，缩小贫富差距，因此引入一个权重，来标识距离原本计算出来的槽的距离，最终的目标是令所有的所有的key的权重（距离）较为平均<br>
+下图蓝色标识原本计算出的槽的位置，val[i]标识最终的位置具体最初计算出的位置的距离<br>
+D[1]&lt;E[2]，因此为了保证均衡，E进入当前D所在的槽，将D挤到下一个槽处，这样D E的权重均为2，而不是一个1一个3</p>
+<p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/net-img-1664122136177-c428e743-2e56-483f-b04a-52dcf8e4dccd-20221113000204-v5htyz1.png" alt=""  />
+</p>
+</li>
+<li>
+<p>CUCKOO 哈希</p>
+<ul>
+<li>创建两个哈希表，但加入一个键是，使用两个不同的哈希函数进行运算，在两个哈希表中挑选一个没有冲突的槽放入</li>
+<li>如果两个均冲突了，选择一个槽，假设选择了1号哈希表，将其中原本的元素取出，使用2号哈希函数计算，试图放入到2号哈希表中，如果还冲突，取出2号的去1号尝试</li>
+<li>这个过程中可能存在无限循环的问题，需要进行检测，并对哈希表扩容</li>
+</ul>
+</li>
+</ul>
+<p><strong>动态哈希</strong></p>
+<ul>
+<li>
+<p>链哈希：在一个哈希槽上存在多个哈希桶，各个哈希桶之间用链表连接，哈希桶中存在多个Key</p>
+</li>
+<li>
+<p>EXTENDIBLE HASHING：</p>
+<ul>
+<li>维护一个全局计数器，标识一个哈希在寻找哈希槽是需要比较的位数</li>
+<li>每个哈希槽维护一个local计数器，标识在这个哈希槽内需要比较的位数</li>
+</ul>
+<p>全局计数器用于找到对应的哈希槽，局部计数器用于在扩容时分配元素</p>
+<p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/net-img-1664124051885-9ef936c0-ff40-4ddf-bcda-399d9ca9994b-20221113000205-naye4is.png" alt=""  />
+</p>
+</li>
+</ul>
+<p>‍</p>
+<p>‍</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>事务与并发控制</span>
+  </a>
+  <a class="next" href="http://itfischer.space/en/posts/tech/etcd/raft-example/">
+    <span class="title">Next »</span>
+    <br>
+    <span>raft-example</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on x"
+            href="https://x.com/intent/tweet/?text=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f&amp;title=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84&amp;summary=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f&title=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on whatsapp"
+            href="https://api.whatsapp.com/send?text=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on telegram"
+            href="https://telegram.me/share/url?text=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 数据库基础结构 on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=%e6%95%b0%e6%8d%ae%e5%ba%93%e5%9f%ba%e7%a1%80%e7%bb%93%e6%9e%84&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2595%25B0%25E6%258D%25AE%25E5%25BA%2593%25E5%259F%25BA%25E7%25A1%2580%25E7%25BB%2593%25E6%259E%2584%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tech on Fischer&#39;s Blog</title>
+    <link>http://itfischer.space/en/posts/tech/</link>
+    <description>Recent content in Tech on Fischer&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 09 Dec 2023 09:31:59 +0000</lastBuildDate>
+    <atom:link href="http://itfischer.space/en/posts/tech/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>More Than Capacity: Performance-oriented Evolution of Pangu in Alibaba</title>
+      <link>http://itfischer.space/en/posts/tech/pangu2.0/</link>
+      <pubDate>Sat, 09 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/pangu2.0/</guid>
+      <description>More Than Capacity: Performance-oriented Evolution of Pangu in Alibaba Introduction 本文主要讲述了盘古分布式存储十年来的一个演变历程，主要分为了三个阶段，分别是1.0，2.0的阶段一和2.0的阶段二。 在盘</description>
+    </item>
+    <item>
+      <title>OceanBase初赛</title>
+      <link>http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/</link>
+      <pubDate>Sat, 09 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/</guid>
+      <description>由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自</description>
+    </item>
+    <item>
+      <title>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search</title>
+      <link>http://itfischer.space/en/posts/tech/spfresh/</link>
+      <pubDate>Thu, 09 Nov 2023 09:31:59 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/spfresh/</guid>
+      <description>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的A</description>
+    </item>
+    <item>
+      <title>Manu: A Cloud Native Vector Database Management System</title>
+      <link>http://itfischer.space/en/posts/tech/manu/</link>
+      <pubDate>Tue, 07 Nov 2023 09:31:59 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/manu/</guid>
+      <description>Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DB</description>
+    </item>
+    <item>
+      <title>日志与恢复</title>
+      <link>http://itfischer.space/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</link>
+      <pubDate>Sun, 04 Jun 2023 23:14:02 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</guid>
+      <description>日志与恢复 数据库当中存在哪些故障？ 简单来说可以分为三种故障： 事务故障 系统故障 存储介质故障 而事务故障也可分为两种： 逻辑错误 (Logical Errors)：由</description>
+    </item>
+    <item>
+      <title>事务与并发控制</title>
+      <link>http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</link>
+      <pubDate>Sun, 04 Jun 2023 09:45:02 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</guid>
+      <description>事务与并发控制 简单介绍一下事务？ 事务作为数据库执行过程中的一个逻辑单位，可以表明一组操作，这一组操作要么一起成功，要么全部回滚，并且事务之间</description>
+    </item>
+    <item>
+      <title>数据库基础结构</title>
+      <link>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</link>
+      <pubDate>Sat, 03 Jun 2023 09:45:02 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</guid>
+      <description>数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当</description>
+    </item>
+    <item>
+      <title>内存虚拟化</title>
+      <link>http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
+      <pubDate>Sat, 27 May 2023 09:45:02 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
+      <description>内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中</description>
+    </item>
+    <item>
+      <title>CPU虚拟化</title>
+      <link>http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
+      <pubDate>Fri, 26 May 2023 21:21:13 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
+      <description>如何理解CPU虚拟化？ CPU虚拟化，用一句话简单的概括就是，通过CPU虚拟化的手段，可以让多个程序在同一时间段内在一台机器上运行，共享CPU</description>
+    </item>
+    <item>
+      <title>Rust内存管理</title>
+      <link>http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</guid>
+      <description>相比于传统c++当中的手动管理内存，rust采用了所有权 + RAII的机制，对于一些复杂的情况，rust还有生命周期等约束，从而保证在编译期能</description>
+    </item>
+    <item>
+      <title>数据库系统概念</title>
+      <link>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/</guid>
+      <description>物理存储系统 这一部分重点并不多，主要是各种存储类型上的差异，比较了几种物理存储上的差异，以及SSD，HDD 之间的差异，最后又介绍了RAID的</description>
+    </item>
+    <item>
+      <title>深入理解分布式系统</title>
+      <link>http://itfischer.space/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://itfischer.space/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</guid>
+      <description>分布式系统模型 拜占庭将军问题 拜占庭将军主要用于解决共识问题，三个将军决定攻打拜占庭，只有三个人一同进行攻打才能够成功，否则则会失败，因此需要</description>
+    </item>
+  </channel>
+</rss>

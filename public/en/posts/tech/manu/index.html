@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Manu: A Cloud Native Vector Database Management System | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DB">
+<meta name="author" content="Sulv">
+<link rel="canonical" href="http://itfischer.space/en/posts/tech/manu/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
+<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
+<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
+<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="Manu: A Cloud Native Vector Database Management System" />
+<meta property="og:description" content="Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DB" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://itfischer.space/en/posts/tech/manu/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-11-07T09:31:59+00:00" />
+<meta property="article:modified_time" content="2023-11-07T12:56:03+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Manu: A Cloud Native Vector Database Management System"/>
+<meta name="twitter:description" content="Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DB"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://itfischer.space/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "http://itfischer.space/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Manu: A Cloud Native Vector Database Management System",
+      "item": "http://itfischer.space/en/posts/tech/manu/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Manu: A Cloud Native Vector Database Management System",
+  "name": "Manu: A Cloud Native Vector Database Management System",
+  "description": "Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DB",
+  "keywords": [
+    
+  ],
+  "articleBody": "Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DBMS，主要有以下的特点：\n无需支持复杂的事务：传统DBMS通常需要支持多表，多行的复杂事务处理逻辑，但是这在VDBMS当中是没有必要的， 因为非结构化数据通常通过AI模型转化为单一的向量，最基本的ACID就足够了 提供一个可调节的性能和一致性之间的trade-off 提供细粒度的弹性伸缩以避免硬件资源的浪费：VDBMS 涉及到很多硬件加速，如 GPU 或者 FPGA，以及大量的内存。通过将函数层或者逻辑层与硬件层进行解耦，以避免非峰值期的浪费 (参考 snowflake 的设计)，弹性和资源应该在函数层进行管理而不是系统层 log as data\nManu的设计准则为日志即数据，整个系统通过一个日志的订阅/发布系统进行管理，通过日志来完成各个层之间的解耦(decoupling of read from write, stateless from stateful, and storage from computing)\n日志机制上使用了MVCC和time-tick，后面进行详细介绍\n在向量检索上，支持量化、倒排索引、临近图等结构\nBackground And Motivation 这里前半部分说的还是VDBMS那几个老生常谈的特性。其他的话\n首先说明了VDBMS目前的架构是不成熟或者会持续发展的，由于目前VDBMS主要是给AI或者数据驱动类型应用服务的，因此随着这些上层应用的发展，VDBMS也会带动着一同革新。 无需支持复杂事务，基础ACID即可 矢量数据库应用程序需要灵活的性能一致性 trade-off。如在视频推荐的场景下，拿不到最新上传的视频是可以接受的，但是让用户长时间等待是万万不可的。可以通过配置最大的延迟时间来提高系统的吞吐量。这里的设计就有点像搜索引擎了，少检索出那么几条数据又如何呢，这也是早年 GFS 采取弱一致性的原因。 做总结，Manu的设计目标如下：\n支持长时间的迭代更新 一致性可调 良好的弹性 高可用性 高性能 强适应性 The Manu System Schema, Collection, Shard, and Segment schema：数据类型上支持基本数据类型 + vector，一条记录由user field和sys field两部分组成: 其中，label和numerical attribute组成了过滤字段，label就是传统意义上的标签，如衣服，食物等，numerical attribute即为和该条记录相关的数值属性，如身高，价格等。\nsys field的LSN对于用户是不可见的，用于系统内部使用\ncollection: 作为entity的集合，对应DBMS当中的表的角色，但最大的区别是不存在关系的概念，不会和其他的collection之间存在relation，同样也不支持关系代数\nshard: 在插入时，entity会根据ID hash到多个shard当中，但是在manu当中，shard并部署数据的存储(placement)单元\nsegment： 每个shard当中的entity通过segment来进行管理，segment可以有两种状态：\ngrowing：可以向其中添加新的entity，到达512MB转换为sealed，或者一段时间没有向其中添加新的数据 Sealed：不接受新的 entity，为只读的状态 小的segment可以进行合并\n对于shard和segment，这里说的比较简陋，在后面日志部分有详细描述，shard是一个较大的单位，对应了一个存储节点的概念，记录通过哈希找到自己所属的存储节点，而segment则是数据的存储或者管理单元，有点类似于chunk的这个概念。\nSystem Architecture 根据上面描述的种种云原生向量数据库的需求，Manu在架构上进行细粒度的解耦，分为了多个层，每层各司其职，这里的解耦比像snowflake那样的存算分离要彻底一些。\nAccess layer\n位于整个系统的最上层，采用无状态(stateless) + 缓存的设计方式，代理客户端的请求，并将其转发到对应的下层节点上。\nCoordinator layer\n在这一层当中存在四个Coordinator，分别负责不同的工作： Root，Query，Data，Index\nRoot主要处理创建/删除collection的操作(对应 sql当中的ddl)，并且维护collection的元数据 Data负责维护一个collection的详细信息，如segment的路由或者路径，并且可以和底层的data node合作将更新的数据转换为binlog Index 维护索引的元数据和创建索引工作 Query 显而易见 Worker layer\n负责真实的计算任务，节点为无状态的，只会从存储节点获得一份copy来进行计算，各节点之间不存在交互。为了保证可以根据需求扩充，将节点根据任务类型划分为了query data index三种类型\nStorage layer\n使用etcd来存储系统状态和元数据 使用AWS S3作为对象存储，存储segment/shard Log Backbone 日志作为骨架，将解耦的系统组件连接成一个整体。日志使用wal + binlog的组合，wal作为增量部分，bin作为基础部分，二者相互补充。data node订阅wal，然后将row-based的wal转换为column-based的binlog。\n所有会更改系统状态的操作都会记录到日志当中，包括ddl、dml，和一些system coordination的操作(向内存当中加载collecion)。而只读请求不会进入日志。 日志采用的是逻辑日志而非物理日志 日志系统的架构如下： logger通过一致性哈希进行管理，相比于普通的哈希函数，可以得到一个较好的负载均衡并且在添加或者删除节点时影响到的节点较少。 每一个shard对应哈希环上的一个逻辑哈希桶(其中对应多个物理哈希桶)，并且和wal channel一一对应 对于一次请求，首先根据ID进行哈希到对应的logger，再使用TSO(实现方式为混合时钟)进行分配一个全局的LSN，根据LSN划分到对应的segment当中，然后将其写入到WAL当中，此外还会维护一个entity ID到segment ID的一个映射，使用rocksdb进行存储，并缓存在logger当中。 WAL channel本身提供一个发布订阅功能，本身相当于一个消息队列，在实现上使用kafka等，logger相当于发布端，data node订阅该channel，将row-based的wal转换为column-based的binlog。而之所以使用column-based的形式，还是VDBMS的检索服务本质上还是有点类似OLAP场景，列式存储可以提供较好的存储和IO性能。 组件间的消息也通过日志传递，例如，数据节点宣布何时将段写入存储，索引节点宣布何时构建索引。这是因为日志系统提供了一种简单可靠的机制来广播系统事件 Tunable Consistency Manu引入了“delta一致性”（delta consistency），这种一致性模型位于强一致性和最终一致性之间。在这种模型下，读操作返回的是最多在delta时间单位之前产生的最后一个值。这里的“delta”是一个可调整的时间参数，可以根据需要设置。值得注意的是，强一致性和最终一致性可以看作是这个模型的特殊情况，其中delta分别为零和无限大\n为了实现delta一致性，分为两方面：\n首先实现TSO来生成全局唯一的LSN，这里使用了混合时钟，物理部分记录物理时间，逻辑部分记录时间顺序。逻辑部分用于确定事件的先后顺序，而物理部分用于和delta配合来设置容忍的延迟。不过这里TSO是单机实现的，有可能成为整个系统的瓶颈。虽然都使用了HLC，到那时和cockroachdb是不同的。 二是使用了time-tick的策略，简单来说这个实现有点像机枪的曳光弹，每隔几发就添加一发曳光弹来进行标识 作为日志订阅者的query node，需要知道三件事:1)用户设定的delta，2)上次更新的时间，3)查询请求的时间 使用time-tick策略，在日志当中会定期的插入带有时间的特殊日志标志，将最后一次的时间记为 $L_s$ ，而请求又会带上$L_r$，只有满足了$L_r - L_s \u003c \\delta$ 的情况下查询才会返回，否则一直等待 Index Building Manu支持的索引类型如下： Manu当中并没有提出什么新颖的索引类型，在这一段，主要阐述了两种索引构建场景。分别是批处理和流处理：\n批处理发生在对于整个collection构建索引的情况，在这种情况下，index coordinator知道collection涉及的所有的segment的路径，然后指示index node去创建索引。 流处理则是增量情况，索引是在不停止搜索服务的情况下实时异步构建的。当一个Segment积累了足够数量的向量后，其驻留数据节点会密封该Segment并将其作为binlog写入对象存储。然后数据协调器通知索引协调器，索引协调器指示索引节点为该段建立索引 Manu通过bitmap来记录被segment当中删除的向量，而被删除的向量数量达到一定程度后，会重新构建索引 Vector Search 先说几个特性：\n可以使用距离或者相似度函数进行搜索，如欧几里得距离，内积，角距离等 使用cost-based模型来选择执行策略 支持多向量检索 查询加速\nCollection被分为segment，然后在各个segment上进行并行查询，在每个段上进行top-k查询，之后再使用一个聚合函数处理各个段上的top-k向量，聚合得到一个全局的top-k结果\n数据来源\n像之前说的那样，Manu使用的是存算分离的架构，计算节点获取一份copy进行计算。因此查询节点共有三个数据来源：WAL，索引，binlog：\n对于还处于growing持续写入的segment，查询节点可以通过订阅WAL的方式，然后在其中进行暴力扫描得到结果，以求最小延迟。但是暴力扫描的开销依旧很高，给出的对策是将segment划分为切片(slice)，一个切片包含1w条vector，一旦一个切片完成了写入，就对其建立临时索引以加速搜索，大约可以提升10x 而从growing转换为sealed的segment，就可以对其建立完整的索引，并存储在AWS S3当中，之后通知查询节点去加载完整索引来替换掉临时索引 当查询节点之间的segment分布发生变化时，查询节点会访问 binlog 来获取数据，这种情况可能发生在扩展、负载均衡、查询节点故障和恢复期间 当查询节点发生故障时，或者节点被移除时（scaling down)其负责的任务对应的segment和索引就会被加载到另外一个正常的节点当中 当新节点被添加到其中时，同样也会有类似的操作 原子性\nManu 不确保段重新分配是原子的，并且一个段可以驻留在多个查询节点上。这不会影响正确性，因为代理会删除查询的重复结果向量。\n剩余的部分可能大多都是些向量特点并不是那么鲜明的内容和一些用例分析了，这里就不做过多的分析了。\nSummary 在我看来《Manu: A Cloud Native Vector Database Management System》这一篇文章工程实践性比较强的文章了，文中并没有对于向量数据库的核心，即向量检索和索引方面提出什么创新性的设计，而是更注重架构方面，从架构方面出发，讲述了向量数据库和云原生架构之间的一个化学反应。同时zilliz也算是比较出名的向量数据库的初创了，还是比较看好其发展的。\n",
+  "wordCount" : "4432",
+  "inLanguage": "en",
+  "datePublished": "2023-11-07T09:31:59Z",
+  "dateModified": "2023-11-07T12:56:03Z",
+  "author":{
+    "@type": "Person",
+    "name": "Sulv"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://itfischer.space/en/posts/tech/manu/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://itfischer.space/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://itfischer.space/en/search" title="Search">
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://itfischer.space/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Manu: A Cloud Native Vector Database Management System
+    </h1>
+    <div class="post-meta"><span title='2023-11-07 09:31:59 +0000 UTC'>2023-11-07</span>&nbsp;·&nbsp;9 min&nbsp;·&nbsp;Sulv
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#manu-a-cloud-native-vector-database-management-system" aria-label="Manu: A Cloud Native Vector Database Management System">Manu: A Cloud Native Vector Database Management System</a><ul>
+                        
+                <li>
+                    <a href="#introduction" aria-label="Introduction">Introduction</a></li>
+                <li>
+                    <a href="#background-and-motivation" aria-label="Background And Motivation">Background And Motivation</a></li>
+                <li>
+                    <a href="#the-manu-system" aria-label="The Manu System">The Manu System</a><ul>
+                        
+                <li>
+                    <a href="#schema-collection-shard-and-segment" aria-label="Schema, Collection, Shard, and Segment">Schema, Collection, Shard, and Segment</a></li>
+                <li>
+                    <a href="#system-architecture" aria-label="System Architecture">System Architecture</a></li>
+                <li>
+                    <a href="#log-backbone" aria-label="Log Backbone">Log Backbone</a></li>
+                <li>
+                    <a href="#tunable-consistency" aria-label="Tunable Consistency">Tunable Consistency</a></li>
+                <li>
+                    <a href="#index-building" aria-label="Index Building">Index Building</a></li>
+                <li>
+                    <a href="#vector-search" aria-label="Vector Search">Vector Search</a></li></ul>
+                </li>
+                <li>
+                    <a href="#summary" aria-label="Summary">Summary</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h1 id="manu-a-cloud-native-vector-database-management-system">Manu: A Cloud Native Vector Database Management System<a hidden class="anchor" aria-hidden="true" href="#manu-a-cloud-native-vector-database-management-system">#</a></h1>
+<h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DBMS，主要有以下的特点：</p>
+<ol>
+<li>无需支持复杂的事务：传统DBMS通常需要支持多表，多行的复杂事务处理逻辑，但是这在VDBMS当中是没有必要的， 因为非结构化数据通常通过AI模型转化为单一的向量，最基本的ACID就足够了</li>
+<li>提供一个可调节的性能和一致性之间的trade-off</li>
+<li>提供细粒度的弹性伸缩以避免硬件资源的浪费：VDBMS 涉及到很多硬件加速，如 GPU 或者 FPGA，以及大量的内存。通过将函数层或者逻辑层与硬件层进行解耦，以避免非峰值期的浪费 (参考 snowflake 的设计)，弹性和资源应该在函数层进行管理而不是系统层</li>
+</ol>
+<p><strong>log as data</strong></p>
+<p>Manu的设计准则为日志即数据，整个系统通过一个日志的订阅/发布系统进行管理，通过日志来完成各个层之间的解耦(decoupling of read from write, stateless from stateful, and storage from computing)</p>
+<p>日志机制上使用了MVCC和time-tick，后面进行详细介绍</p>
+<p>在向量检索上，支持量化、倒排索引、临近图等结构</p>
+<h2 id="background-and-motivation">Background And Motivation<a hidden class="anchor" aria-hidden="true" href="#background-and-motivation">#</a></h2>
+<p>这里前半部分说的还是VDBMS那几个老生常谈的特性。其他的话</p>
+<ul>
+<li>首先说明了VDBMS目前的架构是不成熟或者会持续发展的，由于目前VDBMS主要是给AI或者数据驱动类型应用服务的，因此随着这些上层应用的发展，VDBMS也会带动着一同革新。</li>
+<li>无需支持复杂事务，基础ACID即可</li>
+<li>矢量数据库应用程序需要灵活的性能一致性 trade-off。如在视频推荐的场景下，拿不到最新上传的视频是可以接受的，但是让用户长时间等待是万万不可的。可以通过配置最大的延迟时间来提高系统的吞吐量。这里的设计就有点像搜索引擎了，少检索出那么几条数据又如何呢，这也是早年 GFS 采取弱一致性的原因。</li>
+</ul>
+<p>做总结，Manu的设计目标如下：</p>
+<ol>
+<li>支持长时间的迭代更新</li>
+<li>一致性可调</li>
+<li>良好的弹性</li>
+<li>高可用性</li>
+<li>高性能</li>
+<li>强适应性</li>
+</ol>
+<h2 id="the-manu-system">The Manu System<a hidden class="anchor" aria-hidden="true" href="#the-manu-system">#</a></h2>
+<h3 id="schema-collection-shard-and-segment">Schema, Collection, Shard, and Segment<a hidden class="anchor" aria-hidden="true" href="#schema-collection-shard-and-segment">#</a></h3>
+<p><strong>schema</strong>：数据类型上支持基本数据类型 + vector，一条记录由user field和sys field两部分组成:
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231122152248.png" alt="image.png"  />
+
+其中，label和numerical attribute组成了过滤字段，label就是传统意义上的标签，如衣服，食物等，numerical attribute即为和该条记录相关的数值属性，如身高，价格等。</p>
+<p>sys field的LSN对于用户是不可见的，用于系统内部使用</p>
+<p><strong>collection:</strong> 作为entity的集合，对应DBMS当中的表的角色，但最大的区别是不存在关系的概念，不会和其他的collection之间存在relation，同样也不支持关系代数</p>
+<p><strong>shard:</strong> 在插入时，entity会根据ID hash到多个shard当中，但是在manu当中，shard并部署数据的存储(placement)单元</p>
+<p><strong>segment：</strong> 每个shard当中的entity通过segment来进行管理，segment可以有两种状态：</p>
+<ul>
+<li>growing：可以向其中添加新的entity，到达512MB转换为sealed，或者一段时间没有向其中添加新的数据</li>
+<li>Sealed：不接受新的 entity，为只读的状态</li>
+</ul>
+<p>小的segment可以进行合并</p>
+<p>对于shard和segment，这里说的比较简陋，在后面日志部分有详细描述，shard是一个较大的单位，对应了一个存储节点的概念，记录通过哈希找到自己所属的存储节点，而segment则是数据的存储或者管理单元，有点类似于chunk的这个概念。</p>
+<h3 id="system-architecture">System Architecture<a hidden class="anchor" aria-hidden="true" href="#system-architecture">#</a></h3>
+<p>根据上面描述的种种云原生向量数据库的需求，Manu在架构上进行细粒度的解耦，分为了多个层，每层各司其职，这里的解耦比像snowflake那样的存算分离要彻底一些。</p>
+<p><strong>Access layer</strong></p>
+<p>位于整个系统的最上层，采用无状态(stateless) + 缓存的设计方式，代理客户端的请求，并将其转发到对应的下层节点上。</p>
+<p><strong>Coordinator layer</strong></p>
+<p>在这一层当中存在四个Coordinator，分别负责不同的工作： Root，Query，Data，Index</p>
+<ul>
+<li>Root主要处理创建/删除collection的操作(对应 sql当中的ddl)，并且维护collection的元数据</li>
+<li>Data负责维护一个collection的详细信息，如segment的路由或者路径，并且可以和底层的data node合作将更新的数据转换为binlog</li>
+<li>Index 维护索引的元数据和创建索引工作</li>
+<li>Query 显而易见</li>
+</ul>
+<p><strong>Worker layer</strong></p>
+<p>负责真实的计算任务，节点为无状态的，只会从存储节点获得一份copy来进行计算，各节点之间不存在交互。为了保证可以根据需求扩充，将节点根据任务类型划分为了query data index三种类型</p>
+<p><strong>Storage layer</strong></p>
+<ul>
+<li>使用etcd来存储系统状态和元数据</li>
+<li>使用AWS S3作为对象存储，存储segment/shard
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231122162236.png" alt="image.png"  />
+</li>
+</ul>
+<h3 id="log-backbone">Log Backbone<a hidden class="anchor" aria-hidden="true" href="#log-backbone">#</a></h3>
+<p>日志作为骨架，将解耦的系统组件连接成一个整体。日志使用wal + binlog的组合，wal作为增量部分，bin作为基础部分，二者相互补充。data node订阅wal，然后将row-based的wal转换为column-based的binlog。</p>
+<p>所有会更改系统状态的操作都会记录到日志当中，包括ddl、dml，和一些system coordination的操作(向内存当中加载collecion)。而只读请求不会进入日志。
+日志采用的是逻辑日志而非物理日志
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231122163528.png" alt="image.png"  />
+</p>
+<p>日志系统的架构如下：
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231122164815.png" alt="image.png"  />
+</p>
+<ul>
+<li>logger通过一致性哈希进行管理，相比于普通的哈希函数，可以得到一个较好的负载均衡并且在添加或者删除节点时影响到的节点较少。</li>
+<li>每一个shard对应哈希环上的一个逻辑哈希桶(其中对应多个物理哈希桶)，并且和wal channel一一对应</li>
+<li>对于一次请求，首先根据ID进行哈希到对应的logger，再使用TSO(实现方式为混合时钟)进行分配一个全局的LSN，根据LSN划分到对应的segment当中，然后将其写入到WAL当中，此外还会维护一个entity ID到segment ID的一个映射，使用rocksdb进行存储，并缓存在logger当中。</li>
+<li>WAL channel本身提供一个发布订阅功能，本身相当于一个消息队列，在实现上使用kafka等，logger相当于发布端，data node订阅该channel，将row-based的wal转换为column-based的binlog。而之所以使用column-based的形式，还是VDBMS的检索服务本质上还是有点类似OLAP场景，列式存储可以提供较好的存储和IO性能。</li>
+<li>组件间的消息也通过日志传递，例如，数据节点宣布何时将段写入存储，索引节点宣布何时构建索引。这是因为日志系统提供了一种简单可靠的机制来广播系统事件</li>
+</ul>
+<h3 id="tunable-consistency">Tunable Consistency<a hidden class="anchor" aria-hidden="true" href="#tunable-consistency">#</a></h3>
+<p>Manu引入了“delta一致性”（delta consistency），这种一致性模型位于强一致性和最终一致性之间。在这种模型下，读操作返回的是最多在delta时间单位之前产生的最后一个值。这里的“delta”是一个可调整的时间参数，可以根据需要设置。值得注意的是，强一致性和最终一致性可以看作是这个模型的特殊情况，其中delta分别为零和无限大</p>
+<p>为了实现delta一致性，分为两方面：</p>
+<ul>
+<li>首先实现TSO来生成全局唯一的LSN，这里使用了混合时钟，物理部分记录物理时间，逻辑部分记录时间顺序。逻辑部分用于确定事件的先后顺序，而物理部分用于和delta配合来设置容忍的延迟。不过这里TSO是单机实现的，有可能成为整个系统的瓶颈。虽然都使用了HLC，到那时和cockroachdb是不同的。</li>
+<li>二是使用了time-tick的策略，简单来说这个实现有点像机枪的曳光弹，每隔几发就添加一发曳光弹来进行标识
+<ul>
+<li>作为日志订阅者的query node，需要知道三件事:1)用户设定的delta，2)上次更新的时间，3)查询请求的时间</li>
+<li>使用time-tick策略，在日志当中会定期的插入带有时间的特殊日志标志，将最后一次的时间记为 $L_s$ ，而请求又会带上$L_r$，只有满足了$L_r - L_s &lt; \delta$ 的情况下查询才会返回，否则一直等待</li>
+</ul>
+</li>
+</ul>
+<h3 id="index-building">Index Building<a hidden class="anchor" aria-hidden="true" href="#index-building">#</a></h3>
+<p>Manu支持的索引类型如下：
+<img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20231122192146.png" alt="image.png"  />
+
+Manu当中并没有提出什么新颖的索引类型，在这一段，主要阐述了两种索引构建场景。分别是批处理和流处理：</p>
+<ul>
+<li>批处理发生在对于整个collection构建索引的情况，在这种情况下，index coordinator知道collection涉及的所有的segment的路径，然后指示index node去创建索引。</li>
+<li>流处理则是增量情况，索引是在不停止搜索服务的情况下实时异步构建的。当一个Segment积累了足够数量的向量后，其驻留数据节点会密封该Segment并将其作为binlog写入对象存储。然后数据协调器通知索引协调器，索引协调器指示索引节点为该段建立索引
+Manu通过bitmap来记录被segment当中删除的向量，而被删除的向量数量达到一定程度后，会重新构建索引</li>
+</ul>
+<h3 id="vector-search">Vector Search<a hidden class="anchor" aria-hidden="true" href="#vector-search">#</a></h3>
+<p>先说几个特性：</p>
+<ul>
+<li>可以使用距离或者相似度函数进行搜索，如欧几里得距离，内积，角距离等</li>
+<li>使用cost-based模型来选择执行策略</li>
+<li>支持多向量检索</li>
+</ul>
+<p><strong>查询加速</strong></p>
+<p>Collection被分为segment，然后在各个segment上进行并行查询，在每个段上进行top-k查询，之后再使用一个聚合函数处理各个段上的top-k向量，聚合得到一个全局的top-k结果</p>
+<p><strong>数据来源</strong></p>
+<p>像之前说的那样，Manu使用的是存算分离的架构，计算节点获取一份copy进行计算。因此查询节点共有三个数据来源：WAL，索引，binlog：</p>
+<ul>
+<li>对于还处于growing持续写入的segment，查询节点可以通过订阅WAL的方式，然后在其中进行暴力扫描得到结果，以求最小延迟。但是暴力扫描的开销依旧很高，给出的对策是将segment划分为切片(slice)，一个切片包含1w条vector，一旦一个切片完成了写入，就对其建立临时索引以加速搜索，大约可以提升10x</li>
+<li>而从growing转换为sealed的segment，就可以对其建立完整的索引，并存储在AWS S3当中，之后通知查询节点去加载完整索引来替换掉临时索引</li>
+<li>当查询节点之间的segment分布发生变化时，查询节点会访问 binlog 来获取数据，这种情况可能发生在扩展、负载均衡、查询节点故障和恢复期间
+<ul>
+<li>当查询节点发生故障时，或者节点被移除时（scaling down)其负责的任务对应的segment和索引就会被加载到另外一个正常的节点当中</li>
+<li>当新节点被添加到其中时，同样也会有类似的操作</li>
+</ul>
+</li>
+</ul>
+<p><strong>原子性</strong></p>
+<p>Manu 不确保段重新分配是原子的，并且一个段可以驻留在多个查询节点上。这不会影响正确性，因为代理会删除查询的重复结果向量。</p>
+<p>剩余的部分可能大多都是些向量特点并不是那么鲜明的内容和一些用例分析了，这里就不做过多的分析了。</p>
+<h2 id="summary">Summary<a hidden class="anchor" aria-hidden="true" href="#summary">#</a></h2>
+<p>在我看来《Manu: A Cloud Native Vector Database Management System》这一篇文章工程实践性比较强的文章了，文中并没有对于向量数据库的核心，即向量检索和索引方面提出什么创新性的设计，而是更注重架构方面，从架构方面出发，讲述了向量数据库和云原生架构之间的一个化学反应。同时zilliz也算是比较出名的向量数据库的初创了，还是比较看好其发展的。</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://itfischer.space/en/posts/tech/spfresh/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search</span>
+  </a>
+  <a class="next" href="http://itfischer.space/en/posts/tech/etcd/etcd-raft/">
+    <span class="title">Next »</span>
+    <br>
+    <span>etcd/raft</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on x"
+            href="https://x.com/intent/tweet/?text=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f&amp;title=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System&amp;summary=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f&title=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on whatsapp"
+            href="https://api.whatsapp.com/send?text=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on telegram"
+            href="https://telegram.me/share/url?text=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Manu: A Cloud Native Vector Database Management System on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Manu%3a%20A%20Cloud%20Native%20Vector%20Database%20Management%20System&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fmanu%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

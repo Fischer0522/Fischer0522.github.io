@@ -39,7 +39,7 @@ languages:
         enabled: true
         title: Fischer's Whisper
         subtitle: "Student <br/> Storage, Database,And Distrubuted System<br/>Can you hear me?"
-      #imageUrl: "img/ArrowUp10.svg" #图片放在static/img/Q.gif
+        imageUrl: "img/Asuka.png" #图片放在static/img/Q.gif
         imageTitle: 
         imageWidth: 150
         imageHeight: 150

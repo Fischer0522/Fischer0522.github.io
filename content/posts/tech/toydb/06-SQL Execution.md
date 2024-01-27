@@ -1,5 +1,6 @@
 ---
 title: "06-SQL Execution"
+date: 2023-12-31T19:31:59Z
 ---
 
 

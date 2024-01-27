@@ -38,7 +38,7 @@ languages:
       profileMode:
         enabled: true
         title: Fischer's Whisper
-        subtitle: "Student <br/> Storage, Database,And Distrubuted System<br/>Contact Me"
+        subtitle: "Student <br/> Storage, Database,And Distrubuted System<br/>Can you hear me?"
       #imageUrl: "img/ArrowUp10.svg" #图片放在static/img/Q.gif
         imageTitle: 
         imageWidth: 150
@@ -84,7 +84,7 @@ outputs:
 params:
     env: production # to enable google analytics, opengraph, twitter-cards and schema.
     # description: "这是一个纯粹的博客......"
-    author: Sulv
+    author: Fischer
     # author: ["Me", "You"] # multiple authors
     defaultTheme: auto  # defaultTheme: light or  dark 
     disableThemeToggle: false
@@ -109,15 +109,17 @@ params:
     
     socialIcons:
         - name: github
-          url: "https://github.com/xyming108"
+          url: "https://github.com/Fischer0522"
         - name: zhihu
-          url:  "img/twitter.png"
-        - name: QQ
-          url: "img/qq.png"
-        - name: WeChat
-          url: "img/wechat.png"
+          url:  "https://www.zhihu.com/people/alexander-18-39"
+    #- name: QQ
+      #     url: "img/qq.jpg"
+    # - name: WeChat
+      #     url: "img/wx.jpg"
         - name: email
           url: "mailto:yxy05203744@gmail.com"
+        - name: RSS
+          url: "index.xml"
 
     # editPost:
     #     URL: "https://github.com/adityatelange/hugo-PaperMod/tree/exampleSite/content"
@@ -135,10 +137,10 @@ params:
 
     assets:
         favicon: "img/Navigation.svg"
-        favicon16x16: "img/Q.gif"
-        favicon32x32: "img/Q.gif"
-        apple_touch_icon: "Q.gif"
-        safari_pinned_tab: "Q.gif"
+        favicon16x16: "img/Navigation.svg"
+        favicon32x32: "img/Navigation.svg"
+        apple_touch_icon: "Navigation.svg"
+        safari_pinned_tab: "Navigation.svg"
 
     # cover:
     #     hidden: true # hide everywhere but not in structured data
@@ -173,7 +175,7 @@ markup:
         lineNos: true
         # noClasses: false
         # style: monokai
-        style: darcula
+        style: monokai
 
         # codeFences：代码围栏功能，这个功能一般都要设为 true 的，不然很难看，就是干巴巴的-代码文字，没有颜色。
         # guessSyntax：猜测语法，这个功能建议设置为 true, 如果你没有设置要显示的语言则会自动匹配。

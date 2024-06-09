@@ -8,14 +8,14 @@
 <title>Rust内存管理 | Fischer&#39;s Blog</title>
 <meta name="keywords" content="">
 <meta name="description" content="相比于传统c&#43;&#43;当中的手动管理内存，rust采用了所有权 &#43; RAII的机制，对于一些复杂的情况，rust还有生命周期等约束，从而保证在编译期能">
-<meta name="author" content="Sulv">
-<link rel="canonical" href="http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
+<meta name="author" content="Fischer">
+<link rel="canonical" href="https://fischer0522.github.io/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
-<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
-<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
-<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
-<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<link rel="icon" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="apple-touch-icon" href="https://fischer0522.github.io/Navigation.svg">
+<link rel="mask-icon" href="https://fischer0522.github.io/Navigation.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
 <noscript>
@@ -57,7 +57,7 @@
 </noscript><meta property="og:title" content="Rust内存管理" />
 <meta property="og:description" content="相比于传统c&#43;&#43;当中的手动管理内存，rust采用了所有权 &#43; RAII的机制，对于一些复杂的情况，rust还有生命周期等约束，从而保证在编译期能" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://fischer0522.github.io/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" /><meta property="article:section" content="posts" />
 
 
 
@@ -75,19 +75,19 @@
       "@type": "ListItem",
       "position":  1 ,
       "name": "Blog",
-      "item": "http://itfischer.space/en/posts/"
+      "item": "https://fischer0522.github.io/en/posts/"
     }, 
     {
       "@type": "ListItem",
       "position":  2 ,
       "name": "Tech",
-      "item": "http://itfischer.space/en/posts/tech/"
+      "item": "https://fischer0522.github.io/en/posts/tech/"
     }, 
     {
       "@type": "ListItem",
       "position":  3 ,
       "name": "Rust内存管理",
-      "item": "http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"
+      "item": "https://fischer0522.github.io/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"
     }
   ]
 }
@@ -102,25 +102,25 @@
   "keywords": [
     
   ],
-  "articleBody": "相比于传统c++当中的手动管理内存，rust采用了所有权 + RAII的机制，对于一些复杂的情况，rust还有生命周期等约束，从而保证在编译期能够解决大多数的内存安全问题。\n栈 \u0026\u0026 堆 如果要说内存管理的话，首先需要明确栈和堆的概念，这一点对于所有编程语言都适用，但是在rust当中尤为重要：\n基本类型和小的复合类型，像整数、浮点数、布尔值、字符以及小的数组、元组和结构体这样的基本类型通常是在栈上分配的。这些类型的大小在编译时是已知的，并且通常是固定的。此外引用同样是分配在栈的上，他指向另外一个数据(可能在栈上也可能在堆上) 分配在堆上的主要有两个类型：动态类型和智能指针，智能指针自身是分配在栈上的，但是其管理的数据分配在堆上。而动态类型如Vec、String等需要进行动态扩容，因此分配在堆上进行管理数据。 单一所有权 对于基础类型，rust将其分配在栈上，会随着栈桢的弹出而被回收，和其他语言相同，不需要担心栈上内存安全的问题。\n为了能够管理堆上的数据，保证内存安全，rust对于堆上的数据都定义了一个所有权。即堆上的数据在某一事件只能被一个变量所持有(基础情况)，数据会随着栈上变量被RAII回收而回收。从而保证了内存安全。\n在下面，堆上的String会随着变量s的回收而被回收\n1 2 3 fn test() { let s = String::from(\"hello\"); } 赋值 在cpp当中，如果将一个指针赋值给另外一个指针，两个指针会指向同一个地址，从而两个指针都能够操作这一段地址对应的数据。\n但是在Rust中，由于引入了所有权的概念，一段地址只能被一个引用所持有，在基础情况下，不允许两个引用指向堆上同一段地址，因此，如果是像cpp进行赋值操作，则会发生所有权的转移，即原本的引用失去对地址的所有权，将所有权转交给新的引用。\n1 2 3 4 fn test() { let s = String::from(\"hello\"); let s1 = s; // s1获取所有权，s失去所有权 } 又或者说，在rust当中，每个引用类型都对应了C++当中的unique_ptr，如果想让转移给一个新的指针，就需要进行\"move\"操作。\n而如果在某些情况下，只是需要该地址中的数据，那就可以进行深拷贝，只获取数据，根据数据在堆上重新分配一段地址创建变量，并不会影响原本的数据，同样也不会发生所有权的转移，实现深拷贝的话需要实现Clone Trait。\n1 2 3 4 fn test() { let s = String::from(\"hello\"); let s1 = s.clone(); } 引用与生命周期 引用 有些情况下，我们并不想去获取所有权，只是想临时借用一下这个变量。这种时候，rust就可以使用引用来处理。\n这里的引用其实和c++当中的基本类似，只不过，rust为了保证安全性，对于可变性有着更加严格的设定，在c++当中对于一个const类型的变量，是无法去获取一个非const的引用来修改其中的值的，这一点在rust当中也得到了保留：\n1 2 let x = 5; // 不可变变量 let y = \u0026mut x; // 错误：不能获取不可变变量的可变引用 如果想修改的话，在c++当中就需要使用const_cast来进行转换，而rust中可以通过内部可变性来解决，不过这就是后话了。\n在c++ const的基础上，rust又多了一个新的限制，即在同一作用域当中，对同一数据不能同时拥有可变引用和不可变引用，这里主要是为了避免数据竞争的问题，需要注意的是，这里的数据竞争和多线程毫无关系，单线程同样存在数据竞争问题。\n通过这种冲突约束，能够保证当获取到一个不可变引用时，在该引用失效之前，能够保证数据确实是不变的。可变引用和可变引用之间的冲突同样如此，任何人都不希望自己在修改过程中，有其他引用来修改数据，达到和预期不一致的结果。\n这里有点像一个读写锁的设计，如果将作用域理解为一段时间，而两个引用视为在交替执行的线程，这样整个过程就可以视为并发过程中的数据竞争问题，\n1 2 3 4 5 6 7 8 fn test() { let mut data = 5; let r1 = \u0026data; // 不可变引用 let r2 = \u0026mut data; // 可变引用，这里会产生编译错误 println!(\"{}\",r1); println!(\"{}\",r2); } 在最新的rust编译器当中，r1对data的引用会持续到最后一次使用r1，而不是整个作用域的结尾，因此这样就可以通过合理的编排，将“并发”的过程转换为串行，从而解决数据竞争的问题，这类的数据竞争通常出现在，先对一个容器进行条件性检索，然后通过检索结果去更新容器。在搜索过程中会获取一个不可变引用，在修改时又会去获取一个可变引用，从而产生了冲突，正确的写法是在检索过程中保存结果，完成检索之后再去更新容器，而不是一边检索一边更新。\n上例中正确的写法如下：\n1 2 3 4 5 6 7 8 fn test() { let mut data = 5; let r1 = \u0026data; // 不可变引用 println!(\"{}\",r1); // r1生命周期结束，释放引用 let r2 = \u0026mut data; // 可变引用，r1被释放从而r2可以正确引用 println!(\"{}\",r2); } 生命周期 rust中生命周期标注，核心目的是解决垂悬引用的问题，通俗来讲，就是谁比谁活得长的一个问题，如果a比b活得长，但是a却引用了b，那么就存在一段时间，b已经被释放了，但是a依旧持有一个b的引用，去操作b，这时候就会出现内存安全的问题。\n最经典的违反生命周期约束的例子如下,r的生命周期长于x，此时引用x就会产生垂悬引用：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 { let r; { let x = 5; r = \u0026x; } println!(\"r: {}\", r); } error[E0597]: `x` does not live long enough --\u003e src/main.rs:7:5 | 6 | r = \u0026x; | - borrow occurs here 7 | } | ^ `x` dropped here while still borrowed ... 10 | } | - borrowed value needs to live until here 函数中的生命周期 和C++相同，rust同样不允许返回局部变量的引用，因为会被RAII在函数执行完之后释放掉，一定会产生垂悬引用问题。因此对于函数中的生命周期，只能来自输入。\n一聊到rust函数的生命周期，就会有这样一个经典的例子：\n1 2 3 4 5 6 7 fn longest(x: \u0026str, y: \u0026str) -\u003e \u0026str { if x.len() \u003e y.len() { x } else { y } } 看起来写的毫无问题，获取两个引用，返回其中之一，但实际上会被rust编译器给无情的拒绝掉，而具体原因是无法确定x和y究竟谁能够活的更久的问题，如果像以下这样，就会出现问题，此时s2的作用域更小，提前释放，从而res产生了垂悬引用的问题，这种情况在不使用函数的情况下不应该发生，而在进行函数调用时同样不应该发生，因此如果不进行生命周期的标注，编译器就会严苛的拒绝掉，以避免风险，正确的标注方法如下：\n1 2 3 4 5 6 7 8 9 10 11 fn test() { let res; let s1 = String::from(\"1\"); { let s2 = String::from(\"11111\"); res = longeest(\u0026s1,\u0026s2); } } fn longest\u003c'a\u003e(x: \u0026'a str, y: \u0026str) -\u003e \u0026'a str { } 结构体中的生命周期 相比于函数的生命周期，结构体中的生命周期可能更为常见，因为结构体当中的字段，并不是都是自己所有的，有些字段需要引用其他的变量，这种写法随处可见，比如说一个容器的迭代器，具体如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 type SkipListIter\u003c'a\u003e = Range\u003c'a,InternalKey,(Bound,Bound),InternalKey,ByteVec\u003e; pub struct MemTableIterator \u003c'a\u003e { skip_list: \u0026'a SkipMap, iter: SkipListIter\u003c'a\u003e, key: ByteVec, value: ByteVec, } impl \u003c'a\u003e Iterator\u003c'a\u003e for MemTableIterator\u003c'a\u003e { fn seek(\u0026mut self, target: \u0026[u8]) { let target_key_min = InternalKey::new(target, MAX_SEQUENCE,K_VALUE_TYPE_FOR_SEEK); let min_bound = Bound::Included(target_key_min); self.iter = self.skip_list.range((min_bound,Bound::Unbounded)); self.next(); } } 作为一个迭代器的Wrapper，其中封装了skip_map的iter，例如seek等功能，需要根据skip_map去重新生成一个iter，并保存到iter的字段当中，iter本身是对容器的引用，因此这个生成的过程就是去获取一个引用。\n而此时就需要去进行一个生命周期的保证，原本的容器的引用skip_map至少要和iter活得一样久，才能够生成一个引用容器的iter，并复制给结构体中的字段。\n在这种生命周期的标注下，表明了：\n在创建结构体MemTableIterator时，设当前结构体的生命周期为a 在结构体当中会引用一个至少和当前结构体生命周期a一样长的容器 保存一个 iter 字段，其生命周期至少 和当前结构体一样长 对于上面的情况，如果结构体当中保存一个Arc的话，对于该方法，传入了\u0026self，而在rust当中，\u0026self是独立于结构体中声明的生命周期'a的，可以这里可以定义为'b，编译器无法得知’a ‘b 之间的生命周期关系，因此就会拒绝掉。该函数实际的声明如下：\n1 2 3 4 5 6 7 8 impl \u003c'a\u003e Iterator\u003c'a\u003e for MemTableIterator\u003c'a\u003e { fn seek(\u0026'b mut self, target: \u0026[u8]) { let target_key_min = InternalKey::new(target, MAX_SEQUENCE,K_VALUE_TYPE_FOR_SEEK); let min_bound = Bound::Included(target_key_min); self.iter = self.skip_list.range((min_bound,Bound::Unbounded)); self.next(); } } 而至于rust为什么要这样做，主要是为了灵活性。例如，某些方法可能只是临时借用结构体的数据，而不需要持有与整个结构体相同的生命周期。通过允许独立的生命周期，Rust 可以更准确地表示这种借用行为:\n1 2 3 4 5 6 7 8 9 struct MyStruct\u003c'a\u003e { reference: \u0026'a i32, } impl\u003c'a\u003e MyStruct\u003c'a\u003e { fn get_reference(\u0026self) -\u003e \u0026i32 { self.reference } } 生命周期消除 如果所有的引用都需要手动进行标注，那么编程体验自然是灾难的，因此编译器设置了三条规则，如果满足了就可以自动完成生命周期标注，从而不需要手动标注：\n每个引用参数都会获得独自的生命周期 如果只有一个输入生命周期，那么该生命周期就会赋给所有的输出生命周期 如果存在多个输入生命周期，其中一个是\u0026self或者\u0026mut self，那么\u0026self的生命周期被赋给所有输出生命周期 来几个例子：\n1 2 3 4 fn first_word(s: \u0026str) -\u003e \u0026str { // 实际项目中的手写代码 // 根据规则1，得到： fn first_word(s: \u0026'a str) -\u003e \u0026str { //之后根据规则2完成了生命 1 2 3 fn longest(x: \u0026str, y: \u0026str) -\u003e \u0026str { // 实际项目中的手写代码 // 根据规则1，得到： fn longest\u003c'a, 'b\u003e(x: \u0026'a str, y: \u0026'b str) -\u003e \u0026str { 后续就不满足任何规则了，因此无法自动消除，需要手动进行生命周期的标注。 而对于第三条，带上\u0026self的就是方法了，对于方法的生命周期，得益于一三条规则，通常不需要进行手动标注。\n小结：生命周期的标注不会改变任何引用的实际作用域，他只是为了取悦编译器，让编译器不要难为我们，在进行标注之后，就会按照标注去进行检查，从而保证内存内存安全。\n共享所有权 在上述的情况中，数据的所有权永远只属于同一个变量。其他想要访问该数据只能通过引用来获取，这样的问题是，原始数据必须有最长的生命周期，才能够保证其他的引用有效。但是有些情况，需要多个所有者持有同一个数据，并且使用者之间是对等关系，无法确定一个最长的持有者。：\n在双向链表中，每个节点都会被前一个节点和后一个节点保存(持有)。 在多线程编程中，多个线程持有同一个数据，对其进行修改，由于 rust 的单一可变引用的限制，无法使用引用来完成。 在Rust当中，给出的解决方法就是借助引用计数的思想，使用智能指针Rc与Arc，其实现的作用类似于C++当中的share_ptr，不过做了更多的限制来保证安全。\n正如名字，Arc实现的引用计数是Atomic的，可以用于多线程环境当中，Rc反之。 相比于C++的share_ptr而言，Rc与Arc最大的差别就是实现的是不可变引用，通过该指针无法直接修改指向的数据，只能够进行读取，而如果进行读取，就需要通过内部可变性来实现，即RefCell和Mutex\n内部可变性 关于内部可变性，大概有两个比较重要的概念，一个是“共享”，即通过引用计数来令数据可以在多个持有者之间进行共享，并且允许进行修改。另一个是“内部”，体现了封装的思想。\n可变性\n对于基础的Rc和Arc，rust只允许对其进行读取，而无法修改数据，通过RefCell和Mutex允许对其进行修改，但是可变引用和不可变引用之间的冲突无法绕过，只是将这个过程从编译器推迟到了运行期，如果检测到违反约束，程序会直接panic。\n数据共享\n在单线程时大多数情况下，共享数据可以通过引用来解决，只要小心的保证只有一个可变引用的原则就可以实现，但是有些情况就很难处理了，即在逻辑上很难确定一个主从关系，将数据的所有权归于谁，而其他的去进行引用。由于原节点如果被释放的话，其他的引用全部失效，因此需要确定严格的生命周期关系，在有些情况下，各个使用者之间是对等的关系，因此很难确定出这样一种关系和生命周期，比较经典的一个例子就是双端链表，各个节点之间都是对等的，每个节点都可能因为移出链表而被释放，不存在一个明确的生命周期关系，这种时候再使用引用就不太符合逻辑了。 而对于多线程，那么就更随处可见了，全局原子性计数器、消息队列、cache、任务队列都需要进行共享，无法说出数据到底该归属于谁，就拿消息队列来说，队列究竟该属于谁？无论属于哪一方然后另外一方去引用都是不符合逻辑的，二者是一个共享的关系。其实这就是一个设计哲学的问题，在C++98当中，硬把队列归属于某一方，然后让另外一方去引用也没什么问题，只不过rust在设计上强调了共享的这个概念，并且在编译器层面做了限制而已。\n内部是什么\n在说明内部时，需要对于可变做一些诠释，在C++当中，通常我们去获取一个const引用，这时能够保证的是我们无法通过这个引用来修改原本的数据，但是在rust当中，我们获取了一个不可变引用，这时候我们所期待的是在我持有这个引用的这一段时间内，这个引用指向的数据都不会被改变，通过引用，能够对其进行“可重复读”。二者的出发点是有所不同的，C++的const是保证自身不去进行修改，而rust的非mut是保证没有其他的引用能够修改(同样也保证了自身不去修改)。 所以，这里我对rust中不可变的理解是：我能够获取到数据，并且在我使用数据的过程中，数据都是一直保证不变的。\n那么内部究竟该如何理解呢？这里rust有一个比较有意思的实现，就是对于一个可变的方法，如果他所属对象A在结构体B中被Arc",
+  "articleBody": "相比于传统c++当中的手动管理内存，rust采用了所有权 + RAII的机制，对于一些复杂的情况，rust还有生命周期等约束，从而保证在编译期能够解决大多数的内存安全问题。\n栈 \u0026\u0026 堆 如果要说内存管理的话，首先需要明确栈和堆的概念，这一点对于所有编程语言都适用，但是在rust当中尤为重要：\n基本类型和小的复合类型，像整数、浮点数、布尔值、字符以及小的数组、元组和结构体这样的基本类型通常是在栈上分配的。这些类型的大小在编译时是已知的，并且通常是固定的。此外引用同样是分配在栈的上，他指向另外一个数据(可能在栈上也可能在堆上) 分配在堆上的主要有两个类型：动态类型和智能指针，智能指针自身是分配在栈上的，但是其管理的数据分配在堆上。而动态类型如Vec、String等需要进行动态扩容，因此分配在堆上进行管理数据。 单一所有权 对于基础类型，rust将其分配在栈上，会随着栈桢的弹出而被回收，和其他语言相同，不需要担心栈上内存安全的问题。\n为了能够管理堆上的数据，保证内存安全，rust对于堆上的数据都定义了一个所有权。即堆上的数据在某一事件只能被一个变量所持有(基础情况)，数据会随着栈上变量被RAII回收而回收。从而保证了内存安全。\n在下面，堆上的String会随着变量s的回收而被回收\n1 2 3 fn test() { let s = String::from(\"hello\"); } 赋值 在cpp当中，如果将一个指针赋值给另外一个指针，两个指针会指向同一个地址，从而两个指针都能够操作这一段地址对应的数据。\n但是在Rust中，由于引入了所有权的概念，一段地址只能被一个引用所持有，在基础情况下，不允许两个引用指向堆上同一段地址，因此，如果是像cpp进行赋值操作，则会发生所有权的转移，即原本的引用失去对地址的所有权，将所有权转交给新的引用。\n1 2 3 4 fn test() { let s = String::from(\"hello\"); let s1 = s; // s1获取所有权，s失去所有权 } 又或者说，在rust当中，每个引用类型都对应了C++当中的unique_ptr，如果想让转移给一个新的指针，就需要进行\"move\"操作。\n而如果在某些情况下，只是需要该地址中的数据，那就可以进行深拷贝，只获取数据，根据数据在堆上重新分配一段地址创建变量，并不会影响原本的数据，同样也不会发生所有权的转移，实现深拷贝的话需要实现Clone Trait。\n1 2 3 4 fn test() { let s = String::from(\"hello\"); let s1 = s.clone(); } 引用与生命周期 引用 有些情况下，我们并不想去获取所有权，只是想临时借用一下这个变量。这种时候，rust就可以使用引用来处理。\n这里的引用其实和c++当中的基本类似，只不过，rust为了保证安全性，对于可变性有着更加严格的设定，在c++当中对于一个const类型的变量，是无法去获取一个非const的引用来修改其中的值的，这一点在rust当中也得到了保留：\n1 2 let x = 5; // 不可变变量 let y = \u0026mut x; // 错误：不能获取不可变变量的可变引用 如果想修改的话，在c++当中就需要使用const_cast来进行转换，而rust中可以通过内部可变性来解决，不过这就是后话了。\n在c++ const的基础上，rust又多了一个新的限制，即在同一作用域当中，对同一数据不能同时拥有可变引用和不可变引用，这里主要是为了避免数据竞争的问题，需要注意的是，这里的数据竞争和多线程毫无关系，单线程同样存在数据竞争问题。\n通过这种冲突约束，能够保证当获取到一个不可变引用时，在该引用失效之前，能够保证数据确实是不变的。可变引用和可变引用之间的冲突同样如此，任何人都不希望自己在修改过程中，有其他引用来修改数据，达到和预期不一致的结果。\n这里有点像一个读写锁的设计，如果将作用域理解为一段时间，而两个引用视为在交替执行的线程，这样整个过程就可以视为并发过程中的数据竞争问题，\n1 2 3 4 5 6 7 8 fn test() { let mut data = 5; let r1 = \u0026data; // 不可变引用 let r2 = \u0026mut data; // 可变引用，这里会产生编译错误 println!(\"{}\",r1); println!(\"{}\",r2); } 在最新的rust编译器当中，r1对data的引用会持续到最后一次使用r1，而不是整个作用域的结尾，因此这样就可以通过合理的编排，将“并发”的过程转换为串行，从而解决数据竞争的问题，这类的数据竞争通常出现在，先对一个容器进行条件性检索，然后通过检索结果去更新容器。在搜索过程中会获取一个不可变引用，在修改时又会去获取一个可变引用，从而产生了冲突，正确的写法是在检索过程中保存结果，完成检索之后再去更新容器，而不是一边检索一边更新。\n上例中正确的写法如下：\n1 2 3 4 5 6 7 8 fn test() { let mut data = 5; let r1 = \u0026data; // 不可变引用 println!(\"{}\",r1); // r1生命周期结束，释放引用 let r2 = \u0026mut data; // 可变引用，r1被释放从而r2可以正确引用 println!(\"{}\",r2); } 生命周期 rust中生命周期标注，核心目的是解决垂悬引用的问题，通俗来讲，就是谁比谁活得长的一个问题，如果a比b活得长，但是a却引用了b，那么就存在一段时间，b已经被释放了，但是a依旧持有一个b的引用，去操作b，这时候就会出现内存安全的问题。\n最经典的违反生命周期约束的例子如下,r的生命周期长于x，此时引用x就会产生垂悬引用：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 { let r; { let x = 5; r = \u0026x; } println!(\"r: {}\", r); } error[E0597]: `x` does not live long enough --\u003e src/main.rs:7:5 | 6 | r = \u0026x; | - borrow occurs here 7 | } | ^ `x` dropped here while still borrowed ... 10 | } | - borrowed value needs to live until here 函数中的生命周期 和C++相同，rust同样不允许返回局部变量的引用，因为会被RAII在函数执行完之后释放掉，一定会产生垂悬引用问题。因此对于函数中的生命周期，只能来自输入。\n一聊到rust函数的生命周期，就会有这样一个经典的例子：\n1 2 3 4 5 6 7 fn longest(x: \u0026str, y: \u0026str) -\u003e \u0026str { if x.len() \u003e y.len() { x } else { y } } 看起来写的毫无问题，获取两个引用，返回其中之一，但实际上会被rust编译器给无情的拒绝掉，而具体原因是无法确定x和y究竟谁能够活的更久的问题，如果像以下这样，就会出现问题，此时s2的作用域更小，提前释放，从而res产生了垂悬引用的问题，这种情况在不使用函数的情况下不应该发生，而在进行函数调用时同样不应该发生，因此如果不进行生命周期的标注，编译器就会严苛的拒绝掉，以避免风险，正确的标注方法如下：\n1 2 3 4 5 6 7 8 9 10 11 fn test() { let res; let s1 = String::from(\"1\"); { let s2 = String::from(\"11111\"); res = longeest(\u0026s1,\u0026s2); } } fn longest\u003c'a\u003e(x: \u0026'a str, y: \u0026str) -\u003e \u0026'a str { } 结构体中的生命周期 相比于函数的生命周期，结构体中的生命周期可能更为常见，因为结构体当中的字段，并不是都是自己所有的，有些字段需要引用其他的变量，这种写法随处可见，比如说一个容器的迭代器，具体如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 type SkipListIter\u003c'a\u003e = Range\u003c'a,InternalKey,(Bound\u003cInternalKey\u003e,Bound\u003cInternalKey\u003e),InternalKey,ByteVec\u003e; pub struct MemTableIterator \u003c'a\u003e { skip_list: \u0026'a SkipMap\u003cInternalKey,ByteVec\u003e, iter: SkipListIter\u003c'a\u003e, key: ByteVec, value: ByteVec, } impl \u003c'a\u003e Iterator\u003c'a\u003e for MemTableIterator\u003c'a\u003e { fn seek(\u0026mut self, target: \u0026[u8]) { let target_key_min = InternalKey::new(target, MAX_SEQUENCE,K_VALUE_TYPE_FOR_SEEK); let min_bound = Bound::Included(target_key_min); self.iter = self.skip_list.range((min_bound,Bound::Unbounded)); self.next(); } } 作为一个迭代器的Wrapper，其中封装了skip_map的iter，例如seek等功能，需要根据skip_map去重新生成一个iter，并保存到iter的字段当中，iter本身是对容器的引用，因此这个生成的过程就是去获取一个引用。\n而此时就需要去进行一个生命周期的保证，原本的容器的引用skip_map至少要和iter活得一样久，才能够生成一个引用容器的iter，并复制给结构体中的字段。\n在这种生命周期的标注下，表明了：\n在创建结构体MemTableIterator时，设当前结构体的生命周期为a 在结构体当中会引用一个至少和当前结构体生命周期a一样长的容器 保存一个 iter 字段，其生命周期至少 和当前结构体一样长 对于上面的情况，如果结构体当中保存一个Arc的话，对于该方法，传入了\u0026self，而在rust当中，\u0026self是独立于结构体中声明的生命周期'a的，可以这里可以定义为'b，编译器无法得知’a ‘b 之间的生命周期关系，因此就会拒绝掉。该函数实际的声明如下：\n1 2 3 4 5 6 7 8 impl \u003c'a\u003e Iterator\u003c'a\u003e for MemTableIterator\u003c'a\u003e { fn seek(\u0026'b mut self, target: \u0026[u8]) { let target_key_min = InternalKey::new(target, MAX_SEQUENCE,K_VALUE_TYPE_FOR_SEEK); let min_bound = Bound::Included(target_key_min); self.iter = self.skip_list.range((min_bound,Bound::Unbounded)); self.next(); } } 而至于rust为什么要这样做，主要是为了灵活性。例如，某些方法可能只是临时借用结构体的数据，而不需要持有与整个结构体相同的生命周期。通过允许独立的生命周期，Rust 可以更准确地表示这种借用行为:\n1 2 3 4 5 6 7 8 9 struct MyStruct\u003c'a\u003e { reference: \u0026'a i32, } impl\u003c'a\u003e MyStruct\u003c'a\u003e { fn get_reference(\u0026self) -\u003e \u0026i32 { self.reference } } 生命周期消除 如果所有的引用都需要手动进行标注，那么编程体验自然是灾难的，因此编译器设置了三条规则，如果满足了就可以自动完成生命周期标注，从而不需要手动标注：\n每个引用参数都会获得独自的生命周期 如果只有一个输入生命周期，那么该生命周期就会赋给所有的输出生命周期 如果存在多个输入生命周期，其中一个是\u0026self或者\u0026mut self，那么\u0026self的生命周期被赋给所有输出生命周期 来几个例子：\n1 2 3 4 fn first_word(s: \u0026str) -\u003e \u0026str { // 实际项目中的手写代码 // 根据规则1，得到： fn first_word(s: \u0026'a str) -\u003e \u0026str { //之后根据规则2完成了生命 1 2 3 fn longest(x: \u0026str, y: \u0026str) -\u003e \u0026str { // 实际项目中的手写代码 // 根据规则1，得到： fn longest\u003c'a, 'b\u003e(x: \u0026'a str, y: \u0026'b str) -\u003e \u0026str { 后续就不满足任何规则了，因此无法自动消除，需要手动进行生命周期的标注。 而对于第三条，带上\u0026self的就是方法了，对于方法的生命周期，得益于一三条规则，通常不需要进行手动标注。\n小结：生命周期的标注不会改变任何引用的实际作用域，他只是为了取悦编译器，让编译器不要难为我们，在进行标注之后，就会按照标注去进行检查，从而保证内存内存安全。\n共享所有权 在上述的情况中，数据的所有权永远只属于同一个变量。其他想要访问该数据只能通过引用来获取，这样的问题是，原始数据必须有最长的生命周期，才能够保证其他的引用有效。但是有些情况，需要多个所有者持有同一个数据，并且使用者之间是对等关系，无法确定一个最长的持有者。：\n在双向链表中，每个节点都会被前一个节点和后一个节点保存(持有)。 在多线程编程中，多个线程持有同一个数据，对其进行修改，由于 rust 的单一可变引用的限制，无法使用引用来完成。 在Rust当中，给出的解决方法就是借助引用计数的思想，使用智能指针Rc与Arc，其实现的作用类似于C++当中的share_ptr，不过做了更多的限制来保证安全。\n正如名字，Arc实现的引用计数是Atomic的，可以用于多线程环境当中，Rc反之。 相比于C++的share_ptr而言，Rc与Arc最大的差别就是实现的是不可变引用，通过该指针无法直接修改指向的数据，只能够进行读取，而如果进行读取，就需要通过内部可变性来实现，即RefCell和Mutex\n内部可变性 关于内部可变性，大概有两个比较重要的概念，一个是“共享”，即通过引用计数来令数据可以在多个持有者之间进行共享，并且允许进行修改。另一个是“内部”，体现了封装的思想。\n可变性\n对于基础的Rc和Arc，rust只允许对其进行读取，而无法修改数据，通过RefCell和Mutex允许对其进行修改，但是可变引用和不可变引用之间的冲突无法绕过，只是将这个过程从编译器推迟到了运行期，如果检测到违反约束，程序会直接panic。\n数据共享\n在单线程时大多数情况下，共享数据可以通过引用来解决，只要小心的保证只有一个可变引用的原则就可以实现，但是有些情况就很难处理了，即在逻辑上很难确定一个主从关系，将数据的所有权归于谁，而其他的去进行引用。由于原节点如果被释放的话，其他的引用全部失效，因此需要确定严格的生命周期关系，在有些情况下，各个使用者之间是对等的关系，因此很难确定出这样一种关系和生命周期，比较经典的一个例子就是双端链表，各个节点之间都是对等的，每个节点都可能因为移出链表而被释放，不存在一个明确的生命周期关系，这种时候再使用引用就不太符合逻辑了。 而对于多线程，那么就更随处可见了，全局原子性计数器、消息队列、cache、任务队列都需要进行共享，无法说出数据到底该归属于谁，就拿消息队列来说，队列究竟该属于谁？无论属于哪一方然后另外一方去引用都是不符合逻辑的，二者是一个共享的关系。其实这就是一个设计哲学的问题，在C++98当中，硬把队列归属于某一方，然后让另外一方去引用也没什么问题，只不过rust在设计上强调了共享的这个概念，并且在编译器层面做了限制而已。\n内部是什么\n在说明内部时，需要对于可变做一些诠释，在C++当中，通常我们去获取一个const引用，这时能够保证的是我们无法通过这个引用来修改原本的数据，但是在rust当中，我们获取了一个不可变引用，这时候我们所期待的是在我持有这个引用的这一段时间内，这个引用指向的数据都不会被改变，通过引用，能够对其进行“可重复读”。二者的出发点是有所不同的，C++的const是保证自身不去进行修改，而rust的非mut是保证没有其他的引用能够修改(同样也保证了自身不去修改)。 所以，这里我对rust中不可变的理解是：我能够获取到数据，并且在我使用数据的过程中，数据都是一直保证不变的。\n那么内部究竟该如何理解呢？这里rust有一个比较有意思的实现，就是对于一个可变的方法，如果他所属对象A在结构体B中被Arc",
   "wordCount" : "6810",
   "inLanguage": "en",
   "datePublished": "0001-01-01T00:00:00Z",
   "dateModified": "0001-01-01T00:00:00Z",
   "author":{
     "@type": "Person",
-    "name": "Sulv"
+    "name": "Fischer"
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"
+    "@id": "https://fischer0522.github.io/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/"
   },
   "publisher": {
     "@type": "Organization",
     "name": "Fischer's Blog",
     "logo": {
       "@type": "ImageObject",
-      "url": "http://itfischer.space/img/Navigation.svg"
+      "url": "https://fischer0522.github.io/img/Navigation.svg"
     }
   }
 }
@@ -142,8 +142,8 @@
 <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
-                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+            <a href="https://fischer0522.github.io/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="https://fischer0522.github.io/img/Navigation.svg" alt="" aria-label="logo"
                     height="35">Fischer&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)">
@@ -170,32 +170,32 @@
         </div>
         <ul id="menu">
             <li>
-                <a href="http://itfischer.space/en/search" title="Search">
+                <a href="https://fischer0522.github.io/en/search" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/" title="Home">
+                <a href="https://fischer0522.github.io/en/" title="Home">
                     <span>Home</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/posts" title="Posts">
+                <a href="https://fischer0522.github.io/en/posts" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/archives/" title="Archives">
+                <a href="https://fischer0522.github.io/en/archives/" title="Archives">
                     <span>Archives</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/tags" title="Tags">
+                <a href="https://fischer0522.github.io/en/tags" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/about" title="About">
+                <a href="https://fischer0522.github.io/en/about" title="About">
                     <span>About</span>
                 </a>
             </li>
@@ -206,11 +206,11 @@
 
 <article class="post-single">
   <header class="post-header">
-    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a></div>
+    <div class="breadcrumbs"><a href="https://fischer0522.github.io/en/">Home</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/">Tech</a></div>
     <h1 class="post-title entry-hint-parent">
       Rust内存管理
     </h1>
-    <div class="post-meta">14 min&nbsp;·&nbsp;Sulv
+    <div class="post-meta">14 min&nbsp;·&nbsp;Fischer
 
 </div>
   </header> <div class="toc">
@@ -265,48 +265,48 @@
 <p>对于基础类型，rust将其分配在栈上，会随着栈桢的弹出而被回收，和其他语言相同，不需要担心栈上内存安全的问题。</p>
 <p>为了能够管理堆上的数据，保证内存安全，rust对于堆上的数据都定义了一个所有权。即堆上的数据在某一事件只能被一个变量所持有(基础情况)，数据会随着栈上变量被RAII回收而回收。从而保证了内存安全。</p>
 <p>在下面，堆上的String会随着变量s的回收而被回收</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> test() {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> s = <span style="color:#fff;font-weight:bold">String</span>::from(<span style="color:#0ff;font-weight:bold">&#34;hello&#34;</span>);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> s <span style="color:#f92672">=</span> String::from(<span style="color:#e6db74">&#34;hello&#34;</span>);
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p><strong>赋值</strong>
 在cpp当中，如果将一个指针赋值给另外一个指针，两个指针会指向同一个地址，从而两个指针都能够操作这一段地址对应的数据。</p>
 <p>但是在Rust中，由于引入了所有权的概念，一段地址只能被一个引用所持有，在基础情况下，不允许两个引用指向堆上同一段地址，因此，如果是像cpp进行赋值操作，则会发生所有权的转移，即原本的引用失去对地址的所有权，将所有权转交给新的引用。</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> test() {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> s = <span style="color:#fff;font-weight:bold">String</span>::from(<span style="color:#0ff;font-weight:bold">&#34;hello&#34;</span>);
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> s1 = s; <span style="color:#007f7f">// s1获取所有权，s失去所有权
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>}
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> s <span style="color:#f92672">=</span> String::from(<span style="color:#e6db74">&#34;hello&#34;</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> s1 <span style="color:#f92672">=</span> s; <span style="color:#75715e">// s1获取所有权，s失去所有权
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>又或者说，在rust当中，每个引用类型都对应了C++当中的<code>unique_ptr</code>，如果想让转移给一个新的指针，就需要进行&quot;move&quot;操作。</p>
 <p>而如果在某些情况下，只是需要该地址中的数据，那就可以进行深拷贝，只获取数据，根据数据在堆上重新分配一段地址创建变量，并不会影响原本的数据，同样也不会发生所有权的转移，实现深拷贝的话需要实现Clone Trait。</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> test() {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> s = <span style="color:#fff;font-weight:bold">String</span>::from(<span style="color:#0ff;font-weight:bold">&#34;hello&#34;</span>);
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> s1 = s.clone();
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> s <span style="color:#f92672">=</span> String::from(<span style="color:#e6db74">&#34;hello&#34;</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> s1 <span style="color:#f92672">=</span> s.clone();
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -314,207 +314,207 @@
 <h3 id="引用">引用<a hidden class="anchor" aria-hidden="true" href="#引用">#</a></h3>
 <p>有些情况下，我们并不想去获取所有权，只是想临时借用一下这个变量。这种时候，rust就可以使用引用来处理。</p>
 <p>这里的引用其实和c++当中的基本类似，只不过，rust为了保证安全性，对于可变性有着更加严格的设定，在c++当中对于一个const类型的变量，是无法去获取一个非const的引用来修改其中的值的，这一点在rust当中也得到了保留：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">let</span> x = <span style="color:#ff0;font-weight:bold">5</span>;          <span style="color:#007f7f">// 不可变变量
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">let</span> y = &amp;<span style="color:#fff;font-weight:bold">mut</span> x;     <span style="color:#007f7f">// 错误：不能获取不可变变量的可变引用
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>;          <span style="color:#75715e">// 不可变变量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">let</span> y <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span><span style="color:#66d9ef">mut</span> x;     <span style="color:#75715e">// 错误：不能获取不可变变量的可变引用
 </span></span></span></code></pre></td></tr></table>
 </div>
 </div><p>如果想修改的话，在c++当中就需要使用<code>const_cast</code>来进行转换，而rust中可以通过内部可变性来解决，不过这就是后话了。</p>
 <p>在c++ const的基础上，rust又多了一个新的限制，即在同一作用域当中，对同一数据不能同时拥有可变引用和不可变引用，这里主要是为了避免数据竞争的问题，需要注意的是，这里的数据竞争和多线程毫无关系，单线程同样存在数据竞争问题。</p>
 <p>通过这种冲突约束，能够保证当获取到一个不可变引用时，在该引用失效之前，能够保证数据确实是不变的。可变引用和可变引用之间的冲突同样如此，任何人都不希望自己在修改过程中，有其他引用来修改数据，达到和预期不一致的结果。</p>
 <p>这里有点像一个读写锁的设计，如果将作用域理解为一段时间，而两个引用视为在交替执行的线程，这样整个过程就可以视为并发过程中的数据竞争问题，</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span> <span style="color:#fff;font-weight:bold">fn</span> test() {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> data = <span style="color:#ff0;font-weight:bold">5</span>;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span> <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> <span style="color:#66d9ef">mut</span> data <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>;
 </span></span><span style="display:flex;"><span>	
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> r1 = &amp;data; <span style="color:#007f7f">// 不可变引用
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>	<span style="color:#fff;font-weight:bold">let</span> r2 = &amp;<span style="color:#fff;font-weight:bold">mut</span> data; <span style="color:#007f7f">// 可变引用，这里会产生编译错误
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>	println!(<span style="color:#0ff;font-weight:bold">&#34;</span><span style="color:#0ff;font-weight:bold">{}</span><span style="color:#0ff;font-weight:bold">&#34;</span>,r1);
-</span></span><span style="display:flex;"><span>	println!(<span style="color:#0ff;font-weight:bold">&#34;</span><span style="color:#0ff;font-weight:bold">{}</span><span style="color:#0ff;font-weight:bold">&#34;</span>,r2);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> r1 <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>data; <span style="color:#75715e">// 不可变引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">let</span> r2 <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span><span style="color:#66d9ef">mut</span> data; <span style="color:#75715e">// 可变引用，这里会产生编译错误
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	println!(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span>,r1);
+</span></span><span style="display:flex;"><span>	println!(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span>,r2);
 </span></span><span style="display:flex;"><span> }
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>在最新的rust编译器当中，r1对data的引用会持续到最后一次使用r1，而不是整个作用域的结尾，因此这样就可以通过合理的编排，将“并发”的过程转换为串行，从而解决数据竞争的问题，这类的数据竞争通常出现在，先对一个容器进行条件性检索，然后通过检索结果去更新容器。在搜索过程中会获取一个不可变引用，在修改时又会去获取一个可变引用，从而产生了冲突，正确的写法是在检索过程中保存结果，完成检索之后再去更新容器，而不是一边检索一边更新。</p>
 <p>上例中正确的写法如下：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span> <span style="color:#fff;font-weight:bold">fn</span> test() {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> <span style="color:#fff;font-weight:bold">mut</span> data = <span style="color:#ff0;font-weight:bold">5</span>;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span> <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> <span style="color:#66d9ef">mut</span> data <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>;
 </span></span><span style="display:flex;"><span>	
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> r1 = &amp;data; <span style="color:#007f7f">// 不可变引用
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>	println!(<span style="color:#0ff;font-weight:bold">&#34;</span><span style="color:#0ff;font-weight:bold">{}</span><span style="color:#0ff;font-weight:bold">&#34;</span>,r1); <span style="color:#007f7f">// r1生命周期结束，释放引用
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>	<span style="color:#fff;font-weight:bold">let</span> r2 = &amp;<span style="color:#fff;font-weight:bold">mut</span> data; <span style="color:#007f7f">// 可变引用，r1被释放从而r2可以正确引用
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>	println!(<span style="color:#0ff;font-weight:bold">&#34;</span><span style="color:#0ff;font-weight:bold">{}</span><span style="color:#0ff;font-weight:bold">&#34;</span>,r2);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> r1 <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>data; <span style="color:#75715e">// 不可变引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	println!(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span>,r1); <span style="color:#75715e">// r1生命周期结束，释放引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">let</span> r2 <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span><span style="color:#66d9ef">mut</span> data; <span style="color:#75715e">// 可变引用，r1被释放从而r2可以正确引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	println!(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span>,r2);
 </span></span><span style="display:flex;"><span> }
 </span></span></code></pre></td></tr></table>
 </div>
 </div><h3 id="生命周期">生命周期<a hidden class="anchor" aria-hidden="true" href="#生命周期">#</a></h3>
 <p>rust中生命周期标注，核心目的是解决垂悬引用的问题，通俗来讲，就是谁比谁活得长的一个问题，如果a比b活得长，但是a却引用了b，那么就存在一段时间，b已经被释放了，但是a依旧持有一个b的引用，去操作b，这时候就会出现内存安全的问题。</p>
 <p>最经典的违反生命周期约束的例子如下,r的生命周期长于x，此时引用x就会产生垂悬引用：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">let</span> r;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> r;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    {
-</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> x = <span style="color:#ff0;font-weight:bold">5</span>;
-</span></span><span style="display:flex;"><span>        r = &amp;x;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>;
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>x;
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    println!(<span style="color:#0ff;font-weight:bold">&#34;r: </span><span style="color:#0ff;font-weight:bold">{}</span><span style="color:#0ff;font-weight:bold">&#34;</span>, r);
+</span></span><span style="display:flex;"><span>    println!(<span style="color:#e6db74">&#34;r: </span><span style="color:#e6db74">{}</span><span style="color:#e6db74">&#34;</span>, r);
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>error[E0597]: <span style="color:#f00">`</span>x<span style="color:#f00">`</span> does not live long enough
-</span></span><span style="display:flex;"><span>  --&gt; src/main.rs:<span style="color:#ff0;font-weight:bold">7</span>:<span style="color:#ff0;font-weight:bold">5</span>
-</span></span><span style="display:flex;"><span>   |
-</span></span><span style="display:flex;"><span><span style="color:#ff0;font-weight:bold">6</span>  |         r = &amp;x;
-</span></span><span style="display:flex;"><span>   |              - borrow occurs here
-</span></span><span style="display:flex;"><span><span style="color:#ff0;font-weight:bold">7</span>  |     }
-</span></span><span style="display:flex;"><span>   |     ^ <span style="color:#f00">`</span>x<span style="color:#f00">`</span> dropped here <span style="color:#fff;font-weight:bold">while</span> still borrowed
-</span></span><span style="display:flex;"><span>...
-</span></span><span style="display:flex;"><span><span style="color:#ff0;font-weight:bold">10</span> | }
-</span></span><span style="display:flex;"><span>   | - borrowed value needs to live until here
+</span></span><span style="display:flex;"><span>error[E0597]: <span style="color:#960050;background-color:#1e0010">`</span>x<span style="color:#960050;background-color:#1e0010">`</span> does not live long enough
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">-</span>-&gt; <span style="color:#a6e22e">src</span><span style="color:#f92672">/</span>main.rs:<span style="color:#ae81ff">7</span>:<span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">6</span>  <span style="color:#f92672">|</span>         r <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>x;
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">|</span>              <span style="color:#f92672">-</span> borrow occurs here
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">7</span>  <span style="color:#f92672">|</span>     }
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">|</span>     <span style="color:#f92672">^</span> <span style="color:#960050;background-color:#1e0010">`</span>x<span style="color:#960050;background-color:#1e0010">`</span> dropped here <span style="color:#66d9ef">while</span> still borrowed
+</span></span><span style="display:flex;"><span><span style="color:#f92672">..</span>.
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">10</span> <span style="color:#f92672">|</span> }
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">|</span> <span style="color:#f92672">-</span> borrowed value needs to live until here
 </span></span></code></pre></td></tr></table>
 </div>
 </div><h4 id="函数中的生命周期">函数中的生命周期<a hidden class="anchor" aria-hidden="true" href="#函数中的生命周期">#</a></h4>
 <p>和C++相同，rust同样不允许返回局部变量的引用，因为会被RAII在函数执行完之后释放掉，一定会产生垂悬引用问题。因此对于函数中的生命周期，只能来自输入。</p>
 <p>一聊到rust函数的生命周期，就会有这样一个经典的例子：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> longest(x: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span>, y: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span>) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> x.len() &gt; y.len() {
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">longest</span>(x: <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span>, y: <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span>) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> x.len() <span style="color:#f92672">&gt;</span> y.len() {
 </span></span><span style="display:flex;"><span>        x
-</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
 </span></span><span style="display:flex;"><span>        y
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>看起来写的毫无问题，获取两个引用，返回其中之一，但实际上会被rust编译器给无情的拒绝掉，而具体原因是无法确定x和y究竟谁能够活的更久的问题，如果像以下这样，就会出现问题，此时s2的作用域更小，提前释放，从而res产生了垂悬引用的问题，这种情况在不使用函数的情况下不应该发生，而在进行函数调用时同样不应该发生，因此如果不进行生命周期的标注，编译器就会严苛的拒绝掉，以避免风险，正确的标注方法如下：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> test() {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> res;
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">let</span> s1 = <span style="color:#fff;font-weight:bold">String</span>::from(<span style="color:#0ff;font-weight:bold">&#34;1&#34;</span>);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> res;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> s1 <span style="color:#f92672">=</span> String::from(<span style="color:#e6db74">&#34;1&#34;</span>);
 </span></span><span style="display:flex;"><span>	{
-</span></span><span style="display:flex;"><span>		<span style="color:#fff;font-weight:bold">let</span> s2 = <span style="color:#fff;font-weight:bold">String</span>::from(<span style="color:#0ff;font-weight:bold">&#34;11111&#34;</span>);
-</span></span><span style="display:flex;"><span>		res = longeest(&amp;s1,&amp;s2);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">let</span> s2 <span style="color:#f92672">=</span> String::from(<span style="color:#e6db74">&#34;11111&#34;</span>);
+</span></span><span style="display:flex;"><span>		res <span style="color:#f92672">=</span> longeest(<span style="color:#f92672">&amp;</span>s1,<span style="color:#f92672">&amp;</span>s2);
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> longest&lt;<span style="color:#007f7f">&#39;a</span>&gt;(x: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;a</span> <span style="color:#fff;font-weight:bold">str</span>, y: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span>) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;a</span> <span style="color:#fff;font-weight:bold">str</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">longest</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span>(x: <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;a</span> <span style="color:#66d9ef">str</span>, y: <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span>) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;a</span> <span style="color:#66d9ef">str</span> {
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><h4 id="结构体中的生命周期">结构体中的生命周期<a hidden class="anchor" aria-hidden="true" href="#结构体中的生命周期">#</a></h4>
 <p>相比于函数的生命周期，结构体中的生命周期可能更为常见，因为结构体当中的字段，并不是都是自己所有的，有些字段需要引用其他的变量，这种写法随处可见，比如说一个容器的迭代器，具体如下：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">type</span> SkipListIter&lt;<span style="color:#007f7f">&#39;a</span>&gt; = Range&lt;<span style="color:#007f7f">&#39;a</span>,InternalKey,(Bound&lt;InternalKey&gt;,Bound&lt;InternalKey&gt;),InternalKey,ByteVec&gt;;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">SkipListIter</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> <span style="color:#f92672">=</span> Range<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span>,InternalKey,(Bound<span style="color:#f92672">&lt;</span>InternalKey<span style="color:#f92672">&gt;</span>,Bound<span style="color:#f92672">&lt;</span>InternalKey<span style="color:#f92672">&gt;</span>),InternalKey,ByteVec<span style="color:#f92672">&gt;</span>;
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">struct</span> MemTableIterator &lt;<span style="color:#007f7f">&#39;a</span>&gt; {
-</span></span><span style="display:flex;"><span>    skip_list: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;a</span> SkipMap&lt;InternalKey,ByteVec&gt;,
-</span></span><span style="display:flex;"><span>    iter: SkipListIter&lt;<span style="color:#007f7f">&#39;a</span>&gt;,
-</span></span><span style="display:flex;"><span>    key: ByteVec,
-</span></span><span style="display:flex;"><span>    value: ByteVec,
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">pub</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">MemTableIterator</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    skip_list: <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;a</span> <span style="color:#a6e22e">SkipMap</span><span style="color:#f92672">&lt;</span>InternalKey,ByteVec<span style="color:#f92672">&gt;</span>,
+</span></span><span style="display:flex;"><span>    iter: <span style="color:#a6e22e">SkipListIter</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span>,
+</span></span><span style="display:flex;"><span>    key: <span style="color:#a6e22e">ByteVec</span>,
+</span></span><span style="display:flex;"><span>    value: <span style="color:#a6e22e">ByteVec</span>,
 </span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">impl</span> &lt;<span style="color:#007f7f">&#39;a</span>&gt; <span style="color:#fff;font-weight:bold">Iterator</span>&lt;<span style="color:#007f7f">&#39;a</span>&gt; <span style="color:#fff;font-weight:bold">for</span> MemTableIterator&lt;<span style="color:#007f7f">&#39;a</span>&gt; {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">fn</span> seek(&amp;<span style="color:#fff;font-weight:bold">mut</span> self, target: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>]) {
-</span></span><span style="display:flex;"><span>		<span style="color:#fff;font-weight:bold">let</span> target_key_min = InternalKey::new(target, MAX_SEQUENCE,K_VALUE_TYPE_FOR_SEEK);
-</span></span><span style="display:flex;"><span>		<span style="color:#fff;font-weight:bold">let</span> min_bound = Bound::Included(target_key_min);
-</span></span><span style="display:flex;"><span>		self.iter = self.skip_list.range((min_bound,Bound::Unbounded));
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">impl</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> Iterator<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">for</span> MemTableIterator<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">seek</span>(<span style="color:#f92672">&amp;</span><span style="color:#66d9ef">mut</span> self, target: <span style="color:#66d9ef">&amp;</span>[<span style="color:#66d9ef">u8</span>]) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">let</span> target_key_min <span style="color:#f92672">=</span> InternalKey::new(target, <span style="color:#66d9ef">MAX_SEQUENCE</span>,<span style="color:#66d9ef">K_VALUE_TYPE_FOR_SEEK</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">let</span> min_bound <span style="color:#f92672">=</span> Bound::Included(target_key_min);
+</span></span><span style="display:flex;"><span>		self.iter <span style="color:#f92672">=</span> self.skip_list.range((min_bound,Bound::Unbounded));
 </span></span><span style="display:flex;"><span>		self.next();
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	}
@@ -530,48 +530,48 @@
 <li>保存一个 iter 字段，其生命周期<strong>至少</strong> 和当前结构体一样长</li>
 </ol>
 <p>对于上面的情况，如果结构体当中保存一个<code>Arc&lt;SkipMap&gt;</code>的话，对于该方法，传入了&amp;self，而在rust当中，&amp;self是独立于结构体中声明的生命周期<code>'a</code>的，可以这里可以定义为<code>'b</code>，编译器无法得知&rsquo;a &lsquo;b 之间的生命周期关系，因此就会拒绝掉。该函数实际的声明如下：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">impl</span> &lt;<span style="color:#007f7f">&#39;a</span>&gt; <span style="color:#fff;font-weight:bold">Iterator</span>&lt;<span style="color:#007f7f">&#39;a</span>&gt; <span style="color:#fff;font-weight:bold">for</span> MemTableIterator&lt;<span style="color:#007f7f">&#39;a</span>&gt; {
-</span></span><span style="display:flex;"><span>	<span style="color:#fff;font-weight:bold">fn</span> seek(&amp;<span style="color:#007f7f">&#39;b</span> <span style="color:#fff;font-weight:bold">mut</span> self, target: <span style="color:#fff;font-weight:bold">&amp;</span>[<span style="color:#fff;font-weight:bold">u8</span>]) {
-</span></span><span style="display:flex;"><span>		<span style="color:#fff;font-weight:bold">let</span> target_key_min = InternalKey::new(target, MAX_SEQUENCE,K_VALUE_TYPE_FOR_SEEK);
-</span></span><span style="display:flex;"><span>		<span style="color:#fff;font-weight:bold">let</span> min_bound = Bound::Included(target_key_min);
-</span></span><span style="display:flex;"><span>		self.iter = self.skip_list.range((min_bound,Bound::Unbounded));
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">impl</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> Iterator<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">for</span> MemTableIterator<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">seek</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">&#39;b</span> <span style="color:#66d9ef">mut</span> self, target: <span style="color:#66d9ef">&amp;</span>[<span style="color:#66d9ef">u8</span>]) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">let</span> target_key_min <span style="color:#f92672">=</span> InternalKey::new(target, <span style="color:#66d9ef">MAX_SEQUENCE</span>,<span style="color:#66d9ef">K_VALUE_TYPE_FOR_SEEK</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">let</span> min_bound <span style="color:#f92672">=</span> Bound::Included(target_key_min);
+</span></span><span style="display:flex;"><span>		self.iter <span style="color:#f92672">=</span> self.skip_list.range((min_bound,Bound::Unbounded));
 </span></span><span style="display:flex;"><span>		self.next();
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>而至于rust为什么要这样做，主要是为了灵活性。例如，某些方法可能只是临时借用结构体的数据，而不需要持有与整个结构体相同的生命周期。通过允许独立的生命周期，Rust 可以更准确地表示这种借用行为:</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">9
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">struct</span> MyStruct&lt;<span style="color:#007f7f">&#39;a</span>&gt; {
-</span></span><span style="display:flex;"><span>    reference: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;a</span> <span style="color:#fff;font-weight:bold">i32</span>,
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">MyStruct</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    reference: <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;a</span> <span style="color:#66d9ef">i32</span>,
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">impl</span>&lt;<span style="color:#007f7f">&#39;a</span>&gt; MyStruct&lt;<span style="color:#007f7f">&#39;a</span>&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">fn</span> get_reference(&amp;self) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">i32</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">impl</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> MyStruct<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">get_reference</span>(<span style="color:#f92672">&amp;</span>self) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">i32</span> {
 </span></span><span style="display:flex;"><span>        self.reference
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>}
@@ -585,30 +585,30 @@
 <li>如果存在多个输入生命周期，其中一个是<code>&amp;self</code>或者<code>&amp;mut self</code>，那么<code>&amp;self</code>的生命周期被赋给所有输出生命周期</li>
 </ol>
 <p>来几个例子：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> first_word(s: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span>) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span> { <span style="color:#007f7f">// 实际项目中的手写代码
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f">// 根据规则1，得到：
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">fn</span> first_word(s: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;a</span> <span style="color:#fff;font-weight:bold">str</span>) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span> {
-</span></span><span style="display:flex;"><span><span style="color:#007f7f">//之后根据规则2完成了生命
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">first_word</span>(s: <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span>) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span> { <span style="color:#75715e">// 实际项目中的手写代码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 根据规则1，得到：
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">first_word</span>(s: <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;a</span> <span style="color:#66d9ef">str</span>) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span> {
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//之后根据规则2完成了生命
 </span></span></span></code></pre></td></tr></table>
 </div>
-</div><div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+</div><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">fn</span> longest(x: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span>, y: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span>) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span> { <span style="color:#007f7f">// 实际项目中的手写代码
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f">// 根据规则1，得到：
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">fn</span> longest&lt;<span style="color:#007f7f">&#39;a</span>, <span style="color:#007f7f">&#39;b</span>&gt;(x: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;a</span> <span style="color:#fff;font-weight:bold">str</span>, y: <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#007f7f">&#39;b</span> <span style="color:#fff;font-weight:bold">str</span>) -&gt; <span style="color:#fff;font-weight:bold">&amp;</span><span style="color:#fff;font-weight:bold">str</span> {
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">longest</span>(x: <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span>, y: <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span>) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span> { <span style="color:#75715e">// 实际项目中的手写代码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 根据规则1，得到：
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">longest</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">&#39;a</span>, <span style="color:#a6e22e">&#39;b</span><span style="color:#f92672">&gt;</span>(x: <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;a</span> <span style="color:#66d9ef">str</span>, y: <span style="color:#66d9ef">&amp;</span><span style="color:#a6e22e">&#39;b</span> <span style="color:#66d9ef">str</span>) -&gt; <span style="color:#66d9ef">&amp;</span><span style="color:#66d9ef">str</span> {
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>后续就不满足任何规则了，因此无法自动消除，需要手动进行生命周期的标注。
@@ -635,75 +635,75 @@
 所以，这里我对rust中不可变的理解是：我能够获取到数据，并且在我使用数据的过程中，数据都是一直保证不变的。</p>
 <p>那么内部究竟该如何理解呢？这里rust有一个比较有意思的实现，就是对于一个可变的方法，如果他所属对象A在结构体B中被<code>Arc&lt;Mutex&lt;T&gt;&gt;</code>包裹，那么在B中就可以使用不可变的方法来进行调用，这里实际上是进行修改了的，但是可以保证同一时间只有一个可变引用，我们来看一个例子：
 这里定义了一个ShardLRUCache，其中有多个LRUCache，而由于LRU的get会刷新缓存，因此他是一个<code>&amp;mut self</code>的，但是在ShardLRUCache当中，在进行加锁之后，可以使用<code>&amp;self</code>方法来对其进行调用：</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">20
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">21
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">22
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">23
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">24
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">25
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">26
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">27
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">28
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">29
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">30
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">31
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">32
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">33
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">34
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">35
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">struct</span> BaseCache {
-</span></span><span style="display:flex;"><span>    replacer: LRUReplacer,
-</span></span><span style="display:flex;"><span>    block_table: HashMap&lt;BlockId,Arc&lt;Block&gt;&gt;,
-</span></span><span style="display:flex;"><span>    cache_size: <span style="color:#fff;font-weight:bold">usize</span>,
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">BaseCache</span> {
+</span></span><span style="display:flex;"><span>    replacer: <span style="color:#a6e22e">LRUReplacer</span>,
+</span></span><span style="display:flex;"><span>    block_table: <span style="color:#a6e22e">HashMap</span><span style="color:#f92672">&lt;</span>BlockId,Arc<span style="color:#f92672">&lt;</span>Block<span style="color:#f92672">&gt;&gt;</span>,
+</span></span><span style="display:flex;"><span>    cache_size: <span style="color:#66d9ef">usize</span>,
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">impl</span> BaseCache {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> look_up(&amp;<span style="color:#fff;font-weight:bold">mut</span> self,block_id: BlockId) -&gt; <span style="color:#fff;font-weight:bold">Option</span>&lt;Arc&lt;Block&gt;&gt; {
-</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">match</span> self.block_table.get(&amp;block_id) {
-</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">Some</span>(block) =&gt; {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">impl</span> BaseCache {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pub</span> <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">look_up</span>(<span style="color:#f92672">&amp;</span><span style="color:#66d9ef">mut</span> self,block_id: <span style="color:#a6e22e">BlockId</span>) -&gt; Option<span style="color:#f92672">&lt;</span>Arc<span style="color:#f92672">&lt;</span>Block<span style="color:#f92672">&gt;&gt;</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">match</span> self.block_table.get(<span style="color:#f92672">&amp;</span>block_id) {
+</span></span><span style="display:flex;"><span>            Some(block) <span style="color:#f92672">=&gt;</span> {
 </span></span><span style="display:flex;"><span>                self.replacer.record_access(block_id.clone());
-</span></span><span style="display:flex;"><span>                <span style="color:#fff;font-weight:bold">Some</span>(block.clone())
+</span></span><span style="display:flex;"><span>                Some(block.clone())
 </span></span><span style="display:flex;"><span>            },
-</span></span><span style="display:flex;"><span>            <span style="color:#fff;font-weight:bold">None</span> =&gt; {
-</span></span><span style="display:flex;"><span>                <span style="color:#fff;font-weight:bold">None</span>
+</span></span><span style="display:flex;"><span>            None <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>                None
 </span></span><span style="display:flex;"><span>            }
 </span></span><span style="display:flex;"><span>        }
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#007f7f">// 使用Arc&lt;Mutex&lt;T&gt;&gt;来完成多线程间的共享。
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">struct</span> ShardCache {
-</span></span><span style="display:flex;"><span>	shards: <span style="color:#fff;font-weight:bold">Vec</span>&lt;Arc&lt;Mutex&lt;BaseCache&gt;&gt;&gt;,
-</span></span><span style="display:flex;"><span>	last_id: <span style="color:#fff;font-weight:bold">usize</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用Arc&lt;Mutex&lt;T&gt;&gt;来完成多线程间的共享。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">pub</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ShardCache</span> {
+</span></span><span style="display:flex;"><span>	shards: Vec<span style="color:#f92672">&lt;</span>Arc<span style="color:#f92672">&lt;</span>Mutex<span style="color:#f92672">&lt;</span>BaseCache<span style="color:#f92672">&gt;&gt;&gt;</span>,
+</span></span><span style="display:flex;"><span>	last_id: <span style="color:#66d9ef">usize</span>,
 </span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span><span style="color:#007f7f">// 使用不可变引用的方法对其进行调用
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">impl</span> ShardCache {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">pub</span> <span style="color:#fff;font-weight:bold">fn</span> look_up(&amp;self,block_id: BlockId) -&gt; <span style="color:#fff;font-weight:bold">Option</span>&lt;Arc&lt;Block&gt;&gt; {
-</span></span><span style="display:flex;"><span>        <span style="color:#fff;font-weight:bold">let</span> idx = Self::find_shard(block_id);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用不可变引用的方法对其进行调用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">impl</span> ShardCache {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pub</span> <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">look_up</span>(<span style="color:#f92672">&amp;</span>self,block_id: <span style="color:#a6e22e">BlockId</span>) -&gt; Option<span style="color:#f92672">&lt;</span>Arc<span style="color:#f92672">&lt;</span>Block<span style="color:#f92672">&gt;&gt;</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> idx <span style="color:#f92672">=</span> Self::find_shard(block_id);
 </span></span><span style="display:flex;"><span>        self.shards[idx]
 </span></span><span style="display:flex;"><span>        .lock().unwrap()
 </span></span><span style="display:flex;"><span>        .look_up(block_id)    
@@ -735,12 +735,12 @@
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="prev" href="http://itfischer.space/en/posts/tech/toydb/06-sql-execution/">
+  <a class="prev" href="https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/">
     <span class="title">« Prev</span>
     <br>
-    <span>06-SQL Execution</span>
+    <span></span>
   </a>
-  <a class="next" href="http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/">
+  <a class="next" href="https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/">
     <span class="title">Next »</span>
     <br>
     <span>数据库系统概念</span>
@@ -751,7 +751,7 @@
 <ul class="share-buttons">
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on x"
-            href="https://x.com/intent/tweet/?text=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f&amp;hashtags=">
+            href="https://x.com/intent/tweet/?text=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f&amp;hashtags=">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
@@ -760,7 +760,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f&amp;title=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;summary=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f&amp;title=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;summary=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;source=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
@@ -769,7 +769,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f&title=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86">
+            href="https://reddit.com/submit?url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f&title=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
@@ -778,7 +778,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
+            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
@@ -787,7 +787,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on whatsapp"
-            href="https://api.whatsapp.com/send?text=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
+            href="https://api.whatsapp.com/send?text=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%20-%20https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
@@ -796,7 +796,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on telegram"
-            href="https://telegram.me/share/url?text=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
+            href="https://telegram.me/share/url?text=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
             <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
@@ -805,7 +805,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share Rust内存管理 on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
+            href="https://news.ycombinator.com/submitlink?t=Rust%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86&u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2f%25E6%2589%2580%25E6%259C%2589%25E6%259D%2583%25E4%25B8%258E%25E7%2594%259F%25E5%2591%25BD%25E5%2591%25A8%25E6%259C%259F%2f">
             <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
                 <path
@@ -820,7 +820,7 @@
     </main>
     
 <footer class="footer">
-    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>&copy; 2024 <a href="https://fischer0522.github.io/en/">Fischer&#39;s Blog</a></span>
     <span>
         Powered by
         <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &

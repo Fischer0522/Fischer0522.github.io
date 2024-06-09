@@ -8,14 +8,14 @@
 <title>BusTub Lab2 B&#43;Tree Index checkpoint1 | Fischer&#39;s Blog</title>
 <meta name="keywords" content="">
 <meta name="description" content="Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b&#43;树的模拟动画，然后再使用官方的画图工具比较自己的B&#43;树，一般">
-<meta name="author" content="Sulv">
-<link rel="canonical" href="http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/">
+<meta name="author" content="Fischer">
+<link rel="canonical" href="https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://itfischer.space/img/Navigation.svg">
-<link rel="icon" type="image/png" sizes="16x16" href="http://itfischer.space/img/Q.gif">
-<link rel="icon" type="image/png" sizes="32x32" href="http://itfischer.space/img/Q.gif">
-<link rel="apple-touch-icon" href="http://itfischer.space/Q.gif">
-<link rel="mask-icon" href="http://itfischer.space/Q.gif">
+<link rel="icon" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="apple-touch-icon" href="https://fischer0522.github.io/Navigation.svg">
+<link rel="mask-icon" href="https://fischer0522.github.io/Navigation.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
 <noscript>
@@ -57,7 +57,7 @@
 </noscript><meta property="og:title" content="BusTub Lab2 B&#43;Tree Index checkpoint1" />
 <meta property="og:description" content="Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b&#43;树的模拟动画，然后再使用官方的画图工具比较自己的B&#43;树，一般" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-03-24T15:04:09+00:00" />
 <meta property="article:modified_time" content="2023-04-04T00:50:39+00:00" />
 
@@ -75,25 +75,25 @@
       "@type": "ListItem",
       "position":  1 ,
       "name": "Blog",
-      "item": "http://itfischer.space/en/posts/"
+      "item": "https://fischer0522.github.io/en/posts/"
     }, 
     {
       "@type": "ListItem",
       "position":  2 ,
       "name": "Tech",
-      "item": "http://itfischer.space/en/posts/tech/"
+      "item": "https://fischer0522.github.io/en/posts/tech/"
     }, 
     {
       "@type": "ListItem",
       "position":  3 ,
       "name": "Bustub通关指南",
-      "item": "http://itfischer.space/en/posts/tech/bustub/"
+      "item": "https://fischer0522.github.io/en/posts/tech/bustub/"
     }, 
     {
       "@type": "ListItem",
       "position":  4 ,
       "name": "BusTub Lab2 B+Tree Index checkpoint1",
-      "item": "http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/"
+      "item": "https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/"
     }
   ]
 }
@@ -108,25 +108,25 @@
   "keywords": [
     
   ],
-  "articleBody": "Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b+树的模拟动画，然后再使用官方的画图工具比较自己的B+树，一般3-4层没有问题了大多就是没有问题了，把分裂、合并、重分配等各种情况全部涉及到一次基本就可以了。\nB+树演示动画推荐官方的，其他的可能多少都会有点bug或者实现方式不太一样\nhttps://15445.courses.cs.cmu.edu/fall2022/bpt-printer/\nTask1 分别实现 Parent Page Internal Page Leaf Page，按照注释实现即可，较为简单\n注意一下arrry_[1]的使用方式即可\nflexible array​\n这里可以参考十一大佬的解释，描述的非常详细：flexible array\narray_[1]所采用的是一种flexible array的实现方式，即不指定一个数据的大小，将其封装到一个对象当中，对整个对象分配一个确定的大小，除去已经使用的空间，剩余的空间均可为array_[1]所使用。\n对于一个Internal Page，BUSTUB_PAGE_SIZE​定义的为4KB，即4096B，除去从父类继承而来的6个字段各占4B，其他剩余的所有内存均供flexible array来使用\nPage and BPlusTreePage​\n就像上面的图画的那样，这二者之间并不存在继承或者实现的关系，二者在类的定义上为并列的关系，并不像是在6.830的simpledb 当中通过BPlusTreePage去实现Page接口。\nB+树的一个Page作为索引而存在，而叶子节点即是索引又是真实的存储单元（即存储Tuple对应的RID，非聚簇索引实现）。\n即当要读取一个tuple时，首先根据保存的root_page_id去找到根节点，通过buffer_pool_manager将其加载到内存当中，而root_page是作为Page的数据维护在内存当中，Page当中的data_​为一个4KB的字节数组，通过reinterpret_cast​将其重新解释为BPlusTreePage，后续在其中搜索到对应的Key，在通过buffer_pool_manager去找到下一个节点，直至最后找到叶子节点，并通过RID再去读取到tuple。\n而对于HeapFile的实现方式，则是找到一个表的HeapFile，然后遍历不断读取其中的HeapPage，通过bufffer_pool_manager将其加载到内存当中，再遍历HeapPage当中的所有的tuple，直至找到对应的tuple。\n节点实现 节点大小 先说一个数据库系统概念当中对大小的定义：\n首先对于内部节点和叶子节点的大小都基于Max Degree n\n对于叶子节点max_size为n-1个kv，min_size为(n-1)/2向上取整 对于内部节点max_size为n个指针，n-1个k，min_size为n/2向上取整个指针​ 在Lab当中，对于一棵B+树，并没有制定Max Degree，而是分成leaf_max_size和internal_max_size来定义的，可以分开设置但是二者理论上应该是相等的：在是否需要分裂的判断时，Lab给出的逻辑是：internal_max_size在插入前进行判断，leaf_max_size在插入后进行判断，因此即可保证内部节点可以比叶子节点多容纳一个指针。\n因此对于min_size的求法：\nleaf_node: n / 2 internal_node (n + 1) / 2 不减一直接除可以与-1之后向上取整等价。\n实现方式 在一个Page内部通过array_[1]​来保存所有的KV，array_[1]的元素类型为一个KV键值对，对于叶子节点的实现较为便捷，kv的数量相等，直接从头开始填充即可，在bustub所实现的为非聚簇索引，因此key即为设置索引的键，value即为RecordId。在通过索引找到了RecordId之后再使用RecordId在一个Page当中去进行偏移读取。\n如果想MySQL那样的话主键索引锁存储的为整个tuple，二级索引存储的则是索引和主键，通过二级索引进行查询，需要通过一个回表的过程。\n‍\n而对于internal_page的实现稍微复杂一点，由于指针比索引多一个，因此可以选择将第一个key标记为空，不存储任何东西，之后再更新索引的时候记得跳过0号位，从1开始。\n对于上图的0003 0005 0007则为：\nTask2 只支持唯一索引，当插入重复的key时需要不执行并返回false。\n在插入时需要进行最大值的检测：\n对于内部节点为插入前子节点的数量（指针的数量）等于max_size 对于叶子节点为插入后kv键值对的数量等于max_size 写操作可能会导致根节点的更新，使用updateRootPageId​进行更新，只要root_page_id需要更新时，就对其进行调用\nGetValue 按照伪代码来严格实现，按照上图的划分方法进行封装，分别定义FindLeaf()，用于从根节点找到对应的叶子节点，在这过程当中需要在一个节点内部去搜索，因此分别定义一个LoopUp和KeyIndex：\nKeyIndex：调用std::lower_bound去寻找第一个 \u003e= 的值 LookUp：调用KeyIndex，根据返回的下表去判断是否获取到。 并且叶子节点和内部节点的搜索逻辑并不相同，因此需要分别定义。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_LEAF_PAGE_TYPE ::KeyIndex(const KeyType \u0026key, const KeyComparator \u0026comparator) const -\u003e int { auto target = std::lower_bound(array_,array_ + GetSize(),key, [\u0026comparator](const auto \u0026pair,auto k) { return comparator(pair.first,k) \u003c 0; }) ; return std::distance(array_,target); } INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_LEAF_PAGE_TYPE::LookUp(const KeyType \u0026key, ValueType *valueType, const KeyComparator \u0026keyComparator) const -\u003e bool { int target_in_array = KeyIndex(key,keyComparator); if (target_in_array == GetSize() || keyComparator(array_[target_in_array].first,key) != 0) { return false; } *valueType = array_[target_in_array].second; return true; } 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::Lookup(const KeyType \u0026key, const KeyComparator \u0026comparator) const -\u003e ValueType { // skip the empty key auto target = std::lower_bound(array_ + 1, array_ + GetSize(), key, [\u0026comparator](const auto \u0026pair, auto k) { return comparator(pair.first, k) \u003c 0; }); // larger than any key,return the last one if (target == array_ + GetSize()) { return ValueAt(GetSize() - 1); } // return the key == target_key if (comparator(target-\u003efirst, key) == 0) { return target-\u003esecond; } // return the key \u003c target_key return std::prev(target)-\u003esecond; } Insert 主要分为四个函数，分别为：\n主体insert 当树为空时调用stratNewTree创建第一个节点 insert_in_leaf insert_in_parent Insert insert本身并不实现什么具体逻辑，对StartNewTree和insert_in_leaf进行分类即可\n1 2 3 4 5 6 7 8 INDEX_TEMPLATE_ARGUMENTS auto BPLUSTREE_TYPE::Insert(const KeyType \u0026key, const ValueType \u0026value, Transaction *transaction) -\u003e bool { if (IsEmpty()) { StartNewTree(key,value); return true; } return InsertIntoLeaf(key,value,transaction); } StartNewTree 创建一个全新的树，创建一个叶子节点将其作为根节点，并向其中插入一条数据\n1 2 3 4 5 6 7 8 9 10 11 INDEX_TEMPLATE_ARGUMENTS auto BPLUSTREE_TYPE::StartNewTree(const KeyType \u0026key, const ValueType \u0026val) -\u003e void { auto page = buffer_pool_manager_-\u003eNewPage(\u0026root_page_id_); if (page == nullptr) { throw Exception(ExceptionType::OUT_OF_MEMORY,\"cannot allocate new page in StartNewPage\"); } auto *leaf = reinterpret_cast(page-\u003eGetData()); leaf-\u003eInit(root_page_id_,INVALID_PAGE_ID,leaf_max_size_); leaf-\u003eInsert(key,val,comparator_); buffer_pool_manager_-\u003eUnpinPage(page-\u003eGetPageId(), true); } Insert封装在Leaf_page当中，找到一个合适的位置向其中插入，并且对于重复的key，拒绝插入。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(const KeyType \u0026key, const ValueType \u0026val,const KeyComparator \u0026keyComparator) -\u003e int { auto distance = KeyIndex(key,keyComparator); // larger than any key if (distance == GetSize()) { *(array_ + distance) = std::make_pair(key,val); IncreaseSize(1); return GetSize(); } // duplicated key if (keyComparator(array_[distance].first,key) == 0) { return GetSize(); } std::move_backward(array_ + distance,array_ + GetSize(),array_ +GetSize() + 1); *(array_ + distance) = std::make_pair(key,val); IncreaseSize(1); return GetSize(); } Insert_in_leaf 对于不需要创建新树的情况，一律归类于向叶子节点当中插入数据\n先通过GetValue当中实现的FindLeaf找到对应的叶子节点，之后直接向其中插入，如果叶子节点的大小没有发生变化，那么则证明为重复的key，直接返回即可。\n如果大小发生变化但是没有超出最大值，无需进行分裂，也直接返回即可。\n剩余的情况则是需要进行分裂。\n叶子节点分裂​\n首先从buffer pool当中获取出一个新的Page用于承载分裂得来的新page 原本的节点保留minSize（maxSize / 2 )个数据，其他的全部拷贝至新的节点，最终的新节点当中的数据较多 当完成叶子节点的分裂之后，并将连接关系设置好之后，左右连接，parentId，之后再调用InsertIntoParent将右节点的第一个插入到父节点当中。\nInsertIntoParent 首先需要说明的是调用InsertIntoParent的时机一定是在叶子节点当中插入引发了分裂，之后将新分裂出的右节点的第一个key尝试插入到父亲节点当中\n对于伪代码当中的一条条来看：\n如果N为根节点：则创建新的根节点，insert_in_parent由叶子节点开始调用，而此时N为根节点则证明已经递归到对根节点进行分裂，N‘即为N的新兄弟节点，因此需要创建一个新的根节点，以N，N‘为子节点，\n对应以下的情况：K’ = 0003\nP有不到n个指针，还未满，在父节点当中直接插入并结束，没什么好说的\n此时将6插入到父节点当中，父节点也无法容下，对父节点进行分裂，分裂完之后递归调用，在将5插入到上一级的父节点当中，此时可以容下5，因此不进行分裂，终止插入\n在整个插入过程当中一个比较重要的实现就是分裂，分裂的过程严格按照伪代码所给的进行实现，对于叶子节点和内部节点在分裂上的实现有所不同，因此定义一个Split来对叶子节点和内部节点的数据迁移和指针指向更改。\n创建一块内存块用于存放所有的之前的所有数据和要新插入的K’ N’， 将旧节点的所有的数据都拷贝到其中，新插入的K‘N’也加入到其中 。 完成节点的分裂，前一个节点保存min_size个节点，后一个节点保存其他的所有节点 按照伪代码描述，前一个节点应当保存(n+1)/2向上取整个节点，因此如果是基数个的话，那么前一个节点会比后一个节点多一个，但是个人认为这个是无所谓的，因为两种实现方法都能够达到平衡，在网上看到的两个B+树的演示动画也采用了两种不同的实现方式。\n在分裂上的实现也不是很统一，由于对于叶子节点的分裂使用了先插入之后在判断的方式，因此直接分裂即可，对于内部节点需要在分裂前补上新的数据。伪代码当中的临时内存块其实不使用也可，直接在原节点上进行操作就行了。正确性上也可以得到保证(做完之后在网上看到了说直接插入会导致超出大小限制，但是我自己做下来按照直接插入的方式并没有出现什么问题)\n1 2 3 4 5 6 parent_node-\u003eInsertAfterNode(old_node-\u003eGetPageId(), key, new_node-\u003eGetPageId()); auto parent_sibling_node = Split(parent_node); auto new_key = parent_sibling_node-\u003eKeyAt(0); InsertIntoParent(parent_node, new_key, parent_sibling_node); buffer_pool_manager_-\u003eUnpinPage(parent_page-\u003eGetPageId(), true); buffer_pool_manager_-\u003eUnpinPage(parent_sibling_node-\u003eGetPageId(), true); Delete 相对于插入来说，删除的逻辑就复杂的多,函数拆分方式如上，还是一条条的看。\n下面的例子全以MaxDegree = 4，MaxSize = 4,MinSize = 2来进行讨论\n最开始通过FindLeaf() 找到Key所在的leaf_page，之后调用delete_entry进行删除，不过由于后续涉及到递归调用，因此可以把从leaf_page中删除的逻辑移到delete_entry外面\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 INDEX_TEMPLATE_ARGUMENTS void BPLUSTREE_TYPE::Remove(const KeyType \u0026key, Transaction *transaction) { if (IsEmpty()) { return; } auto leaf_page = FindLeaf(key, transaction); auto *node = reinterpret_cast(leaf_page-\u003eGetData()); if (node-\u003eIsLeafPage()) { auto before_size = node-\u003eGetSize(); auto size = node-\u003eDelete(key, comparator_); if (before_size == size) { // cannot find the key; return; } } DeleteEntry(node, key); } AdjustRoot 一棵树的初始状态如下，此时如果需要从中删除掉Key = 3，叶子节点当中的key不够，并且能够与左节点合并而不达到MaxSize，因此进行合并\n合并结果如下，此时的3号节点当中只有一个指针，小于min_size，同样的与右节点合并之后不会超过max_size，因此合并\n合并的结果如下，并且合并之后会在递归调用一次delete_entry，此时传入的节点即为parent(N)，找到了根节点，并且此时的根节点只有一个孩子，达到了AdjustRoot的条件：\n最终AdjustRoot的结果如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 INDEX_TEMPLATE_ARGUMENTS auto BPLUSTREE_TYPE::AdjustRoot(BPlusTreePage *old_root_node) -\u003e bool { if (!old_root_node-\u003eIsLeafPage() \u0026\u0026 old_root_node-\u003eGetSize() == 1) { auto *root_node = reinterpret_cast(old_root_node); auto only_child_page = buffer_pool_manager_-\u003eFetchPage(root_node-\u003eValueAt(0)); auto only_child_node = reinterpret_cast(only_child_page); only_child_node-\u003eSetParentPageId(INVALID_PAGE_ID); root_page_id_ = only_child_node-\u003eGetPageId(); UpdateRootPageId(0); buffer_pool_manager_-\u003eDeletePage(old_root_node-\u003eGetPageId()); return true; } return false; } Coalesce： 当两个节点合并之后仍小于MaxSize时，对两个节点进行合并，在逻辑上同样需要分为对叶子节点进行操作和对内部节点进行操作，由于在上述AdjustRoot的例子当中已经涉及到了根节点的合并和叶子节点的合并，因此就还用上面的例子\n叶子节点的合并\n初始树：\n将3进行删除，之后发现其左节点与之合并之后仍小于max_size，此时的N为自身，N’为其左节点，K’为3， 执行合并，将右叶子节点当中的所有KV移动到左节点当中 递归调用delete_entry，在父亲节点当中尝试删除掉K’(3) 递归完之后清除掉N 最终结果如下，而当前的3号page当中只有一个指针，因此是不稳定的，并且大小允许合并，执行内部节点的合并\n内部节点的合并​\n初始树，已经删除掉K之后\nN为自身节点，N’为其右节点，K’按照定义即为10，将N作为最终合并后的存储节点 因此先将K’添加到N当中，之后在将N’当中所有的KV添加到其中（不包括第一个空的K） 最终结果如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 auto BPlusTree::Coalesce( N *left_node, N *right_node, BPlusTreeInternalPage *parent, int index) -\u003e bool { auto middle_key = parent-\u003eKeyAt(index); if (!right_node-\u003eIsLeafPage()) { auto *internal_node = reinterpret_cast(right_node); auto *internal_left_node = reinterpret_cast(left_node); internal_node-\u003eMoveAllTo(internal_left_node, middle_key, buffer_pool_manager_); } else { auto *leaf_node = reinterpret_cast(right_node); auto *leaf_left_node = reinterpret_cast(left_node); leaf_node-\u003eMoveAllTo(leaf_left_node); parent-\u003eRemove(index); } DeleteEntry(parent, middle_key); buffer_pool_manager_-\u003eDeletePage(right_node-\u003eGetPageId()); return true; } Redistribute 同样需要分为叶子节点和内部节点来进行讨论，内部节点由于0号位Key为空，因此无法像合并那样直接交换顺序即可，而是需要实现一个逻辑上一样的对称操作。\n叶子节点重分配​\n初始树：\n此时尝试从中删除掉23，此时该叶子节点当中就只剩下一个KV，小于min_size，并且无法和右节点进行合并，因此需要进行redistribute(代码逻辑中先判断是否能进行重分配，如果不能在后续判断合并，重分配本身不涉及到递归调用，因此对整个B+树的调整范围小，开销较小)\n自身为N，右节点为N‘，将N‘当中的第一个KV移动至N的末尾，并且将parent当中N,N’中间的key替换为移动之后的N‘当中的第一个K（25），最终结果如下：\n叶子节点的为完全对称的，因此只需要完全对称的实现即可，将第一个改为最后一个，逻辑上完全一致。\n1 2 3 4 5 6 7 8 9 10 11 if (node-\u003eIsLeafPage()) { auto *leaf_node = reinterpret_cast(node); auto *leaf_neighbor_node = reinterpret_cast(node); if (from_prev) { leaf_neighbor_node-\u003eMoveLastToFrontOf(leaf_node); parent-\u003eSetKeyAt(index, leaf_node-\u003eKeyAt(0)); } else { leaf_neighbor_node-\u003eMoveFrontToLastOf(leaf_node); parent-\u003eSetKeyAt(index, leaf_neighbor_node-\u003eKeyAt(0)); } } 内部节点重分配​\n初始树和从中删除掉3之后的状态分别如下：\n此时左侧只剩下一个指针，并且合并会大于max_size，因此进行重分配，N为自身，N’为其右节点 找到N’当中的第一个KV，记为(K1,V1)，将其添加到N的末尾 找到在parent(N)当中的N与N’指针之间的K’，将N的最后一个K设置为K’，并将parent(N)当中的K’设置为K1 最终结果如下：\n1 2 3 4 5 6 7 8 9 10 auto *internal_node = reinterpret_cast(node); auto *internal_neighbor_node = reinterpret_cast(neighbor_node); if (from_prev) { internal_neighbor_node-\u003eMoveLastToFrontOf(internal_node, parent-\u003eKeyAt(index), buffer_pool_manager_); parent-\u003eSetKeyAt(index, internal_node-\u003eKeyAt(0)); } else { auto new_parent_key = internal_neighbor_node-\u003eKeyAt(1); internal_neighbor_node-\u003eMoveFrontToLastOf(internal_node, parent-\u003eKeyAt(index + 1), buffer_pool_manager_); parent-\u003eSetKeyAt(index + 1, new_parent_key); } 对于内部节点的重分配，存在那么一点不对称的情况：\n即上述例子为在左节点当中检测到需要进行合并，由于第一个空key的存在，K’的位置应当为index + 1,(index为N在parent当中的位置)，而如果是从右侧检测到需要进行重分配，K’即为index 右侧向左侧添加时应当添加index = 1的KV，跳过空Key，左侧向右侧添加时，同样添加到一号位置 实现的时候注意一下即可。\n",
+  "articleBody": "Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b+树的模拟动画，然后再使用官方的画图工具比较自己的B+树，一般3-4层没有问题了大多就是没有问题了，把分裂、合并、重分配等各种情况全部涉及到一次基本就可以了。\nB+树演示动画推荐官方的，其他的可能多少都会有点bug或者实现方式不太一样\nhttps://15445.courses.cs.cmu.edu/fall2022/bpt-printer/\nTask1 分别实现 Parent Page Internal Page Leaf Page，按照注释实现即可，较为简单\n注意一下arrry_[1]的使用方式即可\nflexible array​\n这里可以参考十一大佬的解释，描述的非常详细：flexible array\narray_[1]所采用的是一种flexible array的实现方式，即不指定一个数据的大小，将其封装到一个对象当中，对整个对象分配一个确定的大小，除去已经使用的空间，剩余的空间均可为array_[1]所使用。\n对于一个Internal Page，BUSTUB_PAGE_SIZE​定义的为4KB，即4096B，除去从父类继承而来的6个字段各占4B，其他剩余的所有内存均供flexible array来使用\nPage and BPlusTreePage​\n就像上面的图画的那样，这二者之间并不存在继承或者实现的关系，二者在类的定义上为并列的关系，并不像是在6.830的simpledb 当中通过BPlusTreePage去实现Page接口。\nB+树的一个Page作为索引而存在，而叶子节点即是索引又是真实的存储单元（即存储Tuple对应的RID，非聚簇索引实现）。\n即当要读取一个tuple时，首先根据保存的root_page_id去找到根节点，通过buffer_pool_manager将其加载到内存当中，而root_page是作为Page的数据维护在内存当中，Page当中的data_​为一个4KB的字节数组，通过reinterpret_cast​将其重新解释为BPlusTreePage，后续在其中搜索到对应的Key，在通过buffer_pool_manager去找到下一个节点，直至最后找到叶子节点，并通过RID再去读取到tuple。\n而对于HeapFile的实现方式，则是找到一个表的HeapFile，然后遍历不断读取其中的HeapPage，通过bufffer_pool_manager将其加载到内存当中，再遍历HeapPage当中的所有的tuple，直至找到对应的tuple。\n节点实现 节点大小 先说一个数据库系统概念当中对大小的定义：\n首先对于内部节点和叶子节点的大小都基于Max Degree n\n对于叶子节点max_size为n-1个kv，min_size为(n-1)/2向上取整 对于内部节点max_size为n个指针，n-1个k，min_size为n/2向上取整个指针​ 在Lab当中，对于一棵B+树，并没有制定Max Degree，而是分成leaf_max_size和internal_max_size来定义的，可以分开设置但是二者理论上应该是相等的：在是否需要分裂的判断时，Lab给出的逻辑是：internal_max_size在插入前进行判断，leaf_max_size在插入后进行判断，因此即可保证内部节点可以比叶子节点多容纳一个指针。\n因此对于min_size的求法：\nleaf_node: n / 2 internal_node (n + 1) / 2 不减一直接除可以与-1之后向上取整等价。\n实现方式 在一个Page内部通过array_[1]​来保存所有的KV，array_[1]的元素类型为一个KV键值对，对于叶子节点的实现较为便捷，kv的数量相等，直接从头开始填充即可，在bustub所实现的为非聚簇索引，因此key即为设置索引的键，value即为RecordId。在通过索引找到了RecordId之后再使用RecordId在一个Page当中去进行偏移读取。\n如果想MySQL那样的话主键索引锁存储的为整个tuple，二级索引存储的则是索引和主键，通过二级索引进行查询，需要通过一个回表的过程。\n‍\n而对于internal_page的实现稍微复杂一点，由于指针比索引多一个，因此可以选择将第一个key标记为空，不存储任何东西，之后再更新索引的时候记得跳过0号位，从1开始。\n对于上图的0003 0005 0007则为：\nTask2 只支持唯一索引，当插入重复的key时需要不执行并返回false。\n在插入时需要进行最大值的检测：\n对于内部节点为插入前子节点的数量（指针的数量）等于max_size 对于叶子节点为插入后kv键值对的数量等于max_size 写操作可能会导致根节点的更新，使用updateRootPageId​进行更新，只要root_page_id需要更新时，就对其进行调用\nGetValue 按照伪代码来严格实现，按照上图的划分方法进行封装，分别定义FindLeaf()，用于从根节点找到对应的叶子节点，在这过程当中需要在一个节点内部去搜索，因此分别定义一个LoopUp和KeyIndex：\nKeyIndex：调用std::lower_bound去寻找第一个 \u003e= 的值 LookUp：调用KeyIndex，根据返回的下表去判断是否获取到。 并且叶子节点和内部节点的搜索逻辑并不相同，因此需要分别定义。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_LEAF_PAGE_TYPE ::KeyIndex(const KeyType \u0026key, const KeyComparator \u0026comparator) const -\u003e int { auto target = std::lower_bound(array_,array_ + GetSize(),key, [\u0026comparator](const auto \u0026pair,auto k) { return comparator(pair.first,k) \u003c 0; }) ; return std::distance(array_,target); } INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_LEAF_PAGE_TYPE::LookUp(const KeyType \u0026key, ValueType *valueType, const KeyComparator \u0026keyComparator) const -\u003e bool { int target_in_array = KeyIndex(key,keyComparator); if (target_in_array == GetSize() || keyComparator(array_[target_in_array].first,key) != 0) { return false; } *valueType = array_[target_in_array].second; return true; } 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::Lookup(const KeyType \u0026key, const KeyComparator \u0026comparator) const -\u003e ValueType { // skip the empty key auto target = std::lower_bound(array_ + 1, array_ + GetSize(), key, [\u0026comparator](const auto \u0026pair, auto k) { return comparator(pair.first, k) \u003c 0; }); // larger than any key,return the last one if (target == array_ + GetSize()) { return ValueAt(GetSize() - 1); } // return the key == target_key if (comparator(target-\u003efirst, key) == 0) { return target-\u003esecond; } // return the key \u003c target_key return std::prev(target)-\u003esecond; } Insert 主要分为四个函数，分别为：\n主体insert 当树为空时调用stratNewTree创建第一个节点 insert_in_leaf insert_in_parent Insert insert本身并不实现什么具体逻辑，对StartNewTree和insert_in_leaf进行分类即可\n1 2 3 4 5 6 7 8 INDEX_TEMPLATE_ARGUMENTS auto BPLUSTREE_TYPE::Insert(const KeyType \u0026key, const ValueType \u0026value, Transaction *transaction) -\u003e bool { if (IsEmpty()) { StartNewTree(key,value); return true; } return InsertIntoLeaf(key,value,transaction); } StartNewTree 创建一个全新的树，创建一个叶子节点将其作为根节点，并向其中插入一条数据\n1 2 3 4 5 6 7 8 9 10 11 INDEX_TEMPLATE_ARGUMENTS auto BPLUSTREE_TYPE::StartNewTree(const KeyType \u0026key, const ValueType \u0026val) -\u003e void { auto page = buffer_pool_manager_-\u003eNewPage(\u0026root_page_id_); if (page == nullptr) { throw Exception(ExceptionType::OUT_OF_MEMORY,\"cannot allocate new page in StartNewPage\"); } auto *leaf = reinterpret_cast\u003cLeafPage *\u003e(page-\u003eGetData()); leaf-\u003eInit(root_page_id_,INVALID_PAGE_ID,leaf_max_size_); leaf-\u003eInsert(key,val,comparator_); buffer_pool_manager_-\u003eUnpinPage(page-\u003eGetPageId(), true); } Insert封装在Leaf_page当中，找到一个合适的位置向其中插入，并且对于重复的key，拒绝插入。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 INDEX_TEMPLATE_ARGUMENTS auto B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(const KeyType \u0026key, const ValueType \u0026val,const KeyComparator \u0026keyComparator) -\u003e int { auto distance = KeyIndex(key,keyComparator); // larger than any key if (distance == GetSize()) { *(array_ + distance) = std::make_pair(key,val); IncreaseSize(1); return GetSize(); } // duplicated key if (keyComparator(array_[distance].first,key) == 0) { return GetSize(); } std::move_backward(array_ + distance,array_ + GetSize(),array_ +GetSize() + 1); *(array_ + distance) = std::make_pair(key,val); IncreaseSize(1); return GetSize(); } Insert_in_leaf 对于不需要创建新树的情况，一律归类于向叶子节点当中插入数据\n先通过GetValue当中实现的FindLeaf找到对应的叶子节点，之后直接向其中插入，如果叶子节点的大小没有发生变化，那么则证明为重复的key，直接返回即可。\n如果大小发生变化但是没有超出最大值，无需进行分裂，也直接返回即可。\n剩余的情况则是需要进行分裂。\n叶子节点分裂​\n首先从buffer pool当中获取出一个新的Page用于承载分裂得来的新page 原本的节点保留minSize（maxSize / 2 )个数据，其他的全部拷贝至新的节点，最终的新节点当中的数据较多 当完成叶子节点的分裂之后，并将连接关系设置好之后，左右连接，parentId，之后再调用InsertIntoParent将右节点的第一个插入到父节点当中。\nInsertIntoParent 首先需要说明的是调用InsertIntoParent的时机一定是在叶子节点当中插入引发了分裂，之后将新分裂出的右节点的第一个key尝试插入到父亲节点当中\n对于伪代码当中的一条条来看：\n如果N为根节点：则创建新的根节点，insert_in_parent由叶子节点开始调用，而此时N为根节点则证明已经递归到对根节点进行分裂，N‘即为N的新兄弟节点，因此需要创建一个新的根节点，以N，N‘为子节点，\n对应以下的情况：K’ = 0003\nP有不到n个指针，还未满，在父节点当中直接插入并结束，没什么好说的\n此时将6插入到父节点当中，父节点也无法容下，对父节点进行分裂，分裂完之后递归调用，在将5插入到上一级的父节点当中，此时可以容下5，因此不进行分裂，终止插入\n在整个插入过程当中一个比较重要的实现就是分裂，分裂的过程严格按照伪代码所给的进行实现，对于叶子节点和内部节点在分裂上的实现有所不同，因此定义一个Split来对叶子节点和内部节点的数据迁移和指针指向更改。\n创建一块内存块用于存放所有的之前的所有数据和要新插入的K’ N’， 将旧节点的所有的数据都拷贝到其中，新插入的K‘N’也加入到其中 。 完成节点的分裂，前一个节点保存min_size个节点，后一个节点保存其他的所有节点 按照伪代码描述，前一个节点应当保存(n+1)/2向上取整个节点，因此如果是基数个的话，那么前一个节点会比后一个节点多一个，但是个人认为这个是无所谓的，因为两种实现方法都能够达到平衡，在网上看到的两个B+树的演示动画也采用了两种不同的实现方式。\n在分裂上的实现也不是很统一，由于对于叶子节点的分裂使用了先插入之后在判断的方式，因此直接分裂即可，对于内部节点需要在分裂前补上新的数据。伪代码当中的临时内存块其实不使用也可，直接在原节点上进行操作就行了。正确性上也可以得到保证(做完之后在网上看到了说直接插入会导致超出大小限制，但是我自己做下来按照直接插入的方式并没有出现什么问题)\n1 2 3 4 5 6 parent_node-\u003eInsertAfterNode(old_node-\u003eGetPageId(), key, new_node-\u003eGetPageId()); auto parent_sibling_node = Split(parent_node); auto new_key = parent_sibling_node-\u003eKeyAt(0); InsertIntoParent(parent_node, new_key, parent_sibling_node); buffer_pool_manager_-\u003eUnpinPage(parent_page-\u003eGetPageId(), true); buffer_pool_manager_-\u003eUnpinPage(parent_sibling_node-\u003eGetPageId(), true); Delete 相对于插入来说，删除的逻辑就复杂的多,函数拆分方式如上，还是一条条的看。\n下面的例子全以MaxDegree = 4，MaxSize = 4,MinSize = 2来进行讨论\n最开始通过FindLeaf() 找到Key所在的leaf_page，之后调用delete_entry进行删除，不过由于后续涉及到递归调用，因此可以把从leaf_page中删除的逻辑移到delete_entry外面\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 INDEX_TEMPLATE_ARGUMENTS void BPLUSTREE_TYPE::Remove(const KeyType \u0026key, Transaction *transaction) { if (IsEmpty()) { return; } auto leaf_page = FindLeaf(key, transaction); auto *node = reinterpret_cast\u003cLeafPage *\u003e(leaf_page-\u003eGetData()); if (node-\u003eIsLeafPage()) { auto before_size = node-\u003eGetSize(); auto size = node-\u003eDelete(key, comparator_); if (before_size == size) { // cannot find the key; return; } } DeleteEntry(node, key); } AdjustRoot 一棵树的初始状态如下，此时如果需要从中删除掉Key = 3，叶子节点当中的key不够，并且能够与左节点合并而不达到MaxSize，因此进行合并\n合并结果如下，此时的3号节点当中只有一个指针，小于min_size，同样的与右节点合并之后不会超过max_size，因此合并\n合并的结果如下，并且合并之后会在递归调用一次delete_entry，此时传入的节点即为parent(N)，找到了根节点，并且此时的根节点只有一个孩子，达到了AdjustRoot的条件：\n最终AdjustRoot的结果如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 INDEX_TEMPLATE_ARGUMENTS auto BPLUSTREE_TYPE::AdjustRoot(BPlusTreePage *old_root_node) -\u003e bool { if (!old_root_node-\u003eIsLeafPage() \u0026\u0026 old_root_node-\u003eGetSize() == 1) { auto *root_node = reinterpret_cast\u003cInternalPage *\u003e(old_root_node); auto only_child_page = buffer_pool_manager_-\u003eFetchPage(root_node-\u003eValueAt(0)); auto only_child_node = reinterpret_cast\u003cBPlusTreePage *\u003e(only_child_page); only_child_node-\u003eSetParentPageId(INVALID_PAGE_ID); root_page_id_ = only_child_node-\u003eGetPageId(); UpdateRootPageId(0); buffer_pool_manager_-\u003eDeletePage(old_root_node-\u003eGetPageId()); return true; } return false; } Coalesce： 当两个节点合并之后仍小于MaxSize时，对两个节点进行合并，在逻辑上同样需要分为对叶子节点进行操作和对内部节点进行操作，由于在上述AdjustRoot的例子当中已经涉及到了根节点的合并和叶子节点的合并，因此就还用上面的例子\n叶子节点的合并\n初始树：\n将3进行删除，之后发现其左节点与之合并之后仍小于max_size，此时的N为自身，N’为其左节点，K’为3， 执行合并，将右叶子节点当中的所有KV移动到左节点当中 递归调用delete_entry，在父亲节点当中尝试删除掉K’(3) 递归完之后清除掉N 最终结果如下，而当前的3号page当中只有一个指针，因此是不稳定的，并且大小允许合并，执行内部节点的合并\n内部节点的合并​\n初始树，已经删除掉K之后\nN为自身节点，N’为其右节点，K’按照定义即为10，将N作为最终合并后的存储节点 因此先将K’添加到N当中，之后在将N’当中所有的KV添加到其中（不包括第一个空的K） 最终结果如下：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 auto BPlusTree\u003cKeyType, ValueType, KeyComparator\u003e::Coalesce( N *left_node, N *right_node, BPlusTreeInternalPage\u003cKeyType, page_id_t, KeyComparator\u003e *parent, int index) -\u003e bool { auto middle_key = parent-\u003eKeyAt(index); if (!right_node-\u003eIsLeafPage()) { auto *internal_node = reinterpret_cast\u003cInternalPage *\u003e(right_node); auto *internal_left_node = reinterpret_cast\u003cInternalPage *\u003e(left_node); internal_node-\u003eMoveAllTo(internal_left_node, middle_key, buffer_pool_manager_); } else { auto *leaf_node = reinterpret_cast\u003cLeafPage *\u003e(right_node); auto *leaf_left_node = reinterpret_cast\u003cLeafPage *\u003e(left_node); leaf_node-\u003eMoveAllTo(leaf_left_node); parent-\u003eRemove(index); } DeleteEntry(parent, middle_key); buffer_pool_manager_-\u003eDeletePage(right_node-\u003eGetPageId()); return true; } Redistribute 同样需要分为叶子节点和内部节点来进行讨论，内部节点由于0号位Key为空，因此无法像合并那样直接交换顺序即可，而是需要实现一个逻辑上一样的对称操作。\n叶子节点重分配​\n初始树：\n此时尝试从中删除掉23，此时该叶子节点当中就只剩下一个KV，小于min_size，并且无法和右节点进行合并，因此需要进行redistribute(代码逻辑中先判断是否能进行重分配，如果不能在后续判断合并，重分配本身不涉及到递归调用，因此对整个B+树的调整范围小，开销较小)\n自身为N，右节点为N‘，将N‘当中的第一个KV移动至N的末尾，并且将parent当中N,N’中间的key替换为移动之后的N‘当中的第一个K（25），最终结果如下：\n叶子节点的为完全对称的，因此只需要完全对称的实现即可，将第一个改为最后一个，逻辑上完全一致。\n1 2 3 4 5 6 7 8 9 10 11 if (node-\u003eIsLeafPage()) { auto *leaf_node = reinterpret_cast\u003cLeafPage *\u003e(node); auto *leaf_neighbor_node = reinterpret_cast\u003cLeafPage *\u003e(node); if (from_prev) { leaf_neighbor_node-\u003eMoveLastToFrontOf(leaf_node); parent-\u003eSetKeyAt(index, leaf_node-\u003eKeyAt(0)); } else { leaf_neighbor_node-\u003eMoveFrontToLastOf(leaf_node); parent-\u003eSetKeyAt(index, leaf_neighbor_node-\u003eKeyAt(0)); } } 内部节点重分配​\n初始树和从中删除掉3之后的状态分别如下：\n此时左侧只剩下一个指针，并且合并会大于max_size，因此进行重分配，N为自身，N’为其右节点 找到N’当中的第一个KV，记为(K1,V1)，将其添加到N的末尾 找到在parent(N)当中的N与N’指针之间的K’，将N的最后一个K设置为K’，并将parent(N)当中的K’设置为K1 最终结果如下：\n1 2 3 4 5 6 7 8 9 10 auto *internal_node = reinterpret_cast\u003cInternalPage *\u003e(node); auto *internal_neighbor_node = reinterpret_cast\u003cInternalPage *\u003e(neighbor_node); if (from_prev) { internal_neighbor_node-\u003eMoveLastToFrontOf(internal_node, parent-\u003eKeyAt(index), buffer_pool_manager_); parent-\u003eSetKeyAt(index, internal_node-\u003eKeyAt(0)); } else { auto new_parent_key = internal_neighbor_node-\u003eKeyAt(1); internal_neighbor_node-\u003eMoveFrontToLastOf(internal_node, parent-\u003eKeyAt(index + 1), buffer_pool_manager_); parent-\u003eSetKeyAt(index + 1, new_parent_key); } 对于内部节点的重分配，存在那么一点不对称的情况：\n即上述例子为在左节点当中检测到需要进行合并，由于第一个空key的存在，K’的位置应当为index + 1,(index为N在parent当中的位置)，而如果是从右侧检测到需要进行重分配，K’即为index 右侧向左侧添加时应当添加index = 1的KV，跳过空Key，左侧向右侧添加时，同样添加到一号位置 实现的时候注意一下即可。\n",
   "wordCount" : "5730",
   "inLanguage": "en",
   "datePublished": "2023-03-24T15:04:09Z",
   "dateModified": "2023-04-04T00:50:39Z",
   "author":{
     "@type": "Person",
-    "name": "Sulv"
+    "name": "Fischer"
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/"
+    "@id": "https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/"
   },
   "publisher": {
     "@type": "Organization",
     "name": "Fischer's Blog",
     "logo": {
       "@type": "ImageObject",
-      "url": "http://itfischer.space/img/Navigation.svg"
+      "url": "https://fischer0522.github.io/img/Navigation.svg"
     }
   }
 }
@@ -148,8 +148,8 @@
 <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="http://itfischer.space/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
-                <img src="http://itfischer.space/img/Navigation.svg" alt="" aria-label="logo"
+            <a href="https://fischer0522.github.io/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="https://fischer0522.github.io/img/Navigation.svg" alt="" aria-label="logo"
                     height="35">Fischer&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)">
@@ -176,32 +176,32 @@
         </div>
         <ul id="menu">
             <li>
-                <a href="http://itfischer.space/en/search" title="Search">
+                <a href="https://fischer0522.github.io/en/search" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/" title="Home">
+                <a href="https://fischer0522.github.io/en/" title="Home">
                     <span>Home</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/posts" title="Posts">
+                <a href="https://fischer0522.github.io/en/posts" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/archives/" title="Archives">
+                <a href="https://fischer0522.github.io/en/archives/" title="Archives">
                     <span>Archives</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/tags" title="Tags">
+                <a href="https://fischer0522.github.io/en/tags" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
             <li>
-                <a href="http://itfischer.space/en/about" title="About">
+                <a href="https://fischer0522.github.io/en/about" title="About">
                     <span>About</span>
                 </a>
             </li>
@@ -212,11 +212,11 @@
 
 <article class="post-single">
   <header class="post-header">
-    <div class="breadcrumbs"><a href="http://itfischer.space/en/">Home</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="http://itfischer.space/en/posts/tech/bustub/">Bustub通关指南</a></div>
+    <div class="breadcrumbs"><a href="https://fischer0522.github.io/en/">Home</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/bustub/">Bustub通关指南</a></div>
     <h1 class="post-title entry-hint-parent">
       BusTub Lab2 B&#43;Tree Index checkpoint1
     </h1>
-    <div class="post-meta"><span title='2023-03-24 15:04:09 +0000 UTC'>2023-03-24</span>&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Sulv
+    <div class="post-meta"><span title='2023-03-24 15:04:09 +0000 UTC'>2023-03-24</span>&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Fischer
 
 </div>
   </header> <div class="toc">
@@ -341,85 +341,85 @@
 <li>LookUp：调用KeyIndex，根据返回的下表去判断是否获取到。</li>
 </ul>
 <p>并且叶子节点和内部节点的搜索逻辑并不相同，因此需要分别定义。</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">19
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> B_PLUS_TREE_LEAF_PAGE_TYPE ::KeyIndex(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, <span style="color:#fff;font-weight:bold">const</span> KeyComparator &amp;comparator) <span style="color:#fff;font-weight:bold">const</span> -&gt; <span style="color:#fff;font-weight:bold">int</span> {
-</span></span><span style="display:flex;"><span> <span style="color:#fff;font-weight:bold">auto</span> target = std::lower_bound(array_,array_ + GetSize(),key,
-</span></span><span style="display:flex;"><span>                                   [&amp;comparator](<span style="color:#fff;font-weight:bold">const</span> <span style="color:#fff;font-weight:bold">auto</span> &amp;pair,<span style="color:#fff;font-weight:bold">auto</span> k) {
-</span></span><span style="display:flex;"><span>                                     <span style="color:#fff;font-weight:bold">return</span> comparator(pair.first,k) &lt; <span style="color:#ff0;font-weight:bold">0</span>;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> B_PLUS_TREE_LEAF_PAGE_TYPE <span style="color:#f92672">::</span>KeyIndex(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, <span style="color:#66d9ef">const</span> KeyComparator <span style="color:#f92672">&amp;</span>comparator) <span style="color:#66d9ef">const</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">auto</span> target <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>lower_bound(array_,array_ <span style="color:#f92672">+</span> GetSize(),key,
+</span></span><span style="display:flex;"><span>                                   [<span style="color:#f92672">&amp;</span>comparator](<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">auto</span> <span style="color:#f92672">&amp;</span>pair,<span style="color:#66d9ef">auto</span> k) {
+</span></span><span style="display:flex;"><span>                                     <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">comparator</span>(pair.first,k) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>                                   }) ;
-</span></span><span style="display:flex;"><span> <span style="color:#fff;font-weight:bold">return</span> std::distance(array_,target);
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">return</span> std<span style="color:#f92672">::</span>distance(array_,target);
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> B_PLUS_TREE_LEAF_PAGE_TYPE::LookUp(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, ValueType *valueType,
-</span></span><span style="display:flex;"><span>                                                                  <span style="color:#fff;font-weight:bold">const</span> KeyComparator &amp;keyComparator) <span style="color:#fff;font-weight:bold">const</span> -&gt; <span style="color:#fff;font-weight:bold">bool</span> {
-</span></span><span style="display:flex;"><span> <span style="color:#fff;font-weight:bold">int</span> target_in_array = KeyIndex(key,keyComparator);
-</span></span><span style="display:flex;"><span> <span style="color:#fff;font-weight:bold">if</span> (target_in_array == GetSize() || keyComparator(array_[target_in_array].first,key) != <span style="color:#ff0;font-weight:bold">0</span>) {
-</span></span><span style="display:flex;"><span>   <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> B_PLUS_TREE_LEAF_PAGE_TYPE<span style="color:#f92672">::</span>LookUp(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, ValueType <span style="color:#f92672">*</span>valueType,
+</span></span><span style="display:flex;"><span>                                                                  <span style="color:#66d9ef">const</span> KeyComparator <span style="color:#f92672">&amp;</span>keyComparator) <span style="color:#66d9ef">const</span> <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">int</span> target_in_array <span style="color:#f92672">=</span> KeyIndex(key,keyComparator);
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">if</span> (target_in_array <span style="color:#f92672">==</span> GetSize() <span style="color:#f92672">||</span> keyComparator(array_[target_in_array].first,key) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> false;
 </span></span><span style="display:flex;"><span> }
-</span></span><span style="display:flex;"><span> *valueType = array_[target_in_array].second;
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">*</span>valueType <span style="color:#f92672">=</span> array_[target_in_array].second;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> true;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
-</div><div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+</div><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> B_PLUS_TREE_INTERNAL_PAGE_TYPE::Lookup(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, <span style="color:#fff;font-weight:bold">const</span> KeyComparator &amp;comparator) <span style="color:#fff;font-weight:bold">const</span> -&gt; ValueType {
-</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// skip the empty key
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">auto</span> target = std::lower_bound(array_ + <span style="color:#ff0;font-weight:bold">1</span>, array_ + GetSize(), key,
-</span></span><span style="display:flex;"><span>                                 [&amp;comparator](<span style="color:#fff;font-weight:bold">const</span> <span style="color:#fff;font-weight:bold">auto</span> &amp;pair, <span style="color:#fff;font-weight:bold">auto</span> k) { <span style="color:#fff;font-weight:bold">return</span> comparator(pair.first, k) &lt; <span style="color:#ff0;font-weight:bold">0</span>; });
-</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// larger than any key,return the last one
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (target == array_ + GetSize()) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> ValueAt(GetSize() - <span style="color:#ff0;font-weight:bold">1</span>);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> B_PLUS_TREE_INTERNAL_PAGE_TYPE<span style="color:#f92672">::</span>Lookup(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, <span style="color:#66d9ef">const</span> KeyComparator <span style="color:#f92672">&amp;</span>comparator) <span style="color:#66d9ef">const</span> <span style="color:#f92672">-&gt;</span> ValueType {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// skip the empty key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">auto</span> target <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>lower_bound(array_ <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, array_ <span style="color:#f92672">+</span> GetSize(), key,
+</span></span><span style="display:flex;"><span>                                 [<span style="color:#f92672">&amp;</span>comparator](<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">auto</span> <span style="color:#f92672">&amp;</span>pair, <span style="color:#66d9ef">auto</span> k) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">comparator</span>(pair.first, k) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>; });
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// larger than any key,return the last one
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (target <span style="color:#f92672">==</span> array_ <span style="color:#f92672">+</span> GetSize()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ValueAt</span>(GetSize() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>);
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// return the key == target_key
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (comparator(target-&gt;first, key) == <span style="color:#ff0;font-weight:bold">0</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> target-&gt;second;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// return the key == target_key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (comparator(target<span style="color:#f92672">-&gt;</span>first, key) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> target<span style="color:#f92672">-&gt;</span>second;
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// return the key &lt; target_key
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">return</span> std::prev(target)-&gt;second;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// return the key &lt; target_key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> std<span style="color:#f92672">::</span>prev(target)<span style="color:#f92672">-&gt;</span>second;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -435,98 +435,98 @@
 </ul>
 <h4 id="insert-1">Insert<a hidden class="anchor" aria-hidden="true" href="#insert-1">#</a></h4>
 <p>insert本身并不实现什么具体逻辑，对StartNewTree和insert_in_leaf进行分类即可</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">8
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> BPLUSTREE_TYPE::Insert(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, <span style="color:#fff;font-weight:bold">const</span> ValueType &amp;value, Transaction *transaction) -&gt; <span style="color:#fff;font-weight:bold">bool</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (IsEmpty()) {
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> BPLUSTREE_TYPE<span style="color:#f92672">::</span>Insert(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, <span style="color:#66d9ef">const</span> ValueType <span style="color:#f92672">&amp;</span>value, Transaction <span style="color:#f92672">*</span>transaction) <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (IsEmpty()) {
 </span></span><span style="display:flex;"><span>     StartNewTree(key,value);
-</span></span><span style="display:flex;"><span>     <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">return</span> true;
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">return</span> InsertIntoLeaf(key,value,transaction);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">InsertIntoLeaf</span>(key,value,transaction);
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><h4 id="startnewtree">StartNewTree<a hidden class="anchor" aria-hidden="true" href="#startnewtree">#</a></h4>
 <p>创建一个全新的树，创建一个叶子节点将其作为根节点，并向其中插入一条数据</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> BPLUSTREE_TYPE::StartNewTree(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, <span style="color:#fff;font-weight:bold">const</span> ValueType &amp;val) -&gt; <span style="color:#fff;font-weight:bold">void</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> page = buffer_pool_manager_-&gt;NewPage(&amp;root_page_id_);
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (page == <span style="color:#fff;font-weight:bold">nullptr</span>) {
-</span></span><span style="display:flex;"><span>     <span style="color:#fff;font-weight:bold">throw</span> Exception(ExceptionType::OUT_OF_MEMORY,<span style="color:#0ff;font-weight:bold">&#34;cannot allocate new page in StartNewPage&#34;</span>);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> BPLUSTREE_TYPE<span style="color:#f92672">::</span>StartNewTree(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, <span style="color:#66d9ef">const</span> ValueType <span style="color:#f92672">&amp;</span>val) <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> page <span style="color:#f92672">=</span> buffer_pool_manager_<span style="color:#f92672">-&gt;</span>NewPage(<span style="color:#f92672">&amp;</span>root_page_id_);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (page <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">Exception</span>(ExceptionType<span style="color:#f92672">::</span>OUT_OF_MEMORY,<span style="color:#e6db74">&#34;cannot allocate new page in StartNewPage&#34;</span>);
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> *leaf = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;LeafPage *&gt;(page-&gt;GetData());
-</span></span><span style="display:flex;"><span>  leaf-&gt;Init(root_page_id_,INVALID_PAGE_ID,leaf_max_size_);
-</span></span><span style="display:flex;"><span>  leaf-&gt;Insert(key,val,comparator_);
-</span></span><span style="display:flex;"><span>  buffer_pool_manager_-&gt;UnpinPage(page-&gt;GetPageId(), <span style="color:#fff;font-weight:bold">true</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>leaf <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>LeafPage <span style="color:#f92672">*&gt;</span>(page<span style="color:#f92672">-&gt;</span>GetData());
+</span></span><span style="display:flex;"><span>  leaf<span style="color:#f92672">-&gt;</span>Init(root_page_id_,INVALID_PAGE_ID,leaf_max_size_);
+</span></span><span style="display:flex;"><span>  leaf<span style="color:#f92672">-&gt;</span>Insert(key,val,comparator_);
+</span></span><span style="display:flex;"><span>  buffer_pool_manager_<span style="color:#f92672">-&gt;</span>UnpinPage(page<span style="color:#f92672">-&gt;</span>GetPageId(), true);
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>Insert封装在Leaf_page当中，找到一个合适的位置向其中插入，并且对于重复的key，拒绝插入。</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, <span style="color:#fff;font-weight:bold">const</span> ValueType &amp;val,<span style="color:#fff;font-weight:bold">const</span> KeyComparator &amp;keyComparator) -&gt; <span style="color:#fff;font-weight:bold">int</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> distance = KeyIndex(key,keyComparator);
-</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// larger than any key
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (distance == GetSize()) {
-</span></span><span style="display:flex;"><span>   *(array_ + distance) = std::make_pair(key,val);
-</span></span><span style="display:flex;"><span>   IncreaseSize(<span style="color:#ff0;font-weight:bold">1</span>);
-</span></span><span style="display:flex;"><span>   <span style="color:#fff;font-weight:bold">return</span> GetSize();
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> B_PLUS_TREE_LEAF_PAGE_TYPE<span style="color:#f92672">::</span>Insert(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, <span style="color:#66d9ef">const</span> ValueType <span style="color:#f92672">&amp;</span>val,<span style="color:#66d9ef">const</span> KeyComparator <span style="color:#f92672">&amp;</span>keyComparator) <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> distance <span style="color:#f92672">=</span> KeyIndex(key,keyComparator);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// larger than any key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (distance <span style="color:#f92672">==</span> GetSize()) {
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">*</span>(array_ <span style="color:#f92672">+</span> distance) <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>make_pair(key,val);
+</span></span><span style="display:flex;"><span>   IncreaseSize(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">GetSize</span>();
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#007f7f">// duplicated key
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>  <span style="color:#fff;font-weight:bold">if</span> (keyComparator(array_[distance].first,key) == <span style="color:#ff0;font-weight:bold">0</span>) {
-</span></span><span style="display:flex;"><span>   <span style="color:#fff;font-weight:bold">return</span> GetSize();
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// duplicated key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (keyComparator(array_[distance].first,key) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">GetSize</span>();
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  std::move_backward(array_ + distance,array_ + GetSize(),array_ +GetSize() + <span style="color:#ff0;font-weight:bold">1</span>);
-</span></span><span style="display:flex;"><span>  *(array_ + distance) = std::make_pair(key,val);
-</span></span><span style="display:flex;"><span>  IncreaseSize(<span style="color:#ff0;font-weight:bold">1</span>);
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">return</span> GetSize();
+</span></span><span style="display:flex;"><span>  std<span style="color:#f92672">::</span>move_backward(array_ <span style="color:#f92672">+</span> distance,array_ <span style="color:#f92672">+</span> GetSize(),array_ <span style="color:#f92672">+</span>GetSize() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">*</span>(array_ <span style="color:#f92672">+</span> distance) <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>make_pair(key,val);
+</span></span><span style="display:flex;"><span>  IncreaseSize(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">GetSize</span>();
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -584,22 +584,22 @@
 </p>
 </blockquote>
 <p>在分裂上的实现也不是很统一，由于对于叶子节点的分裂使用了先插入之后在判断的方式，因此直接分裂即可，对于内部节点需要在分裂前补上新的数据。伪代码当中的临时内存块其实不使用也可，直接在原节点上进行操作就行了。正确性上也可以得到保证(做完之后在网上看到了说直接插入会导致超出大小限制，但是我自己做下来按照直接插入的方式并没有出现什么问题)</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">6
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>  parent_node-&gt;InsertAfterNode(old_node-&gt;GetPageId(), key, new_node-&gt;GetPageId());
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> parent_sibling_node = Split(parent_node);
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> new_key = parent_sibling_node-&gt;KeyAt(<span style="color:#ff0;font-weight:bold">0</span>);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>  parent_node<span style="color:#f92672">-&gt;</span>InsertAfterNode(old_node<span style="color:#f92672">-&gt;</span>GetPageId(), key, new_node<span style="color:#f92672">-&gt;</span>GetPageId());
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> parent_sibling_node <span style="color:#f92672">=</span> Split(parent_node);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> new_key <span style="color:#f92672">=</span> parent_sibling_node<span style="color:#f92672">-&gt;</span>KeyAt(<span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>  InsertIntoParent(parent_node, new_key, parent_sibling_node);
-</span></span><span style="display:flex;"><span>  buffer_pool_manager_-&gt;UnpinPage(parent_page-&gt;GetPageId(), <span style="color:#fff;font-weight:bold">true</span>);
-</span></span><span style="display:flex;"><span>  buffer_pool_manager_-&gt;UnpinPage(parent_sibling_node-&gt;GetPageId(), <span style="color:#fff;font-weight:bold">true</span>);
+</span></span><span style="display:flex;"><span>  buffer_pool_manager_<span style="color:#f92672">-&gt;</span>UnpinPage(parent_page<span style="color:#f92672">-&gt;</span>GetPageId(), true);
+</span></span><span style="display:flex;"><span>  buffer_pool_manager_<span style="color:#f92672">-&gt;</span>UnpinPage(parent_sibling_node<span style="color:#f92672">-&gt;</span>GetPageId(), true);
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/t1.dot-20230401103521-ap9d87k.png" alt=""  />
@@ -612,42 +612,42 @@
 <ol>
 <li>
 <p>最开始通过FindLeaf() 找到Key所在的leaf_page，之后调用delete_entry进行删除，不过由于后续涉及到递归调用，因此可以把从leaf_page中删除的逻辑移到delete_entry外面</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">18
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">void</span> BPLUSTREE_TYPE::Remove(<span style="color:#fff;font-weight:bold">const</span> KeyType &amp;key, Transaction *transaction) {
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (IsEmpty()) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span>;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> BPLUSTREE_TYPE<span style="color:#f92672">::</span>Remove(<span style="color:#66d9ef">const</span> KeyType <span style="color:#f92672">&amp;</span>key, Transaction <span style="color:#f92672">*</span>transaction) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (IsEmpty()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> leaf_page = FindLeaf(key, transaction);
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> *node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;LeafPage *&gt;(leaf_page-&gt;GetData());
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> leaf_page <span style="color:#f92672">=</span> FindLeaf(key, transaction);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>LeafPage <span style="color:#f92672">*&gt;</span>(leaf_page<span style="color:#f92672">-&gt;</span>GetData());
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (node-&gt;IsLeafPage()) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> before_size = node-&gt;GetSize();
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> size = node-&gt;Delete(key, comparator_);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> (before_size == size) {
-</span></span><span style="display:flex;"><span>      <span style="color:#007f7f">// cannot find the key;
-</span></span></span><span style="display:flex;"><span><span style="color:#007f7f"></span>      <span style="color:#fff;font-weight:bold">return</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (node<span style="color:#f92672">-&gt;</span>IsLeafPage()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> before_size <span style="color:#f92672">=</span> node<span style="color:#f92672">-&gt;</span>GetSize();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> size <span style="color:#f92672">=</span> node<span style="color:#f92672">-&gt;</span>Delete(key, comparator_);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (before_size <span style="color:#f92672">==</span> size) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// cannot find the key;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">return</span>;
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>  }
 </span></span><span style="display:flex;"><span>  DeleteEntry(node, key);
@@ -679,37 +679,37 @@
 </p>
 </li>
 </ol>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
-</span></span><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> BPLUSTREE_TYPE::AdjustRoot(BPlusTreePage *old_root_node) -&gt; <span style="color:#fff;font-weight:bold">bool</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (!old_root_node-&gt;IsLeafPage() &amp;&amp; old_root_node-&gt;GetSize() == <span style="color:#ff0;font-weight:bold">1</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *root_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;InternalPage *&gt;(old_root_node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> only_child_page = buffer_pool_manager_-&gt;FetchPage(root_node-&gt;ValueAt(<span style="color:#ff0;font-weight:bold">0</span>));
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> only_child_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;BPlusTreePage *&gt;(only_child_page);
-</span></span><span style="display:flex;"><span>    only_child_node-&gt;SetParentPageId(INVALID_PAGE_ID);
-</span></span><span style="display:flex;"><span>    root_page_id_ = only_child_node-&gt;GetPageId();
-</span></span><span style="display:flex;"><span>    UpdateRootPageId(<span style="color:#ff0;font-weight:bold">0</span>);
-</span></span><span style="display:flex;"><span>    buffer_pool_manager_-&gt;DeletePage(old_root_node-&gt;GetPageId());
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">true</span>;
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>INDEX_TEMPLATE_ARGUMENTS
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> BPLUSTREE_TYPE<span style="color:#f92672">::</span>AdjustRoot(BPlusTreePage <span style="color:#f92672">*</span>old_root_node) <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>old_root_node<span style="color:#f92672">-&gt;</span>IsLeafPage() <span style="color:#f92672">&amp;&amp;</span> old_root_node<span style="color:#f92672">-&gt;</span>GetSize() <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>root_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>InternalPage <span style="color:#f92672">*&gt;</span>(old_root_node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> only_child_page <span style="color:#f92672">=</span> buffer_pool_manager_<span style="color:#f92672">-&gt;</span>FetchPage(root_node<span style="color:#f92672">-&gt;</span>ValueAt(<span style="color:#ae81ff">0</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> only_child_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>BPlusTreePage <span style="color:#f92672">*&gt;</span>(only_child_page);
+</span></span><span style="display:flex;"><span>    only_child_node<span style="color:#f92672">-&gt;</span>SetParentPageId(INVALID_PAGE_ID);
+</span></span><span style="display:flex;"><span>    root_page_id_ <span style="color:#f92672">=</span> only_child_node<span style="color:#f92672">-&gt;</span>GetPageId();
+</span></span><span style="display:flex;"><span>    UpdateRootPageId(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    buffer_pool_manager_<span style="color:#f92672">-&gt;</span>DeletePage(old_root_node<span style="color:#f92672">-&gt;</span>GetPageId());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> true;
 </span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> false;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -751,43 +751,43 @@
 </p>
 </li>
 </ol>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">12
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">13
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">14
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">15
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">16
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">17
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#fff;font-weight:bold">auto</span> BPlusTree&lt;KeyType, ValueType, KeyComparator&gt;::Coalesce(
-</span></span><span style="display:flex;"><span>    N *left_node, N *right_node, BPlusTreeInternalPage&lt;KeyType, page_id_t, KeyComparator&gt; *parent, <span style="color:#fff;font-weight:bold">int</span> index) -&gt; <span style="color:#fff;font-weight:bold">bool</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">auto</span> middle_key = parent-&gt;KeyAt(index);
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (!right_node-&gt;IsLeafPage()) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *internal_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;InternalPage *&gt;(right_node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *internal_left_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;InternalPage *&gt;(left_node);
-</span></span><span style="display:flex;"><span>    internal_node-&gt;MoveAllTo(internal_left_node, middle_key, buffer_pool_manager_);
-</span></span><span style="display:flex;"><span>  } <span style="color:#fff;font-weight:bold">else</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *leaf_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;LeafPage *&gt;(right_node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *leaf_left_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;LeafPage *&gt;(left_node);
-</span></span><span style="display:flex;"><span>    leaf_node-&gt;MoveAllTo(leaf_left_node);
-</span></span><span style="display:flex;"><span>    parent-&gt;Remove(index);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">auto</span> BPlusTree<span style="color:#f92672">&lt;</span>KeyType, ValueType, KeyComparator<span style="color:#f92672">&gt;::</span>Coalesce(
+</span></span><span style="display:flex;"><span>    N <span style="color:#f92672">*</span>left_node, N <span style="color:#f92672">*</span>right_node, BPlusTreeInternalPage<span style="color:#f92672">&lt;</span>KeyType, page_id_t, KeyComparator<span style="color:#f92672">&gt;</span> <span style="color:#f92672">*</span>parent, <span style="color:#66d9ef">int</span> index) <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">auto</span> middle_key <span style="color:#f92672">=</span> parent<span style="color:#f92672">-&gt;</span>KeyAt(index);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>right_node<span style="color:#f92672">-&gt;</span>IsLeafPage()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>internal_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>InternalPage <span style="color:#f92672">*&gt;</span>(right_node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>internal_left_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>InternalPage <span style="color:#f92672">*&gt;</span>(left_node);
+</span></span><span style="display:flex;"><span>    internal_node<span style="color:#f92672">-&gt;</span>MoveAllTo(internal_left_node, middle_key, buffer_pool_manager_);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>leaf_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>LeafPage <span style="color:#f92672">*&gt;</span>(right_node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>leaf_left_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>LeafPage <span style="color:#f92672">*&gt;</span>(left_node);
+</span></span><span style="display:flex;"><span>    leaf_node<span style="color:#f92672">-&gt;</span>MoveAllTo(leaf_left_node);
+</span></span><span style="display:flex;"><span>    parent<span style="color:#f92672">-&gt;</span>Remove(index);
 </span></span><span style="display:flex;"><span>  }
 </span></span><span style="display:flex;"><span>  DeleteEntry(parent, middle_key);
-</span></span><span style="display:flex;"><span>  buffer_pool_manager_-&gt;DeletePage(right_node-&gt;GetPageId());
-</span></span><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">return</span> <span style="color:#fff;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>  buffer_pool_manager_<span style="color:#f92672">-&gt;</span>DeletePage(right_node<span style="color:#f92672">-&gt;</span>GetPageId());
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> true;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -812,30 +812,30 @@
 </li>
 </ol>
 <p>叶子节点的为完全对称的，因此只需要完全对称的实现即可，将第一个改为最后一个，逻辑上完全一致。</p>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">11
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>  <span style="color:#fff;font-weight:bold">if</span> (node-&gt;IsLeafPage()) {
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *leaf_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;LeafPage *&gt;(node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *leaf_neighbor_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;LeafPage *&gt;(node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> (from_prev) {
-</span></span><span style="display:flex;"><span>      leaf_neighbor_node-&gt;MoveLastToFrontOf(leaf_node);
-</span></span><span style="display:flex;"><span>      parent-&gt;SetKeyAt(index, leaf_node-&gt;KeyAt(<span style="color:#ff0;font-weight:bold">0</span>));
-</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> {
-</span></span><span style="display:flex;"><span>      leaf_neighbor_node-&gt;MoveFrontToLastOf(leaf_node);
-</span></span><span style="display:flex;"><span>      parent-&gt;SetKeyAt(index, leaf_neighbor_node-&gt;KeyAt(<span style="color:#ff0;font-weight:bold">0</span>));
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (node<span style="color:#f92672">-&gt;</span>IsLeafPage()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>leaf_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>LeafPage <span style="color:#f92672">*&gt;</span>(node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>leaf_neighbor_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>LeafPage <span style="color:#f92672">*&gt;</span>(node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (from_prev) {
+</span></span><span style="display:flex;"><span>      leaf_neighbor_node<span style="color:#f92672">-&gt;</span>MoveLastToFrontOf(leaf_node);
+</span></span><span style="display:flex;"><span>      parent<span style="color:#f92672">-&gt;</span>SetKeyAt(index, leaf_node<span style="color:#f92672">-&gt;</span>KeyAt(<span style="color:#ae81ff">0</span>));
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      leaf_neighbor_node<span style="color:#f92672">-&gt;</span>MoveFrontToLastOf(leaf_node);
+</span></span><span style="display:flex;"><span>      parent<span style="color:#f92672">-&gt;</span>SetKeyAt(index, leaf_neighbor_node<span style="color:#f92672">-&gt;</span>KeyAt(<span style="color:#ae81ff">0</span>));
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>  }
 </span></span></code></pre></td></tr></table>
@@ -862,29 +862,29 @@
 </p>
 </li>
 </ol>
-<div class="highlight"><div style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
 <table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 1
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 2
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 3
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 4
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 5
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 6
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 7
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 8
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272"> 9
-</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#727272">10
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *internal_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;InternalPage *&gt;(node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">auto</span> *internal_neighbor_node = <span style="color:#fff;font-weight:bold">reinterpret_cast</span>&lt;InternalPage *&gt;(neighbor_node);
-</span></span><span style="display:flex;"><span>    <span style="color:#fff;font-weight:bold">if</span> (from_prev) {
-</span></span><span style="display:flex;"><span>      internal_neighbor_node-&gt;MoveLastToFrontOf(internal_node, parent-&gt;KeyAt(index), buffer_pool_manager_);
-</span></span><span style="display:flex;"><span>      parent-&gt;SetKeyAt(index, internal_node-&gt;KeyAt(<span style="color:#ff0;font-weight:bold">0</span>));
-</span></span><span style="display:flex;"><span>    } <span style="color:#fff;font-weight:bold">else</span> {
-</span></span><span style="display:flex;"><span>      <span style="color:#fff;font-weight:bold">auto</span> new_parent_key = internal_neighbor_node-&gt;KeyAt(<span style="color:#ff0;font-weight:bold">1</span>);
-</span></span><span style="display:flex;"><span>      internal_neighbor_node-&gt;MoveFrontToLastOf(internal_node, parent-&gt;KeyAt(index + <span style="color:#ff0;font-weight:bold">1</span>), buffer_pool_manager_);
-</span></span><span style="display:flex;"><span>      parent-&gt;SetKeyAt(index + <span style="color:#ff0;font-weight:bold">1</span>, new_parent_key);
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>internal_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>InternalPage <span style="color:#f92672">*&gt;</span>(node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">auto</span> <span style="color:#f92672">*</span>internal_neighbor_node <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>InternalPage <span style="color:#f92672">*&gt;</span>(neighbor_node);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (from_prev) {
+</span></span><span style="display:flex;"><span>      internal_neighbor_node<span style="color:#f92672">-&gt;</span>MoveLastToFrontOf(internal_node, parent<span style="color:#f92672">-&gt;</span>KeyAt(index), buffer_pool_manager_);
+</span></span><span style="display:flex;"><span>      parent<span style="color:#f92672">-&gt;</span>SetKeyAt(index, internal_node<span style="color:#f92672">-&gt;</span>KeyAt(<span style="color:#ae81ff">0</span>));
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">auto</span> new_parent_key <span style="color:#f92672">=</span> internal_neighbor_node<span style="color:#f92672">-&gt;</span>KeyAt(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>      internal_neighbor_node<span style="color:#f92672">-&gt;</span>MoveFrontToLastOf(internal_node, parent<span style="color:#f92672">-&gt;</span>KeyAt(index <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>), buffer_pool_manager_);
+</span></span><span style="display:flex;"><span>      parent<span style="color:#f92672">-&gt;</span>SetKeyAt(index <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, new_parent_key);
 </span></span><span style="display:flex;"><span>    }
 </span></span></code></pre></td></tr></table>
 </div>
@@ -902,12 +902,12 @@
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="prev" href="http://itfischer.space/en/posts/tech/bustub/busttub-lab2-c2/">
+  <a class="prev" href="https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/">
     <span class="title">« Prev</span>
     <br>
     <span>BusTub Lab2 B&#43;Tree Index checkpoint2</span>
   </a>
-  <a class="next" href="http://itfischer.space/en/posts/tech/bustub/bustub-lab1/">
+  <a class="next" href="https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/">
     <span class="title">Next »</span>
     <br>
     <span>BusTub Lab1 Buffer Pool Manager</span>
@@ -918,7 +918,7 @@
 <ul class="share-buttons">
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on x"
-            href="https://x.com/intent/tweet/?text=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f&amp;hashtags=">
+            href="https://x.com/intent/tweet/?text=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f&amp;hashtags=">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
@@ -927,7 +927,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f&amp;title=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;summary=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;source=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f&amp;title=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;summary=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;source=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
@@ -936,7 +936,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f&title=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1">
+            href="https://reddit.com/submit?url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f&title=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
@@ -945,7 +945,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
+            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
@@ -954,7 +954,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on whatsapp"
-            href="https://api.whatsapp.com/send?text=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1%20-%20http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
+            href="https://api.whatsapp.com/send?text=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1%20-%20https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
@@ -963,7 +963,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on telegram"
-            href="https://telegram.me/share/url?text=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;url=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
+            href="https://telegram.me/share/url?text=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
             <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
@@ -972,7 +972,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share BusTub Lab2 B&#43;Tree Index checkpoint1 on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&u=http%3a%2f%2fitfischer.space%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
+            href="https://news.ycombinator.com/submitlink?t=BusTub%20Lab2%20B%2bTree%20Index%20checkpoint1&u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fbustub%2fbustub-lab2-c1%2f">
             <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
                 <path
@@ -987,7 +987,7 @@
     </main>
     
 <footer class="footer">
-    <span>&copy; 2024 <a href="http://itfischer.space/en/">Fischer&#39;s Blog</a></span>
+    <span>&copy; 2024 <a href="https://fischer0522.github.io/en/">Fischer&#39;s Blog</a></span>
     <span>
         Powered by
         <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &

@@ -2,24 +2,24 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>OS on Fischer&#39;s Blog</title>
-    <link>http://itfischer.space/en/categories/os/</link>
+    <link>https://fischer0522.github.io/en/categories/os/</link>
     <description>Recent content in OS on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sat, 27 May 2023 09:45:02 +0000</lastBuildDate>
-    <atom:link href="http://itfischer.space/en/categories/os/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://fischer0522.github.io/en/categories/os/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>内存虚拟化</title>
-      <link>http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
       <pubDate>Sat, 27 May 2023 09:45:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
       <description>内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中</description>
     </item>
     <item>
       <title>CPU虚拟化</title>
-      <link>http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
       <pubDate>Fri, 26 May 2023 21:21:13 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
       <description>如何理解CPU虚拟化？ CPU虚拟化，用一句话简单的概括就是，通过CPU虚拟化的手段，可以让多个程序在同一时间段内在一台机器上运行，共享CPU</description>
     </item>
   </channel>

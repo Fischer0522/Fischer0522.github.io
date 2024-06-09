@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>00-Etcd-Raft整体架构 | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e">
+<meta name="author" content="Fischer">
+<link rel="canonical" href="https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="https://fischer0522.github.io/img/Navigation.svg">
+<link rel="apple-touch-icon" href="https://fischer0522.github.io/Navigation.svg">
+<link rel="mask-icon" href="https://fischer0522.github.io/Navigation.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="00-Etcd-Raft整体架构" />
+<meta property="og:description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-05-02T09:31:59+00:00" />
+<meta property="article:modified_time" content="2024-05-02T09:31:59+00:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="00-Etcd-Raft整体架构"/>
+<meta name="twitter:description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "https://fischer0522.github.io/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Tech",
+      "item": "https://fischer0522.github.io/en/posts/tech/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "00-Etcd-Raft整体架构",
+      "item": "https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "00-Etcd-Raft整体架构",
+  "name": "00-Etcd-Raft整体架构",
+  "description": "在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e",
+  "keywords": [
+    
+  ],
+  "articleBody": "在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被etcd引用:GitHub - etcd-io/raft: Raft library for maintaining a replicated state machine\netcd/raft作为一个投入生产环境的raft package，ectd/raft在架构上的最大的魅力就是将整个系统视为一个状态机，并且将各部分进行解耦：\n在基础结构上，etcd/raft将raft视为一个状态机，上层给予Raft一些输入，如tick或者message，Raft就会根据输入作出一些响应，更改自身状态，最后提供一些输出，上层处理完输出之后再调用Advance来继续推进Raft去更新状态。\n在etcd当中，raft package仅提供raft的逻辑，如如何进行选举和发送日志，但是如持久化存储，网络通信都由上层应用负责，raft package通过 Ready 将需要存储的日志，快照，以及需要发送的消息交给上层。\n在结构上，etcd/raft以Message为主体和驱动，整个Raft的执行流程就是在tick的驱动下，不断的执行和发送Message的过程，并不会像MIT6.824 当中那样在一个函数当中能看到完整的rpc调用和处理流程，每个Message只会负责整体逻辑的一部分，执行完自己的内容就生成一个新的Message发送，其他拿到这条Message的来完成这个事件的剩余逻辑，举个例子，在进行选举时：\ncandidate首先会向其他节点发送一个请求投票的Message，此时candidate目前负责的逻辑已经执行结束，candidate可以去执行其他内容 follower受到candidate发送的Message就会进行处理，投票或者忽略，同样将结果封装成一条Message再发送给candidate Candidate 再收到 Message 之后继续完成剩余的逻辑，统计投票，决定是否当选 整个执行过程是松散、非连续的。但是主体逻辑全部使用 Message 来承载的话，整体结构就会非常清晰，raft 只需要不断的处理 Message 即可，并在适当的时候产生新的 Message，这也符合状态机的定义，即Message和Command作为系统的输入，调用Ready产生的Log, Message, Snapshot作为系统的输出。\n正如上面所说，单独的etcd/raft是无法运行的，需要补充额外的逻辑，用于调用驱etcd/raft，这一部分在etcd当中也有实现，位于raftexample目录下。提供了一个使用raft来提供http kv存储的最小实现。因此，在本文中，笔者也会分为raft example 和 raft package两部分介绍etcd/raft。后续为了便于区分，笔者会将上层驱动性质的称为 RaftNode ，而下层则称为Raft package或者底层Raft，而最上层接收请求的部分则称为状态机。\nRaft example 这一部分代码位于 contrib/raftexample 当中，除去http封装，剩下的逻辑可以分为两部分：\nKVStore：充当状态机，接收http层传来的请求，将请求封装，通过propose向下传递，同时读取commit的日志，应用到自身 RaftNode：驱动底层Raft，完成通信，存储等额外功能 State machine kvstore，即状态机，实现的非常简单，结构体定义如下：\n1 2 3 4 5 6 type kvstore struct { proposeC chan\u003c- string // channel for proposing updates mu sync.RWMutex kvStore map[string]string // current committed key-value pairs snapshotter *snap.Snapshotter } 在初始化时，通过传入的参数，建立起了状态机和RaftNode的连接：\nsnapshotter：用于通知，加载日志，通过日志完成系统的恢复 proposeC：channel发送方，将接收到的请求进行封装，通过该channel发送给raft commitC：接收下层raft确认提交的内容，应用到状态机 errorC：处理error 在状态机初始化完成后，开启一个协程，用于从下层读取提交的日志，状态机本身提供propose和lookup来处理读写请求 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 func newKVStore(snapshotter *snap.Snapshotter, proposeC chan\u003c- string, commitC \u003c-chan *commit, errorC \u003c-chan error) *kvstore { s := \u0026kvstore{proposeC: proposeC, kvStore: make(map[string]string), snapshotter: snapshotter} snapshot, err := s.loadSnapshot() if err != nil { log.Panic(err) } if snapshot != nil { log.Printf(\"loading snapshot at term %d and index %d\", snapshot.Metadata.Term, snapshot.Metadata.Index) if err := s.recoverFromSnapshot(snapshot.Data); err != nil { log.Panic(err) } } // read commits from raft into kvStore map until error go s.readCommits(commitC, errorC) return s } 不过，在raft example当中，仅仅只是做了简单的演示，并没有提供线性一致性读的保证，lookup仅仅会直接搜索当前已经commit的内容，对于在此次读取前发送，但还没有应用的内容无法读取。如果想满足线性一致性也很简单，可以直接使用log read，对于读请求也封装成日志去共识，或者使用readIndex/lease read来完成优化\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 func (s *kvstore) Lookup(key string) (string, bool) { s.mu.RLock() defer s.mu.RUnlock() v, ok := s.kvStore[key] return v, ok } func (s *kvstore) Propose(k string, v string) { var buf strings.Builder if err := gob.NewEncoder(\u0026buf).Encode(kv{k, v}); err != nil { log.Fatal(err) } s.proposeC \u003c- buf.String() } RaftNode 在raft example中，通过RaftNode完成对Raft Package的调用，驱动下层Raft运行，并且处理掉存储，消息发送，提交日志应用等操作。\n为了研究RaftNode如何驱动底层Raft的运行，我们不妨先看看下层提供或者说暴露了什么接口，这里封装成了一个interface的形式,。对于RaftNode而言，只需要通过配置信息来初始化该Interface的实现，然后在合适的时机调用对应的方法即可。：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 // Node represents a node in a raft cluster. type Node interface { // Tick increments the internal logical clock for the Node by a single tick. Election // timeouts and heartbeat timeouts are in units of ticks. Tick() // Campaign causes the Node to transition to candidate state and start campaigning to become leader. Campaign(ctx context.Context) error // Propose proposes that data be appended to the log. Note that proposals can be lost without // notice, therefore it is user's job to ensure proposal retries. Propose(ctx context.Context, data []byte) error // ProposeConfChange proposes a configuration change. Like any proposal, the // configuration change may be dropped with or without an error being // returned. In particular, configuration changes are dropped unless the // leader has certainty that there is no prior unapplied configuration // change in its log. // // The method accepts either a pb.ConfChange (deprecated) or pb.ConfChangeV2 // message. The latter allows arbitrary configuration changes via joint // consensus, notably including replacing a voter. Passing a ConfChangeV2 // message is only allowed if all Nodes participating in the cluster run a // version of this library aware of the V2 API. See pb.ConfChangeV2 for // usage details and semantics. ProposeConfChange(ctx context.Context, cc pb.ConfChangeI) error // Step advances the state machine using the given message. ctx.Err() will be returned, if any. Step(ctx context.Context, msg pb.Message) error // Ready returns a channel that returns the current point-in-time state. // Users of the Node must call Advance after retrieving the state returned by Ready (unless // async storage writes is enabled, in which case it should never be called). // // NOTE: No committed entries from the next Ready may be applied until all committed entries // and snapshots from the previous one have finished. Ready() \u003c-chan Ready // Advance notifies the Node that the application has saved progress up to the last Ready. // It prepares the node to return the next available Ready. // // The application should generally call Advance after it applies the entries in last Ready. // // However, as an optimization, the application may call Advance while it is applying the // commands. For example. when the last Ready contains a snapshot, the application might take // a long time to apply the snapshot data. To continue receiving Ready without blocking raft // progress, it can call Advance before finishing applying the last ready. // // NOTE: Advance must not be called when using AsyncStorageWrites. Response messages from the // local append and apply threads take its place. Advance() // ApplyConfChange applies a config change (previously passed to // ProposeConfChange) to the node. This must be called whenever a config // change is observed in Ready.CommittedEntries, except when the app decides // to reject the configuration change (i.e. treats it as a noop instead), in // which case it must not be called. // // Returns an opaque non-nil ConfState protobuf which must be recorded in // snapshots. ApplyConfChange(cc pb.ConfChangeI) *pb.ConfState // TransferLeadership attempts to transfer leadership to the given transferee. TransferLeadership(ctx context.Context, lead, transferee uint64) // ForgetLeader forgets a follower's current leader, changing it to None. It // remains a leaderless follower in the current term, without campaigning. // // This is useful with PreVote+CheckQuorum, where followers will normally not // grant pre-votes if they've heard from the leader in the past election // timeout interval. Leaderless followers can grant pre-votes immediately, so // if a quorum of followers have strong reason to believe the leader is dead // (for example via a side-channel or external failure detector) and forget it // then they can elect a new leader immediately, without waiting out the // election timeout. They will also revert to normal followers if they hear // from the leader again, or transition to candidates on an election timeout. // // For example, consider a three-node cluster where 1 is the leader and 2+3 // have just received a heartbeat from it. If 2 and 3 believe the leader has // now died (maybe they know that an orchestration system shut down 1's VM), // we can instruct 2 to forget the leader and 3 to campaign. 2 will then be // able to grant 3's pre-vote and elect 3 as leader immediately (normally 2 // would reject the vote until an election timeout passes because it has heard // from the leader recently). However, 3 can not campaign unilaterally, a // quorum have to agree that the leader is dead, which avoids disrupting the // leader if individual nodes are wrong about it being dead. // // This does nothing with ReadOnlyLeaseBased, since it would allow a new // leader to be elected without the old leader knowing. ForgetLeader(ctx context.Context) error // ReadIndex request a read state. The read state will be set in the ready. // Read state has a read index. Once the application advances further than the read // index, any linearizable read requests issued before the read request can be // processed safely. The read state will have the same rctx attached. // Note that request can be lost without notice, therefore it is user's job // to ensure read index retries. ReadIndex(ctx context.Context, rctx []byte) error // Status returns the current status of the raft state machine. Status() Status // ReportUnreachable reports the given node is not reachable for the last send. ReportUnreachable(id uint64) // ReportSnapshot reports the status of the sent snapshot. The id is the raft ID of the follower // who is meant to receive the snapshot, and the status is SnapshotFinish or SnapshotFailure. // Calling ReportSnapshot with SnapshotFinish is a no-op. But, any failure in applying a // snapshot (for e.g., while streaming it from leader to follower), should be reported to the // leader with SnapshotFailure. When leader sends a snapshot to a follower, it pauses any raft // log probes until the follower can apply the snapshot and advance its state. If the follower // can't do that, for e.g., due to a crash, it could end up in a limbo, never getting any // updates from the leader. Therefore, it is crucial that the application ensures that any // failure in snapshot sending is caught and reported back to the leader; so it can resume raft // log probing in the follower. ReportSnapshot(id uint64, status SnapshotStatus) // Stop performs any necessary termination of the Node. Stop() } 启动流程 在 newRaftNode 当中，逻辑分为三部分：\n初始化底层raft节点，并建立起各个节点间的通信 开启一个channel，驱动底层Raft，并从底层Raft获取已经处理好的信息 配置channel，完成RaftNode和状态机之间的双向连通 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 // newRaftNode initiates a raft instance and returns a committed log entry // channel and error channel. Proposals for log updates are sent over the // provided the proposal channel. All log entries are replayed over the // commit channel, followed by a nil message (to indicate the channel is // current), then new log entries. To shutdown, close proposeC and read errorC. func newRaftNode(id int, peers []string, join bool, getSnapshot func() ([]byte, error), proposeC \u003c-chan string, confChangeC \u003c-chan raftpb.ConfChange) (\u003c-chan *commit, \u003c-chan error, \u003c-chan *snap.Snapshotter) { commitC := make(chan *commit) errorC := make(chan error) rc := \u0026raftNode{ proposeC: proposeC, confChangeC: confChangeC, commitC: commitC, errorC: errorC, id: id, peers: peers, join: join, waldir: fmt.Sprintf(\"raftexample-%d\", id), snapdir: fmt.Sprintf(\"raftexample-%d-snap\", id), getSnapshot: getSnapshot, snapCount: defaultSnapshotCount, stopc: make(chan struct{}), httpstopc: make(chan struct{}), httpdonec: make(chan struct{}), logger: zap.NewExample(), snapshotterReady: make(chan *snap.Snapshotter, 1), // rest of structure populated after WAL replay } go rc.startRaft() return commitC, errorC, rc.snapshotterReady } Raft Package初始化 Raft package的初始化封装在 startRaft() 当中，主要逻辑为：\n读取原本的持久化文件，获取snapshot和wal中的内容，恢复状态。这里的wal是log entry的wal，因为raft package并不会对log进行持久化存储，因此在raft example当中提供了一个wal + memory的存储方式，对应结构体为MemoryStorage 生成一份配置，初始化下层的Raft package中的节点 初始化网络，连通各个节点 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 func (rc *raftNode) startRaft() { if !fileutil.Exist(rc.snapdir) { if err := os.Mkdir(rc.snapdir, 0750); err != nil { log.Fatalf(\"raftexample: cannot create dir for snapshot (%v)\", err) } } rc.snapshotter = snap.New(zap.NewExample(), rc.snapdir) oldwal := wal.Exist(rc.waldir) rc.wal = rc.replayWAL() // signal replay has finished rc.snapshotterReady \u003c- rc.snapshotter rpeers := make([]raft.Peer, len(rc.peers)) for i := range rpeers { rpeers[i] = raft.Peer{ID: uint64(i + 1)} } c := \u0026raft.Config{ ID: uint64(rc.id), ElectionTick: 10, HeartbeatTick: 1, Storage: rc.raftStorage, MaxSizePerMsg: 1024 * 1024, MaxInflightMsgs: 256, MaxUncommittedEntriesSize: 1 \u003c\u003c 30, } if oldwal || rc.join { rc.node = raft.RestartNode(c) } else { rc.node = raft.StartNode(c, rpeers) } rc.transport = \u0026rafthttp.Transport{ Logger: rc.logger, ID: types.ID(rc.id), ClusterID: 0x1000, Raft: rc, ServerStats: stats.NewServerStats(\"\", \"\"), LeaderStats: stats.NewLeaderStats(zap.NewExample(), strconv.Itoa(rc.id)), ErrorC: make(chan error), } rc.transport.Start() for i := range rc.peers { if i+1 != rc.id { rc.transport.AddPeer(types.ID(i+1), []string{rc.peers[i]}) } } go rc.serveRaft() go rc.serveChannels() } serveChannels 完成Raft Package的初始化之后，通过 serveChannls （在startRaft当中被调用）会建立raft node和raft package之间的连接，即将propose的请求向下传递，并且从下层获取处理完的内容。\n从raft node至 raft package自上向下的过程比较简单，只需要把propose和confChange调用对应的方法就可以传递下去，而这两个请求来自于状态机，即raft node只是通过channel做了一次转发\n自下向上通过Ready结构体进行传递，主要内容为：\nSoftState：不需要持久化存储的状态，其中包含的当前节点的身份和Leader Id HardState：持久化存储的状态，如Raft论文中所述，其中包含了VoteFor Term和Commit进度 ReadState：ReadIndex线性一致性读优化 Entry: Log Entry，交给上层存储 Snapshot，同，上层进行存储 CommitEntries：确定提交的日志，可以交给上层来完成Apply Message：发送给其他的节点 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 // Ready encapsulates the entries and messages that are ready to read, // be saved to stable storage, committed or sent to other peers. // All fields in Ready are read-only. type Ready struct { // The current volatile state of a Node. // SoftState will be nil if there is no update. // It is not required to consume or store SoftState. *SoftState // The current state of a Node to be saved to stable storage BEFORE // Messages are sent. // // HardState will be equal to empty state if there is no update. // // If async storage writes are enabled, this field does not need to be acted // on immediately. It will be reflected in a MsgStorageAppend message in the // Messages slice. pb.HardState // ReadStates can be used for node to serve linearizable read requests locally // when its applied index is greater than the index in ReadState. // Note that the readState will be returned when raft receives msgReadIndex. // The returned is only valid for the request that requested to read. ReadStates []ReadState // Entries specifies entries to be saved to stable storage BEFORE // Messages are sent. // // If async storage writes are enabled, this field does not need to be acted // on immediately. It will be reflected in a MsgStorageAppend message in the // Messages slice. Entries []pb.Entry // Snapshot specifies the snapshot to be saved to stable storage. // // If async storage writes are enabled, this field does not need to be acted // on immediately. It will be reflected in a MsgStorageAppend message in the // Messages slice. Snapshot pb.Snapshot // CommittedEntries specifies entries to be committed to a // store/state-machine. These have previously been appended to stable // storage. // // If async storage writes are enabled, this field does not need to be acted // on immediately. It will be reflected in a MsgStorageApply message in the // Messages slice. CommittedEntries []pb.Entry // Messages specifies outbound messages. // // If async storage writes are not enabled, these messages must be sent // AFTER Entries are appended to stable storage. // // If async storage writes are enabled, these messages can be sent // immediately as the messages that have the completion of the async writes // as a precondition are attached to the individual MsgStorage{Append,Apply} // messages instead. // // If it contains a MsgSnap message, the application MUST report back to raft // when the snapshot has been received or has failed by calling ReportSnapshot. Messages []pb.Message // MustSync indicates whether the HardState and Entries must be durably // written to disk or if a non-durable write is permissible. MustSync bool } etcd/raft批处理的形式一次性返回一个Ready，其中封装了经Raft package处理好的各类信息，上层拿到之后，该存储的存储，该执行的执行，该发送的发送：\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 for { select { case \u003c-ticker.C: rc.node.Tick() // store raft entries to wal, then publish over commit channel case rd := \u003c-rc.node.Ready(): // Must save the snapshot file and WAL snapshot entry before saving any other entries // or hardstate to ensure that recovery after a snapshot restore is possible. if !raft.IsEmptySnap(rd.Snapshot) { rc.saveSnap(rd.Snapshot) } rc.wal.Save(rd.HardState, rd.Entries) if !raft.IsEmptySnap(rd.Snapshot) { rc.raftStorage.ApplySnapshot(rd.Snapshot) rc.publishSnapshot(rd.Snapshot) } rc.raftStorage.Append(rd.Entries) rc.transport.Send(rc.processMessages(rd.Messages)) applyDoneC, ok := rc.publishEntries(rc.entriesToApply(rd.CommittedEntries)) if !ok { rc.stop() return } rc.maybeTriggerSnapshot(applyDoneC) rc.node.Advance() case err := \u003c-rc.transport.ErrorC: rc.writeError(err) return case \u003c-rc.stopc: rc.stop() return } } 状态机连接 RaftNode的启动时，调用处会创建好节点id，集群的信息，以及proposeC, confChagneC。\nproposeC由状态机和RaftNode共享，状态机那一端持有sender，将请求发送给RaftNode，RaftNode的receiver获取之后就会调用Propose方法将请求转发给下层去完成共识，在 newRaftNode 当中，会创建一个commitC，来从下层获取提交的日志，之后这个channel也会返回给状态机，此时完成了RaftNode和状态机的双向连通。\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 func newRaftNode(id int, peers []string, join bool, getSnapshot func() ([]byte, error), proposeC \u003c-chan string, confChangeC \u003c-chan raftpb.ConfChange) (\u003c-chan *commit, \u003c-chan error, \u003c-chan *snap.Snapshotter) { commitC := make(chan *commit) errorC := make(chan error) rc := \u0026raftNode{ proposeC: proposeC, confChangeC: confChangeC, commitC: commitC, errorC: errorC, id: id, peers: peers, join: join, waldir: fmt.Sprintf(\"raftexample-%d\", id), snapdir: fmt.Sprintf(\"raftexample-%d-snap\", id), getSnapshot: getSnapshot, snapCount: defaultSnapshotCount, stopc: make(chan struct{}), httpstopc: make(chan struct{}), httpdonec: make(chan struct{}), logger: zap.NewExample(), snapshotterReady: make(chan *snap.Snapshotter, 1), // rest of structure populated after WAL replay } go rc.startRaft() return commitC, errorC, rc.snapshotterReady } 这一部分结合test中的内容会更加清晰:\n状态机持有proposeC的sender，raftNode中持有proposeC的receiver，建立起了State Machine -\u003e RaftNode的连接 commitC由raftNode创建，之后传入给状态机，完成了RaftNode -\u003e State Machine的连接 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 func TestPutAndGetKeyValue(t *testing.T) { clusters := []string{\"http://127.0.0.1:9021\"} proposeC := make(chan string) defer close(proposeC) confChangeC := make(chan raftpb.ConfChange) defer close(confChangeC) var kvs *kvstore getSnapshot := func() ([]byte, error) { return kvs.getSnapshot() } commitC, errorC, snapshotterReady := newRaftNode(1, clusters, false, getSnapshot, proposeC, confChangeC) kvs = newKVStore(\u003c-snapshotterReady, proposeC, commitC, errorC) } Summary 在本章中，笔者介绍了etcd/raft的设计思想和整体架构，大致展现了etcd/raft作为一个提供raft逻辑的库，是如何运行的，但是对于etcd/raft内部的细节并未展开，一方面是关于etcd/raft，已经有了相当优秀的文章：深入浅出etcd/raft —— 0x00 引言 - 叉鸽 MrCroxx 的博客。\n另一方面是，笔者写本篇文章主要目的是介绍一下如何基于etcd/raft来实现一个简单的curp算法。不过临近毕业，加上目前还在实习，短时间内大概没有时间完成更新，因此目前文章的题目定为了Etcd/raft整体架构，后续如果更新，大概会改成从《从 0.5 到 1 实现curp-q》\n如果想看一个架构上与etcd/raft相同，但稍微简化一点的Raft，也可以看笔者的另一篇文章：\ntoydb源码阅读03-Raft - 知乎\ntoydb源码阅读04-Raft State Machine - 知乎\n",
+  "wordCount" : "6057",
+  "inLanguage": "en",
+  "datePublished": "2024-05-02T09:31:59Z",
+  "dateModified": "2024-05-02T09:31:59Z",
+  "author":{
+    "@type": "Person",
+    "name": "Fischer"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://fischer0522.github.io/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://fischer0522.github.io/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="https://fischer0522.github.io/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://fischer0522.github.io/en/search" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://fischer0522.github.io/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://fischer0522.github.io/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://fischer0522.github.io/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://fischer0522.github.io/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://fischer0522.github.io/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://fischer0522.github.io/en/">Home</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/">Tech</a></div>
+    <h1 class="post-title entry-hint-parent">
+      00-Etcd-Raft整体架构
+    </h1>
+    <div class="post-meta"><span title='2024-05-02 09:31:59 +0000 UTC'>2024-05-02</span>&nbsp;·&nbsp;13 min&nbsp;·&nbsp;Fischer
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#raft-example" aria-label="Raft example">Raft example</a><ul>
+                        
+                <li>
+                    <a href="#state-machine" aria-label="State machine">State machine</a></li>
+                <li>
+                    <a href="#raftnode" aria-label="RaftNode">RaftNode</a></li>
+                <li>
+                    <a href="#%e5%90%af%e5%8a%a8%e6%b5%81%e7%a8%8b" aria-label="启动流程">启动流程</a><ul>
+                        
+                <li>
+                    <a href="#raft-package%e5%88%9d%e5%a7%8b%e5%8c%96" aria-label="Raft Package初始化">Raft Package初始化</a></li>
+                <li>
+                    <a href="#servechannels" aria-label="serveChannels">serveChannels</a></li>
+                <li>
+                    <a href="#%e7%8a%b6%e6%80%81%e6%9c%ba%e8%bf%9e%e6%8e%a5" aria-label="状态机连接">状态机连接</a></li></ul>
+                </li></ul>
+                </li>
+                <li>
+                    <a href="#summary" aria-label="Summary">Summary</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p>在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被etcd引用:<a href="https://github.com/etcd-io/raft">GitHub - etcd-io/raft: Raft library for maintaining a replicated state machine</a></p>
+<p>etcd/raft作为一个投入生产环境的raft package，ectd/raft在架构上的最大的魅力就是将整个系统视为一个状态机，并且将各部分进行解耦：</p>
+<p>在基础结构上，etcd/raft将raft视为一个状态机，上层给予Raft一些输入，如tick或者message，Raft就会根据输入作出一些响应，更改自身状态，最后提供一些输出，上层处理完输出之后再调用Advance来继续推进Raft去更新状态。</p>
+<p>在etcd当中，raft package仅提供raft的逻辑，如如何进行选举和发送日志，但是如持久化存储，网络通信都由上层应用负责，raft package通过 <code>Ready</code> 将需要存储的日志，快照，以及需要发送的消息交给上层。</p>
+<p>在结构上，etcd/raft以Message为主体和驱动，整个Raft的执行流程就是在tick的驱动下，不断的执行和发送Message的过程，并不会像MIT6.824 当中那样在一个函数当中能看到完整的rpc调用和处理流程，每个Message只会负责整体逻辑的一部分，执行完自己的内容就生成一个新的Message发送，其他拿到这条Message的来完成这个事件的剩余逻辑，举个例子，在进行选举时：</p>
+<ol>
+<li>candidate首先会向其他节点发送一个请求投票的Message，此时candidate目前负责的逻辑已经执行结束，candidate可以去执行其他内容</li>
+<li>follower受到candidate发送的Message就会进行处理，投票或者忽略，同样将结果封装成一条Message再发送给candidate</li>
+<li>Candidate 再收到 Message 之后继续完成剩余的逻辑，统计投票，决定是否当选</li>
+</ol>
+<p>整个执行过程是松散、非连续的。但是主体逻辑全部使用 Message 来承载的话，整体结构就会非常清晰，raft 只需要不断的处理 Message 即可，并在适当的时候产生新的 Message，这也符合状态机的定义，即Message和Command作为系统的输入，调用Ready产生的Log, Message, Snapshot作为系统的输出。</p>
+<p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20240413210029.png" alt="image.png"  />
+</p>
+<p>正如上面所说，单独的etcd/raft是无法运行的，需要补充额外的逻辑，用于调用驱etcd/raft，这一部分在etcd当中也有实现，位于raftexample目录下。提供了一个使用raft来提供http kv存储的最小实现。因此，在本文中，笔者也会分为raft example 和 raft package两部分介绍etcd/raft。后续为了便于区分，笔者会将上层驱动性质的称为 <code>RaftNode</code> ，而下层则称为Raft package或者底层Raft，而最上层接收请求的部分则称为状态机。</p>
+<h2 id="raft-example">Raft example<a hidden class="anchor" aria-hidden="true" href="#raft-example">#</a></h2>
+<p>这一部分代码位于 <code>contrib/raftexample</code> 当中，除去http封装，剩下的逻辑可以分为两部分：</p>
+<ul>
+<li>KVStore：充当状态机，接收http层传来的请求，将请求封装，通过propose向下传递，同时读取commit的日志，应用到自身</li>
+<li>RaftNode：驱动底层Raft，完成通信，存储等额外功能</li>
+</ul>
+<h3 id="state-machine">State machine<a hidden class="anchor" aria-hidden="true" href="#state-machine">#</a></h3>
+<p>kvstore，即状态机，实现的非常简单，结构体定义如下：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">kvstore</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">proposeC</span>    <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// channel for proposing updates
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mu</span>          <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">kvStore</span>     <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span> <span style="color:#75715e">// current committed key-value pairs
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">snapshotter</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在初始化时，通过传入的参数，建立起了状态机和RaftNode的连接：</p>
+<ul>
+<li>snapshotter：用于通知，加载日志，通过日志完成系统的恢复</li>
+<li>proposeC：channel发送方，将接收到的请求进行封装，通过该channel发送给raft</li>
+<li>commitC：接收下层raft确认提交的内容，应用到状态机</li>
+<li>errorC：处理error
+在状态机初始化完成后，开启一个协程，用于从下层读取提交的日志，状态机本身提供propose和lookup来处理读写请求</li>
+</ul>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newKVStore</span>(<span style="color:#a6e22e">snapshotter</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>, <span style="color:#a6e22e">proposeC</span> <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">commitC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>, <span style="color:#a6e22e">errorC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">kvstore</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">kvstore</span>{<span style="color:#a6e22e">proposeC</span>: <span style="color:#a6e22e">proposeC</span>, <span style="color:#a6e22e">kvStore</span>: make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span>), <span style="color:#a6e22e">snapshotter</span>: <span style="color:#a6e22e">snapshotter</span>}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">snapshot</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loadSnapshot</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panic</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">snapshot</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;loading snapshot at term %d and index %d&#34;</span>, <span style="color:#a6e22e">snapshot</span>.<span style="color:#a6e22e">Metadata</span>.<span style="color:#a6e22e">Term</span>, <span style="color:#a6e22e">snapshot</span>.<span style="color:#a6e22e">Metadata</span>.<span style="color:#a6e22e">Index</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">recoverFromSnapshot</span>(<span style="color:#a6e22e">snapshot</span>.<span style="color:#a6e22e">Data</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panic</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// read commits from raft into kvStore map until error
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">readCommits</span>(<span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>不过，在raft example当中，仅仅只是做了简单的演示，并没有提供线性一致性读的保证，lookup仅仅会直接搜索当前已经commit的内容，对于在此次读取前发送，但还没有应用的内容无法读取。如果想满足线性一致性也很简单，可以直接使用log read，对于读请求也封装成日志去共识，或者使用readIndex/lease read来完成优化</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">kvstore</span>) <span style="color:#a6e22e">Lookup</span>(<span style="color:#a6e22e">key</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">bool</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RLock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">v</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">kvStore</span>[<span style="color:#a6e22e">key</span>]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">v</span>, <span style="color:#a6e22e">ok</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">kvstore</span>) <span style="color:#a6e22e">Propose</span>(<span style="color:#a6e22e">k</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">v</span> <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">buf</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Builder</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">buf</span>).<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">kv</span>{<span style="color:#a6e22e">k</span>, <span style="color:#a6e22e">v</span>}); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">String</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="raftnode">RaftNode<a hidden class="anchor" aria-hidden="true" href="#raftnode">#</a></h3>
+<p>在raft example中，通过RaftNode完成对Raft Package的调用，驱动下层Raft运行，并且处理掉存储，消息发送，提交日志应用等操作。</p>
+<p>为了研究RaftNode如何驱动底层Raft的运行，我们不妨先看看下层提供或者说暴露了什么接口，这里封装成了一个interface的形式,。对于RaftNode而言，只需要通过配置信息来初始化该Interface的实现，然后在合适的时机调用对应的方法即可。：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Node represents a node in a raft cluster.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Node</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Tick increments the internal logical clock for the Node by a single tick. Election
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// timeouts and heartbeat timeouts are in units of ticks.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Tick</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Campaign causes the Node to transition to candidate state and start campaigning to become leader.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Campaign</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Propose proposes that data be appended to the log. Note that proposals can be lost without
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// notice, therefore it is user&#39;s job to ensure proposal retries.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Propose</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ProposeConfChange proposes a configuration change. Like any proposal, the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// configuration change may be dropped with or without an error being
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// returned. In particular, configuration changes are dropped unless the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader has certainty that there is no prior unapplied configuration
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// change in its log.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// The method accepts either a pb.ConfChange (deprecated) or pb.ConfChangeV2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// message. The latter allows arbitrary configuration changes via joint
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// consensus, notably including replacing a voter. Passing a ConfChangeV2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// message is only allowed if all Nodes participating in the cluster run a
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// version of this library aware of the V2 API. See pb.ConfChangeV2 for
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// usage details and semantics.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ProposeConfChange</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfChangeI</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Step advances the state machine using the given message. ctx.Err() will be returned, if any.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Step</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Message</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Ready returns a channel that returns the current point-in-time state.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Users of the Node must call Advance after retrieving the state returned by Ready (unless
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// async storage writes is enabled, in which case it should never be called).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// NOTE: No committed entries from the next Ready may be applied until all committed entries
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// and snapshots from the previous one have finished.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Ready</span>() <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">Ready</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Advance notifies the Node that the application has saved progress up to the last Ready.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// It prepares the node to return the next available Ready.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// The application should generally call Advance after it applies the entries in last Ready.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// However, as an optimization, the application may call Advance while it is applying the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// commands. For example. when the last Ready contains a snapshot, the application might take
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// a long time to apply the snapshot data. To continue receiving Ready without blocking raft
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// progress, it can call Advance before finishing applying the last ready.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// NOTE: Advance must not be called when using AsyncStorageWrites. Response messages from the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// local append and apply threads take its place.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Advance</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ApplyConfChange applies a config change (previously passed to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// ProposeConfChange) to the node. This must be called whenever a config
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// change is observed in Ready.CommittedEntries, except when the app decides
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// to reject the configuration change (i.e. treats it as a noop instead), in
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// which case it must not be called.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Returns an opaque non-nil ConfState protobuf which must be recorded in
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// snapshots.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ApplyConfChange</span>(<span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfChangeI</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfState</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// TransferLeadership attempts to transfer leadership to the given transferee.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">TransferLeadership</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">lead</span>, <span style="color:#a6e22e">transferee</span> <span style="color:#66d9ef">uint64</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ForgetLeader forgets a follower&#39;s current leader, changing it to None. It
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// remains a leaderless follower in the current term, without campaigning.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// This is useful with PreVote+CheckQuorum, where followers will normally not
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// grant pre-votes if they&#39;ve heard from the leader in the past election
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// timeout interval. Leaderless followers can grant pre-votes immediately, so
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// if a quorum of followers have strong reason to believe the leader is dead
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// (for example via a side-channel or external failure detector) and forget it
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// then they can elect a new leader immediately, without waiting out the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// election timeout. They will also revert to normal followers if they hear
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// from the leader again, or transition to candidates on an election timeout.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// For example, consider a three-node cluster where 1 is the leader and 2+3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// have just received a heartbeat from it. If 2 and 3 believe the leader has
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// now died (maybe they know that an orchestration system shut down 1&#39;s VM),
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// we can instruct 2 to forget the leader and 3 to campaign. 2 will then be
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// able to grant 3&#39;s pre-vote and elect 3 as leader immediately (normally 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// would reject the vote until an election timeout passes because it has heard
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// from the leader recently). However, 3 can not campaign unilaterally, a
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// quorum have to agree that the leader is dead, which avoids disrupting the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader if individual nodes are wrong about it being dead.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// This does nothing with ReadOnlyLeaseBased, since it would allow a new
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader to be elected without the old leader knowing.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ForgetLeader</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReadIndex request a read state. The read state will be set in the ready.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Read state has a read index. Once the application advances further than the read
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// index, any linearizable read requests issued before the read request can be
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// processed safely. The read state will have the same rctx attached.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Note that request can be lost without notice, therefore it is user&#39;s job
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// to ensure read index retries.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReadIndex</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">rctx</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Status returns the current status of the raft state machine.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Status</span>() <span style="color:#a6e22e">Status</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReportUnreachable reports the given node is not reachable for the last send.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReportUnreachable</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">uint64</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReportSnapshot reports the status of the sent snapshot. The id is the raft ID of the follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// who is meant to receive the snapshot, and the status is SnapshotFinish or SnapshotFailure.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Calling ReportSnapshot with SnapshotFinish is a no-op. But, any failure in applying a
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// snapshot (for e.g., while streaming it from leader to follower), should be reported to the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader with SnapshotFailure. When leader sends a snapshot to a follower, it pauses any raft
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// log probes until the follower can apply the snapshot and advance its state. If the follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// can&#39;t do that, for e.g., due to a crash, it could end up in a limbo, never getting any
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// updates from the leader. Therefore, it is crucial that the application ensures that any
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// failure in snapshot sending is caught and reported back to the leader; so it can resume raft
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// log probing in the follower.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReportSnapshot</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">uint64</span>, <span style="color:#a6e22e">status</span> <span style="color:#a6e22e">SnapshotStatus</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Stop performs any necessary termination of the Node.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Stop</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="启动流程">启动流程<a hidden class="anchor" aria-hidden="true" href="#启动流程">#</a></h3>
+<p>在 <code>newRaftNode</code> 当中，逻辑分为三部分：</p>
+<ul>
+<li>初始化底层raft节点，并建立起各个节点间的通信</li>
+<li>开启一个channel，驱动底层Raft，并从底层Raft获取已经处理好的信息</li>
+<li>配置channel，完成RaftNode和状态机之间的双向连通</li>
+</ul>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// newRaftNode initiates a raft instance and returns a committed log entry
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// channel and error channel. Proposals for log updates are sent over the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// provided the proposal channel. All log entries are replayed over the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// commit channel, followed by a nil message (to indicate the channel is
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// current), then new log entries. To shutdown, close proposeC and read errorC.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newRaftNode</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">peers</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">join</span> <span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">getSnapshot</span> <span style="color:#66d9ef">func</span>() ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>), <span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">confChangeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">raftpb</span>.<span style="color:#a6e22e">ConfChange</span>) (<span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>, <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>, <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">commitC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">errorC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">raftNode</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">proposeC</span>:    <span style="color:#a6e22e">proposeC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">confChangeC</span>: <span style="color:#a6e22e">confChangeC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">commitC</span>:     <span style="color:#a6e22e">commitC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">errorC</span>:      <span style="color:#a6e22e">errorC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">id</span>:          <span style="color:#a6e22e">id</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">peers</span>:       <span style="color:#a6e22e">peers</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">join</span>:        <span style="color:#a6e22e">join</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">waldir</span>:      <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;raftexample-%d&#34;</span>, <span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapdir</span>:     <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;raftexample-%d-snap&#34;</span>, <span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">getSnapshot</span>: <span style="color:#a6e22e">getSnapshot</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapCount</span>:   <span style="color:#a6e22e">defaultSnapshotCount</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">stopc</span>:       make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">httpstopc</span>:   make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">httpdonec</span>:   make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">logger</span>: <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>(),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapshotterReady</span>: make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>, <span style="color:#ae81ff">1</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// rest of structure populated after WAL replay
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">startRaft</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>, <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="raft-package初始化">Raft Package初始化<a hidden class="anchor" aria-hidden="true" href="#raft-package初始化">#</a></h4>
+<p>Raft package的初始化封装在 <code>startRaft()</code> 当中，主要逻辑为：</p>
+<ol>
+<li>读取原本的持久化文件，获取snapshot和wal中的内容，恢复状态。这里的wal是log entry的wal，因为raft package并不会对log进行持久化存储，因此在raft example当中提供了一个wal + memory的存储方式，对应结构体为MemoryStorage</li>
+<li>生成一份配置，初始化下层的Raft package中的节点</li>
+<li>初始化网络，连通各个节点</li>
+</ol>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rc</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">raftNode</span>) <span style="color:#a6e22e">startRaft</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">fileutil</span>.<span style="color:#a6e22e">Exist</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapdir</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Mkdir</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapdir</span>, <span style="color:#ae81ff">0750</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;raftexample: cannot create dir for snapshot (%v)&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotter</span> = <span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>(), <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapdir</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">oldwal</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">wal</span>.<span style="color:#a6e22e">Exist</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">waldir</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">wal</span> = <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">replayWAL</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// signal replay has finished
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotter</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rpeers</span> <span style="color:#f92672">:=</span> make([]<span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">Peer</span>, len(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">peers</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rpeers</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">rpeers</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">Peer</span>{<span style="color:#a6e22e">ID</span>: uint64(<span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">Config</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ID</span>:                        uint64(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ElectionTick</span>:              <span style="color:#ae81ff">10</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">HeartbeatTick</span>:             <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Storage</span>:                   <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">raftStorage</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">MaxSizePerMsg</span>:             <span style="color:#ae81ff">1024</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">MaxInflightMsgs</span>:           <span style="color:#ae81ff">256</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">MaxUncommittedEntriesSize</span>: <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">30</span>,
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">oldwal</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">join</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span> = <span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">RestartNode</span>(<span style="color:#a6e22e">c</span>)
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span> = <span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">StartNode</span>(<span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">rpeers</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">transport</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">rafthttp</span>.<span style="color:#a6e22e">Transport</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Logger</span>:      <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">logger</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ID</span>:          <span style="color:#a6e22e">types</span>.<span style="color:#a6e22e">ID</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ClusterID</span>:   <span style="color:#ae81ff">0x1000</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Raft</span>:        <span style="color:#a6e22e">rc</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ServerStats</span>: <span style="color:#a6e22e">stats</span>.<span style="color:#a6e22e">NewServerStats</span>(<span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">LeaderStats</span>: <span style="color:#a6e22e">stats</span>.<span style="color:#a6e22e">NewLeaderStats</span>(<span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>(), <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Itoa</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">id</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ErrorC</span>:      make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>),
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">transport</span>.<span style="color:#a6e22e">Start</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">peers</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">id</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">transport</span>.<span style="color:#a6e22e">AddPeer</span>(<span style="color:#a6e22e">types</span>.<span style="color:#a6e22e">ID</span>(<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>), []<span style="color:#66d9ef">string</span>{<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">i</span>]})
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">serveRaft</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">serveChannels</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="servechannels">serveChannels<a hidden class="anchor" aria-hidden="true" href="#servechannels">#</a></h4>
+<p>完成Raft Package的初始化之后，通过 <code>serveChannls</code> （在startRaft当中被调用）会建立raft node和raft package之间的连接，即将propose的请求向下传递，并且从下层获取处理完的内容。</p>
+<p>从raft node至 raft package自上向下的过程比较简单，只需要把propose和confChange调用对应的方法就可以传递下去，而这两个请求来自于状态机，即raft node只是通过channel做了一次转发</p>
+<p>自下向上通过Ready结构体进行传递，主要内容为：</p>
+<ul>
+<li>SoftState：不需要持久化存储的状态，其中包含的当前节点的身份和Leader Id</li>
+<li>HardState：持久化存储的状态，如Raft论文中所述，其中包含了VoteFor Term和Commit进度</li>
+<li>ReadState：ReadIndex线性一致性读优化</li>
+<li>Entry: Log Entry，交给上层存储</li>
+<li>Snapshot，同，上层进行存储</li>
+<li>CommitEntries：确定提交的日志，可以交给上层来完成Apply</li>
+<li>Message：发送给其他的节点</li>
+</ul>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Ready encapsulates the entries and messages that are ready to read,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// be saved to stable storage, committed or sent to other peers.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// All fields in Ready are read-only.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Ready</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The current volatile state of a Node.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// SoftState will be nil if there is no update.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// It is not required to consume or store SoftState.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">*</span><span style="color:#a6e22e">SoftState</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The current state of a Node to be saved to stable storage BEFORE
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages are sent.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// HardState will be equal to empty state if there is no update.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">HardState</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReadStates can be used for node to serve linearizable read requests locally
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// when its applied index is greater than the index in ReadState.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Note that the readState will be returned when raft receives msgReadIndex.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// The returned is only valid for the request that requested to read.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReadStates</span> []<span style="color:#a6e22e">ReadState</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Entries specifies entries to be saved to stable storage BEFORE
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages are sent.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Entries</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Entry</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Snapshot specifies the snapshot to be saved to stable storage.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Snapshot</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Snapshot</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// CommittedEntries specifies entries to be committed to a
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// store/state-machine. These have previously been appended to stable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// storage.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageApply message in the
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">CommittedEntries</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Entry</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages specifies outbound messages.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are not enabled, these messages must be sent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// AFTER Entries are appended to stable storage.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, these messages can be sent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// immediately as the messages that have the completion of the async writes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// as a precondition are attached to the individual MsgStorage{Append,Apply}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// messages instead.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If it contains a MsgSnap message, the application MUST report back to raft
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// when the snapshot has been received or has failed by calling ReportSnapshot.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Messages</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Message</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// MustSync indicates whether the HardState and Entries must be durably
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// written to disk or if a non-durable write is permissible.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">MustSync</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>etcd/raft批处理的形式一次性返回一个Ready，其中封装了经Raft package处理好的各类信息，上层拿到之后，该存储的存储，该执行的执行，该发送的发送：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">C</span>:
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">Tick</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// store raft entries to wal, then publish over commit channel
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">rd</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">Ready</span>():
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// Must save the snapshot file and WAL snapshot entry before saving any other entries
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#75715e">// or hardstate to ensure that recovery after a snapshot restore is possible.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">IsEmptySnap</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">saveSnap</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">wal</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">HardState</span>, <span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Entries</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">IsEmptySnap</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">raftStorage</span>.<span style="color:#a6e22e">ApplySnapshot</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>)
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">publishSnapshot</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">raftStorage</span>.<span style="color:#a6e22e">Append</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Entries</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">transport</span>.<span style="color:#a6e22e">Send</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">processMessages</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Messages</span>))
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">applyDoneC</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">publishEntries</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">entriesToApply</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">CommittedEntries</span>))
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">stop</span>()
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">maybeTriggerSnapshot</span>(<span style="color:#a6e22e">applyDoneC</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">Advance</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">transport</span>.<span style="color:#a6e22e">ErrorC</span>:
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">writeError</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">stopc</span>:
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">stop</span>()
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="状态机连接">状态机连接<a hidden class="anchor" aria-hidden="true" href="#状态机连接">#</a></h4>
+<p>RaftNode的启动时，调用处会创建好节点id，集群的信息，以及proposeC, confChagneC。</p>
+<p>proposeC由状态机和RaftNode共享，状态机那一端持有sender，将请求发送给RaftNode，RaftNode的receiver获取之后就会调用Propose方法将请求转发给下层去完成共识，在 <code>newRaftNode</code> 当中，会创建一个commitC，来从下层获取提交的日志，之后这个channel也会返回给状态机，此时完成了RaftNode和状态机的双向连通。</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newRaftNode</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">peers</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">join</span> <span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">getSnapshot</span> <span style="color:#66d9ef">func</span>() ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>), <span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">confChangeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">raftpb</span>.<span style="color:#a6e22e">ConfChange</span>) (<span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>, <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>, <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">commitC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">errorC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">raftNode</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">proposeC</span>:    <span style="color:#a6e22e">proposeC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">confChangeC</span>: <span style="color:#a6e22e">confChangeC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">commitC</span>:     <span style="color:#a6e22e">commitC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">errorC</span>:      <span style="color:#a6e22e">errorC</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">id</span>:          <span style="color:#a6e22e">id</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">peers</span>:       <span style="color:#a6e22e">peers</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">join</span>:        <span style="color:#a6e22e">join</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">waldir</span>:      <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;raftexample-%d&#34;</span>, <span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapdir</span>:     <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;raftexample-%d-snap&#34;</span>, <span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">getSnapshot</span>: <span style="color:#a6e22e">getSnapshot</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapCount</span>:   <span style="color:#a6e22e">defaultSnapshotCount</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">stopc</span>:       make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">httpstopc</span>:   make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">httpdonec</span>:   make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">logger</span>: <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>(),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapshotterReady</span>: make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>, <span style="color:#ae81ff">1</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// rest of structure populated after WAL replay
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">startRaft</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>, <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这一部分结合test中的内容会更加清晰:</p>
+<ul>
+<li>状态机持有proposeC的sender，raftNode中持有proposeC的receiver，建立起了State Machine -&gt; RaftNode的连接</li>
+<li>commitC由raftNode创建，之后传入给状态机，完成了RaftNode -&gt; State Machine的连接</li>
+</ul>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestPutAndGetKeyValue</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">clusters</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;http://127.0.0.1:9021&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> close(<span style="color:#a6e22e">proposeC</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">confChangeC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">raftpb</span>.<span style="color:#a6e22e">ConfChange</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> close(<span style="color:#a6e22e">confChangeC</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">kvs</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">kvstore</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">getSnapshot</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">func</span>() ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">kvs</span>.<span style="color:#a6e22e">getSnapshot</span>() }
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>, <span style="color:#a6e22e">snapshotterReady</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newRaftNode</span>(<span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">clusters</span>, <span style="color:#66d9ef">false</span>, <span style="color:#a6e22e">getSnapshot</span>, <span style="color:#a6e22e">proposeC</span>, <span style="color:#a6e22e">confChangeC</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">kvs</span> = <span style="color:#a6e22e">newKVStore</span>(<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">snapshotterReady</span>, <span style="color:#a6e22e">proposeC</span>, <span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="summary">Summary<a hidden class="anchor" aria-hidden="true" href="#summary">#</a></h2>
+<p>在本章中，笔者介绍了etcd/raft的设计思想和整体架构，大致展现了etcd/raft作为一个提供raft逻辑的库，是如何运行的，但是对于etcd/raft内部的细节并未展开，一方面是关于etcd/raft，已经有了相当优秀的文章：<a href="https://blog.mrcroxx.com/posts/code-reading/etcdraft-made-simple/0-introduction/">深入浅出etcd/raft —— 0x00 引言 - 叉鸽 MrCroxx 的博客</a>。</p>
+<p>另一方面是，笔者写本篇文章主要目的是介绍一下如何基于etcd/raft来实现一个简单的curp算法。不过临近毕业，加上目前还在实习，短时间内大概没有时间完成更新，因此目前文章的题目定为了Etcd/raft整体架构，后续如果更新，大概会改成从《从 0.5 到 1 实现curp-q》</p>
+<p>如果想看一个架构上与etcd/raft相同，但稍微简化一点的Raft，也可以看笔者的另一篇文章：</p>
+<p><a href="https://zhuanlan.zhihu.com/p/674156966">toydb源码阅读03-Raft - 知乎</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/674991164">toydb源码阅读04-Raft State Machine - 知乎</a></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://fischer0522.github.io/en/posts/tech/toydb/06-sql-execution/">
+    <span class="title">Next »</span>
+    <br>
+    <span>06-SQL Execution</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on x"
+            href="https://x.com/intent/tweet/?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&amp;title=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;summary=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;source=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on reddit"
+            href="https://reddit.com/submit?url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&title=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on whatsapp"
+            href="https://api.whatsapp.com/send?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84%20-%20https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on telegram"
+            href="https://telegram.me/share/url?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="https://fischer0522.github.io/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

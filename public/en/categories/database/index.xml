@@ -2,73 +2,73 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Database on Fischer&#39;s Blog</title>
-    <link>http://itfischer.space/en/categories/database/</link>
+    <link>https://fischer0522.github.io/en/categories/database/</link>
     <description>Recent content in Database on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sun, 04 Jun 2023 23:14:02 +0000</lastBuildDate>
-    <atom:link href="http://itfischer.space/en/categories/database/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://fischer0522.github.io/en/categories/database/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>日志与恢复</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</link>
       <pubDate>Sun, 04 Jun 2023 23:14:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</guid>
       <description>日志与恢复 数据库当中存在哪些故障？ 简单来说可以分为三种故障： 事务故障 系统故障 存储介质故障 而事务故障也可分为两种： 逻辑错误 (Logical Errors)：由</description>
     </item>
     <item>
       <title>事务与并发控制</title>
-      <link>http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</link>
       <pubDate>Sun, 04 Jun 2023 09:45:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</guid>
       <description>事务与并发控制 简单介绍一下事务？ 事务作为数据库执行过程中的一个逻辑单位，可以表明一组操作，这一组操作要么一起成功，要么全部回滚，并且事务之间</description>
     </item>
     <item>
       <title>数据库基础结构</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</link>
       <pubDate>Sat, 03 Jun 2023 09:45:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</guid>
       <description>数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当</description>
     </item>
     <item>
       <title>BusTub-Lab4</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab4/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab4/</link>
       <pubDate>Sun, 23 Apr 2023 21:21:13 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab4/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab4/</guid>
       <description>Lab4 由于五一临近考试，再加上后续还需要准备各种机试以及408等，整个Lab4做的比较的草率，基本上只实现了最基础的功能，Leaderboard</description>
     </item>
     <item>
       <title>BusTub Lab3 Query Execution</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab3/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab3/</link>
       <pubDate>Sat, 15 Apr 2023 23:31:34 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab3/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab3/</guid>
       <description>Lab3 Task1 火山模型 在Task1当中实现了SeqScan​ Insert​ Delete​ IndexScan​，由于均为火山模型，因此在实现上大同小异，</description>
     </item>
     <item>
       <title>BusTub Lab2 B&#43;Tree Index checkpoint2</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/busttub-lab2-c2/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/</link>
       <pubDate>Fri, 14 Apr 2023 20:46:05 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/busttub-lab2-c2/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/</guid>
       <description>checkpoint2 Task3 在支持并发前没什么好说的，一个简单的迭代器。根据begin的条件找到一个起始页，之后在该页内遍历即可，当遍历完该页之后，根据nextPa</description>
     </item>
     <item>
       <title>BusTub Lab2 B&#43;Tree Index checkpoint1</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/</link>
       <pubDate>Fri, 24 Mar 2023 15:04:09 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/</guid>
       <description>Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b+树的模拟动画，然后再使用官方的画图工具比较自己的B+树，一般</description>
     </item>
     <item>
       <title>BusTub Lab1 Buffer Pool Manager</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab1/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/</link>
       <pubDate>Mon, 20 Mar 2023 14:54:39 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab1/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/</guid>
       <description>BusTub Lab1 Buffer Pool Manager Task1 可扩展哈希表 相关函数 Find(K,V)​：查询一个Key是否存在，如果存在则将其V指针指向相关的值，返回true，否则返回fal</description>
     </item>
     <item>
       <title>BusTub Lab0 cpp primer</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab0/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</link>
       <pubDate>Sat, 18 Mar 2023 00:28:50 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab0/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</guid>
       <description>BusTub Lab0 cpp primer 实现一个字典树，主要定义了三个类： TrieNode TrieNodeWithValue Trie Task1 实现一个不支持并发的字典树 TrieNode 内部存储的数据为一个char字符， 并且有一个标识位置来表示是否</description>
     </item>
   </channel>

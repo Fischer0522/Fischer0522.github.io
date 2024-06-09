@@ -2,234 +2,262 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Fischer&#39;s Blog</title>
-    <link>http://itfischer.space/en/</link>
+    <link>https://fischer0522.github.io/en/</link>
     <description>Recent content on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 09 Dec 2023 09:31:59 +0000</lastBuildDate>
-    <atom:link href="http://itfischer.space/en/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 02 May 2024 09:31:59 +0000</lastBuildDate>
+    <atom:link href="https://fischer0522.github.io/en/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>00-Etcd-Raft整体架构</title>
+      <link>https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
+      <pubDate>Thu, 02 May 2024 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
+      <description>在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e</description>
+    </item>
+    <item>
+      <title>06-SQL Execution</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/06-sql-execution/</link>
+      <pubDate>Sun, 31 Dec 2023 19:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/06-sql-execution/</guid>
+      <description>本系列的第一章00-Architecture以SQL执行流程为整个系列做了一个引子，目前本系列通过六篇文章，已经将toydb的各个模块都分析</description>
+    </item>
+    <item>
+      <title>05-SQL Engine</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/05-sql-engine/</link>
+      <pubDate>Sun, 31 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/05-sql-engine/</guid>
+      <description>在前面的几章，分别分析了Bitcask，构建于Bitcask之上的MVCC，Raft，以及Raft状态机。在本章中，笔者会将这几个模块组合起</description>
+    </item>
+    <item>
+      <title>记忆，迷茫与成长：The End Of 2023</title>
+      <link>https://fischer0522.github.io/en/posts/life/2023%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93%E8%AE%B0%E5%BF%86%E8%BF%B7%E8%8C%AB%E4%B8%8E%E6%88%90%E9%95%BF/</link>
+      <pubDate>Sun, 31 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/life/2023%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93%E8%AE%B0%E5%BF%86%E8%BF%B7%E8%8C%AB%E4%B8%8E%E6%88%90%E9%95%BF/</guid>
+      <description>今天是2023年的最后一天，大概半个月前就萌生了写一篇年度总结的想法，不过一直因为一些其他的事情拖到了最后一天，现在看大概是写不完了。鉴于我</description>
+    </item>
+    <item>
+      <title>04-Raft State Machine</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/04-raft-state-machine/</link>
+      <pubDate>Sat, 30 Dec 2023 19:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/04-raft-state-machine/</guid>
+      <description>在正式写这一篇文章之前，原本的规划是在这一部分介绍sql执行引擎，即如何将Raft，Raft状态机，存储引擎组合起来，为SQL的执行去提供支</description>
+    </item>
+    <item>
+      <title>03-Raft</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/03-raft/</link>
+      <pubDate>Thu, 28 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/03-raft/</guid>
+      <description>toydb的Raft实现，相比于6.824更接近于生产级别的，和etcd/raft在结构上比较相似，但是并没有实现Raft大论文当中的优化，</description>
+    </item>
+    <item>
+      <title>02-MVCC</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/02-mvcc/</link>
+      <pubDate>Mon, 25 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/02-mvcc/</guid>
+      <description>基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根</description>
+    </item>
+    <item>
+      <title>01-Bitcask</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/01-bitcask/</link>
+      <pubDate>Fri, 22 Dec 2023 12:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/01-bitcask/</guid>
+      <description>基础结构 Bitcask本身非常简单，要是想实现一个最基础的bitcask存储引擎，大概200-300行代码就能实现，这里先简单介绍一下Bit</description>
+    </item>
+    <item>
+      <title>00-Architecture</title>
+      <link>https://fischer0522.github.io/en/posts/tech/toydb/00-architecture/</link>
+      <pubDate>Thu, 21 Dec 2023 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/toydb/00-architecture/</guid>
+      <description>引言 toydb是一个完全由rust编写的分布式关系型数据库，相对于其代码规模，其功能实现上可以说是非常的完善了，使用大约1.5w的rust代</description>
+    </item>
     <item>
       <title>More Than Capacity: Performance-oriented Evolution of Pangu in Alibaba</title>
-      <link>http://itfischer.space/en/posts/tech/pangu2.0/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/pangu2.0/</link>
       <pubDate>Sat, 09 Dec 2023 09:31:59 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/pangu2.0/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/pangu2.0/</guid>
       <description>More Than Capacity: Performance-oriented Evolution of Pangu in Alibaba Introduction 本文主要讲述了盘古分布式存储十年来的一个演变历程，主要分为了三个阶段，分别是1.0，2.0的阶段一和2.0的阶段二。 在盘</description>
     </item>
     <item>
       <title>OceanBase初赛</title>
-      <link>http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/</link>
       <pubDate>Sat, 09 Dec 2023 09:31:59 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/oceanbase%E5%88%9D%E8%B5%9B/</guid>
       <description>由于Miniob的整体架构并没有做出很大的变化，并且目前知乎上也已经有其他人写的架构分析文章，我在这里就不过多介绍架构相关的了，只说一下我自</description>
     </item>
     <item>
       <title>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search</title>
-      <link>http://itfischer.space/en/posts/tech/spfresh/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/spfresh/</link>
       <pubDate>Thu, 09 Nov 2023 09:31:59 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/spfresh/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/spfresh/</guid>
       <description>SPFresh: Incremental In-Place Update for Billion-Scale Vector Search Introduction 本文聚焦于两个方面，一个是采用in-place(即原地更新)的方式更新索引，而另一个则是如何维护高质量的索引。对于之前的A</description>
     </item>
     <item>
       <title>Manu: A Cloud Native Vector Database Management System</title>
-      <link>http://itfischer.space/en/posts/tech/manu/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/manu/</link>
       <pubDate>Tue, 07 Nov 2023 09:31:59 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/manu/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/manu/</guid>
       <description>Manu: A Cloud Native Vector Database Management System Introduction Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DB</description>
     </item>
     <item>
       <title>etcd/raft</title>
-      <link>http://itfischer.space/en/posts/tech/etcd/etcd-raft/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft/</link>
       <pubDate>Mon, 12 Jun 2023 22:09:29 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/etcd/etcd-raft/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft/</guid>
       <description>raft-example etcd/raft整体架构 etcd/raft选举流程 etcd/raft日志复制</description>
     </item>
     <item>
       <title>etcd/raft日志复制</title>
-      <link>http://itfischer.space/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</link>
       <pubDate>Sun, 11 Jun 2023 10:48:19 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</guid>
       <description>Raft日志 日志存储 Raft日志在存储上分为两部分，一部分为新写入或者新生成的日志，暂时存储于内存当中，还未来得及进行稳定存储。而另一部分则</description>
     </item>
     <item>
       <title>etcd-raft整体架构</title>
-      <link>http://itfischer.space/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
       <pubDate>Wed, 07 Jun 2023 09:31:59 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
       <description>etcd-raft整体架构 引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-ma</description>
     </item>
     <item>
       <title>etcd/raft选举流程</title>
-      <link>http://itfischer.space/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</link>
       <pubDate>Wed, 07 Jun 2023 00:25:29 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</guid>
       <description>Raft选举流程 引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-made-si</description>
     </item>
     <item>
       <title>日志与恢复</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</link>
       <pubDate>Sun, 04 Jun 2023 23:14:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%97%A5%E5%BF%97%E4%B8%8E%E6%81%A2%E5%A4%8D/</guid>
       <description>日志与恢复 数据库当中存在哪些故障？ 简单来说可以分为三种故障： 事务故障 系统故障 存储介质故障 而事务故障也可分为两种： 逻辑错误 (Logical Errors)：由</description>
     </item>
     <item>
       <title>事务与并发控制</title>
-      <link>http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</link>
       <pubDate>Sun, 04 Jun 2023 09:45:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6/</guid>
       <description>事务与并发控制 简单介绍一下事务？ 事务作为数据库执行过程中的一个逻辑单位，可以表明一组操作，这一组操作要么一起成功，要么全部回滚，并且事务之间</description>
     </item>
     <item>
       <title>数据库基础结构</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</link>
       <pubDate>Sat, 03 Jun 2023 09:45:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84/</guid>
       <description>数据库基础结构 数据库结构 为什么需要DBMS？ 一个数据库在最基础的层次上需要完成两件事情：当你把数据交给数据库时，它应当把数据存储起来；而后当</description>
     </item>
     <item>
       <title>raft-example</title>
-      <link>http://itfischer.space/en/posts/tech/etcd/raft-example/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/etcd/raft-example/</link>
       <pubDate>Wed, 31 May 2023 20:28:32 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/etcd/raft-example/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/etcd/raft-example/</guid>
       <description>raft-example 在etcd当中，提供了一个raft-example，该程序并非构建了一个完整的Raft模块，而是对Raft模块的的基本使用。并在此基础上构</description>
     </item>
     <item>
       <title>内存虚拟化</title>
-      <link>http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
       <pubDate>Sat, 27 May 2023 09:45:02 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E5%86%85%E5%AD%98%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
       <description>内存虚拟化 简单谈一谈对内存虚拟化的理解？ 计算机当中的内存条成为物理内存，虚拟化内存即为对物理内存进行抽象，抽象成为地址空间的一个概念。在其中</description>
     </item>
     <item>
       <title>CPU虚拟化</title>
-      <link>http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</link>
       <pubDate>Fri, 26 May 2023 21:21:13 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/cpu%E8%99%9A%E6%8B%9F%E5%8C%96/</guid>
       <description>如何理解CPU虚拟化？ CPU虚拟化，用一句话简单的概括就是，通过CPU虚拟化的手段，可以让多个程序在同一时间段内在一台机器上运行，共享CPU</description>
     </item>
     <item>
       <title>BusTub-Lab4</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab4/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab4/</link>
       <pubDate>Sun, 23 Apr 2023 21:21:13 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab4/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab4/</guid>
       <description>Lab4 由于五一临近考试，再加上后续还需要准备各种机试以及408等，整个Lab4做的比较的草率，基本上只实现了最基础的功能，Leaderboard</description>
     </item>
     <item>
       <title>BusTub Lab3 Query Execution</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab3/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab3/</link>
       <pubDate>Sat, 15 Apr 2023 23:31:34 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab3/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab3/</guid>
       <description>Lab3 Task1 火山模型 在Task1当中实现了SeqScan​ Insert​ Delete​ IndexScan​，由于均为火山模型，因此在实现上大同小异，</description>
     </item>
     <item>
       <title>BusTub Lab2 B&#43;Tree Index checkpoint2</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/busttub-lab2-c2/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/</link>
       <pubDate>Fri, 14 Apr 2023 20:46:05 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/busttub-lab2-c2/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/</guid>
       <description>checkpoint2 Task3 在支持并发前没什么好说的，一个简单的迭代器。根据begin的条件找到一个起始页，之后在该页内遍历即可，当遍历完该页之后，根据nextPa</description>
     </item>
     <item>
       <title>BusTub Lab2 B&#43;Tree Index checkpoint1</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/</link>
       <pubDate>Fri, 24 Mar 2023 15:04:09 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab2-c1/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/</guid>
       <description>Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b+树的模拟动画，然后再使用官方的画图工具比较自己的B+树，一般</description>
     </item>
     <item>
       <title>BusTub Lab1 Buffer Pool Manager</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab1/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/</link>
       <pubDate>Mon, 20 Mar 2023 14:54:39 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab1/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/</guid>
       <description>BusTub Lab1 Buffer Pool Manager Task1 可扩展哈希表 相关函数 Find(K,V)​：查询一个Key是否存在，如果存在则将其V指针指向相关的值，返回true，否则返回fal</description>
     </item>
     <item>
       <title>BusTub Lab0 cpp primer</title>
-      <link>http://itfischer.space/en/posts/tech/bustub/bustub-lab0/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</link>
       <pubDate>Sat, 18 Mar 2023 00:28:50 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/bustub/bustub-lab0/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</guid>
       <description>BusTub Lab0 cpp primer 实现一个字典树，主要定义了三个类： TrieNode TrieNodeWithValue Trie Task1 实现一个不支持并发的字典树 TrieNode 内部存储的数据为一个char字符， 并且有一个标识位置来表示是否</description>
     </item>
     <item>
       <title></title>
-      <link>http://itfischer.space/en/posts/life/2023%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93%E8%AE%B0%E5%BF%86%E8%BF%B7%E8%8C%AB%E4%B8%8E%E6%88%90%E9%95%BF/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/life/2023%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93%E8%AE%B0%E5%BF%86%E8%BF%B7%E8%8C%AB%E4%B8%8E%E6%88%90%E9%95%BF/</guid>
-      <description>今天是2023年的最后一天，大概半个月前就萌生了写一篇年度总结的想法，不过一直因为一些其他的事情拖到了最后一天，现在看大概是写不完了。鉴于我</description>
+      <guid>https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/</guid>
+      <description>背景 title: &amp;ldquo;01-CURP: 共识算法的重新思考&amp;rdquo; date: 2024-05-06T09:31:59Z 动机：目前的一些容错算法或者说共识算法，无论是简单的主从结构还是Raft Paxos等，都需要两个</description>
     </item>
     <item>
       <title></title>
-      <link>http://itfischer.space/en/posts/life/cs%E7%A7%91%E7%A0%94%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%93%BE%E5%88%86%E4%BA%AB/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/life/cs%E7%A7%91%E7%A0%94%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%93%BE%E5%88%86%E4%BA%AB/</guid>
-      <description>差生文具多系列 CS方向，个人科研 + 开发工具链分享，主要涉及到文献阅读、代码编辑、笔记等内容 文献阅读 Zotero 集文件管理、阅读、记录为一体，基本可以解</description>
+      <guid>https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</guid>
+      <description>Intro title: &amp;ldquo;02-从0.5实现CURP&amp;rdquo; date: 2024-06-03T09:31:59Z 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高</description>
     </item>
     <item>
-      <title>00-Architecture</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/00-architecture/</link>
+      <title>About</title>
+      <link>https://fischer0522.github.io/en/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/00-architecture/</guid>
-      <description>引言 toydb是一个完全由rust编写的分布式关系型数据库，相对于其代码规模，其功能实现上可以说是非常的完善了，使用大约1.5w的rust代</description>
-    </item>
-    <item>
-      <title>01-Bitcask</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/01-bitcask/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/01-bitcask/</guid>
-      <description>基础结构 Bitcask本身非常简单，要是想实现一个最基础的bitcask存储引擎，大概200-300行代码就能实现，这里先简单介绍一下Bit</description>
-    </item>
-    <item>
-      <title>02-MVCC</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/02-mvcc/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/02-mvcc/</guid>
-      <description>基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根</description>
-    </item>
-    <item>
-      <title>03-Raft</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/03-raft/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/03-raft/</guid>
-      <description>toydb的Raft实现，相比于6.824更接近于生产级别的，和etcd/raft在结构上比较相似，但是并没有实现Raft大论文当中的优化，</description>
-    </item>
-    <item>
-      <title>04-Raft State Machine</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/04-raft-state-machine/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/04-raft-state-machine/</guid>
-      <description>在正式写这一篇文章之前，原本的规划是在这一部分介绍sql执行引擎，即如何将Raft，Raft状态机，存储引擎组合起来，为SQL的执行去提供支</description>
-    </item>
-    <item>
-      <title>05-SQL Engine</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/05-sql-engine/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/05-sql-engine/</guid>
-      <description>在前面的几章，分别分析了Bitcask，构建于Bitcask之上的MVCC，Raft，以及Raft状态机。在本章中，笔者会将这几个模块组合起</description>
-    </item>
-    <item>
-      <title>06-SQL Execution</title>
-      <link>http://itfischer.space/en/posts/tech/toydb/06-sql-execution/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/toydb/06-sql-execution/</guid>
-      <description>本系列的第一章00-Architecture以SQL执行流程为整个系列做了一个引子，目前本系列通过六篇文章，已经将toydb的各个模块都分析</description>
+      <guid>https://fischer0522.github.io/en/about/</guid>
+      <description>Name: Fischer Yu Location： Xiamen Hobbies: Bass,Tennis,Running Focusing On: Storage,Distrubuted System,Database, and something intresting</description>
     </item>
     <item>
       <title>Rust内存管理</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/</guid>
       <description>相比于传统c++当中的手动管理内存，rust采用了所有权 + RAII的机制，对于一些复杂的情况，rust还有生命周期等约束，从而保证在编译期能</description>
     </item>
     <item>
       <title>数据库系统概念</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/</link>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/</guid>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%AE%BA/</guid>
       <description>物理存储系统 这一部分重点并不多，主要是各种存储类型上的差异，比较了几种物理存储上的差异，以及SSD，HDD 之间的差异，最后又介绍了RAID的</description>
     </item>
     <item>
-      <title>深入理解分布式系统</title>
-      <link>http://itfischer.space/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link>
+      <title>构建自己的知识库：科研/开发工具链</title>
+      <link>https://fischer0522.github.io/en/posts/life/cs%E7%A7%91%E7%A0%94%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%93%BE%E5%88%86%E4%BA%AB/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://itfischer.space/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</guid>
+      <guid>https://fischer0522.github.io/en/posts/life/cs%E7%A7%91%E7%A0%94%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E9%93%BE%E5%88%86%E4%BA%AB/</guid>
+      <description>差生文具多系列 CS方向，个人科研 + 开发工具链分享，主要涉及到文献阅读、代码编辑、笔记等内容 文献阅读 Zotero 集文件管理、阅读、记录为一体，基本可以解</description>
+    </item>
+    <item>
+      <title>深入理解分布式系统</title>
+      <link>https://fischer0522.github.io/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</guid>
       <description>分布式系统模型 拜占庭将军问题 拜占庭将军主要用于解决共识问题，三个将军决定攻打拜占庭，只有三个人一同进行攻打才能够成功，否则则会失败，因此需要</description>
     </item>
   </channel>

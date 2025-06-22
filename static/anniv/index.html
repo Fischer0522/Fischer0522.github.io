@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>我们的时光</title>
+        <style>
+            /* 1. Google Fonts & Global Styles */
+            @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=Roboto:wght@300;400;500&display=swap");
+
+            :root {
+                --primary-color: #0288d1; /* Material Design Blue 700 */
+                --background-color: #f5f5f5; /* Material Design Grey 100 */
+                --card-background: #ffffff;
+                --text-color-primary: #212121;
+                --text-color-secondary: #757575;
+                --digit-background: #e0e0e0;
+                --digit-color: var(--text-color-primary);
+            }
+
+            body {
+                font-family: "Noto Sans SC", "Roboto", sans-serif;
+                background-color: var(--background-color);
+                color: var(--text-color-primary);
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                box-sizing: border-box;
+                text-rendering: optimizeLegibility;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+
+            /* 2. Main Container & Card Layout */
+            main {
+                width: 100%;
+                max-width: 500px;
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .card {
+                background: var(--card-background);
+                border-radius: 12px;
+                box-shadow: 0 4px M12px rgba(0, 0, 0, 0.1);
+                padding: 28px;
+                text-align: center;
+                transition: box-shadow 0.3s ease-in-out;
+                overflow: hidden; /* Ensures content stays within rounded corners */
+            }
+
+            .card:hover {
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            }
+
+            .card-header {
+                font-size: 18px;
+                font-weight: 400;
+                color: var(--text-color-secondary);
+                margin-bottom: 8px;
+            }
+
+            /* 3. Anniversary Section */
+            .anniversary-days {
+                font-size: 48px;
+                font-weight: 500;
+                line-height: 1;
+                color: var(--primary-color);
+            }
+
+            .anniversary-days .unit {
+                font-size: 24px;
+                font-weight: 400;
+                margin-left: 8px;
+            }
+
+            .anniversary-date {
+                font-size: 16px;
+                color: var(--text-color-secondary);
+                margin-top: 12px;
+            }
+
+            /* 4. Countdown Timer - Mechanical Scroller Style */
+            .countdown-container {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start; /* Aligns units correctly with labels */
+                gap: 12px;
+                flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            }
+
+            .time-unit {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .digits-wrapper {
+                display: flex;
+                gap: 3px;
+            }
+
+            .digit-scroller {
+                width: 28px;
+                height: 48px; /* Control the height of the visible digit */
+                background-color: var(--digit-background);
+                border-radius: 6px;
+                overflow: hidden;
+                font-size: 40px;
+                line-height: 48px;
+                font-weight: 500;
+                color: var(--digit-color);
+                text-align: center;
+                flex-shrink: 0;
+            }
+
+            .digit-strip {
+                display: flex;
+                flex-direction: column;
+                transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Smooth, elastic scroll */
+            }
+
+            .unit-label {
+                margin-top: 8px;
+                font-size: 14px;
+                color: var(--text-color-secondary);
+                font-weight: 400;
+            }
+
+            /* 5. Completion Message Style */
+            .completion-message {
+                font-size: 24px;
+                font-weight: 500;
+                color: var(--primary-color);
+                padding: 20px 0;
+            }
+
+            /* 6. Responsive Design */
+            @media (max-width: 480px) {
+                body {
+                    padding: 12px;
+                }
+                main {
+                    gap: 16px;
+                }
+                .card {
+                    padding: 20px;
+                }
+                .anniversary-days {
+                    font-size: 40px;
+                }
+                .anniversary-days .unit {
+                    font-size: 20px;
+                }
+                .digit-scroller {
+                    width: 24px;
+                    height: 42px;
+                    font-size: 34px;
+                    line-height: 42px;
+                    border-radius: 4px;
+                }
+                .countdown-container {
+                    gap: 8px;
+                }
+                .unit-label {
+                    font-size: 12px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <!-- Card 1: Anniversary -->
+            <section class="card">
+                <div class="card-header">我们已经在一起</div>
+                <p class="anniversary-days">
+                    <span id="anniversary-day-counter">0</span>
+                    <span class="unit">天</span>
+                </p>
+                <p class="anniversary-date">始于 2024.12.05</p>
+            </section>
+
+            <!-- Card 2: Countdown -->
+            <section class="card">
+                <div class="card-header">距离我们重逢还有</div>
+                <div id="countdown-wrapper">
+                    <div class="countdown-container">
+                        <!-- Days (2 digits) -->
+                        <div class="time-unit">
+                            <div class="digits-wrapper">
+                                <div id="days-10" class="digit-scroller"></div>
+                                <div id="days-1" class="digit-scroller"></div>
+                            </div>
+                            <div class="unit-label">天</div>
+                        </div>
+                        <!-- Hours -->
+                        <div class="time-unit">
+                            <div class="digits-wrapper">
+                                <div id="hours-10" class="digit-scroller"></div>
+                                <div id="hours-1" class="digit-scroller"></div>
+                            </div>
+                            <div class="unit-label">小时</div>
+                        </div>
+                        <!-- Minutes -->
+                        <div class="time-unit">
+                            <div class="digits-wrapper">
+                                <div
+                                    id="minutes-10"
+                                    class="digit-scroller"
+                                ></div>
+                                <div
+                                    id="minutes-1"
+                                    class="digit-scroller"
+                                ></div>
+                            </div>
+                            <div class="unit-label">分钟</div>
+                        </div>
+                        <!-- Seconds -->
+                        <div class="time-unit">
+                            <div class="digits-wrapper">
+                                <div
+                                    id="seconds-10"
+                                    class="digit-scroller"
+                                ></div>
+                                <div
+                                    id="seconds-1"
+                                    class="digit-scroller"
+                                ></div>
+                            </div>
+                            <div class="unit-label">秒</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="anniversary-date" style="margin-top: 20px">
+                    约定于 2025.08.25
+                </p>
+            </section>
+        </main>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // --- CONFIGURATION ---
+                // Important: Set dates in CST (UTC+8). The format 'YYYY-MM-DDTHH:mm:ss+08:00' ensures the timezone is correct.
+                const anniversaryStartDate = new Date(
+                    "2024-12-04T00:00:00+08:00",
+                );
+                const reunionTargetDate = new Date("2025-08-25T00:00:00+08:00");
+
+                // --- CACHE DOM ELEMENTS ---
+                const anniversaryCounter = document.getElementById(
+                    "anniversary-day-counter",
+                );
+                const countdownWrapper =
+                    document.getElementById("countdown-wrapper");
+                let countdownInterval; // To store the interval ID
+
+                // --- UTILITY FUNCTIONS ---
+
+                // Creates the number strip (0-9) for a single scroller
+                const createDigitStrips = () => {
+                    const scrollers =
+                        document.querySelectorAll(".digit-scroller");
+                    if (scrollers.length === 0) return; // Don't run if countdown is already over
+                    scrollers.forEach((scroller) => {
+                        // Clear previous content to prevent duplicates on potential re-runs
+                        scroller.innerHTML = "";
+                        const strip = document.createElement("div");
+                        strip.className = "digit-strip";
+                        for (let i = 0; i <= 9; i++) {
+                            const digit = document.createElement("div");
+                            digit.textContent = i;
+                            strip.appendChild(digit);
+                        }
+                        scroller.appendChild(strip);
+                    });
+                };
+
+                // Scrolls a digit strip to the correct number
+                const setDigit = (scrollerId, number) => {
+                    const scroller = document.getElementById(scrollerId);
+                    if (scroller) {
+                        const digitStrip =
+                            scroller.querySelector(".digit-strip");
+                        if (digitStrip) {
+                            const digitHeight = scroller.clientHeight;
+                            digitStrip.style.transform = `translateY(-${number * digitHeight}px)`;
+                        }
+                    }
+                };
+
+                // --- CORE LOGIC ---
+
+                const updateAnniversary = () => {
+                    const now = new Date();
+                    const diffTime = Math.abs(now - anniversaryStartDate);
+                    // The number of full days that have passed. Day 0 is the first 24 hours.
+                    const diffDays = Math.floor(
+                        diffTime / (1000 * 60 * 60 * 24),
+                    );
+                    anniversaryCounter.textContent = diffDays;
+                };
+
+                const updateCountdown = () => {
+                    const now = new Date();
+                    const totalSeconds = Math.floor(
+                        (reunionTargetDate - now) / 1000,
+                    );
+
+                    if (totalSeconds < 0) {
+                        // Countdown has ended, show completion message
+                        countdownWrapper.innerHTML =
+                            "<div class='completion-message'>我们已经重逢！</div>";
+                        // Stop the interval from running unnecessarily
+                        if (countdownInterval) {
+                            clearInterval(countdownInterval);
+                        }
+                        return;
+                    }
+
+                    const days = Math.floor(totalSeconds / 3600 / 24);
+                    const hours = Math.floor(totalSeconds / 3600) % 24;
+                    const minutes = Math.floor(totalSeconds / 60) % 60;
+                    const seconds = totalSeconds % 60;
+
+                    // Set days (2 digits)
+                    setDigit("days-10", Math.floor(days / 10));
+                    setDigit("days-1", days % 10);
+
+                    // Set hours (2 digits)
+                    setDigit("hours-10", Math.floor(hours / 10));
+                    setDigit("hours-1", hours % 10);
+
+                    // Set minutes (2 digits)
+                    setDigit("minutes-10", Math.floor(minutes / 10));
+                    setDigit("minutes-1", minutes % 10);
+
+                    // Set seconds (2 digits)
+                    setDigit("seconds-10", Math.floor(seconds / 10));
+                    setDigit("seconds-1", seconds % 10);
+                };
+
+                // --- INITIALIZATION & INTERVALS ---
+                const now = new Date();
+                const initialTotalSeconds = Math.floor(
+                    (reunionTargetDate - now) / 1000,
+                );
+
+                updateAnniversary();
+
+                if (initialTotalSeconds < 0) {
+                    // If countdown is already over on page load, just show the message
+                    updateCountdown();
+                } else {
+                    // Otherwise, create the digit scrollers and start the timer
+                    createDigitStrips();
+                    updateCountdown();
+                    countdownInterval = setInterval(updateCountdown, 1000);
+                }
+
+                // The anniversary day only needs to be updated periodically.
+                setInterval(updateAnniversary, 30000); // Check every 30 seconds for accuracy
+            });
+        </script>
+    </body>
+</html>

@@ -6,8 +6,22 @@
     <description>Recent content on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 02 May 2024 09:31:59 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 03 Jun 2024 09:31:59 +0000</lastBuildDate>
     <atom:link href="https://fischer0522.github.io/en/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>02-从0.5实现CURP</title>
+      <link>https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</link>
+      <pubDate>Mon, 03 Jun 2024 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</guid>
+      <description>Intro 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个R</description>
+    </item>
+    <item>
+      <title>01-CURP: 共识算法的重新思考</title>
+      <link>https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/</link>
+      <pubDate>Mon, 06 May 2024 09:31:59 +0000</pubDate>
+      <guid>https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/</guid>
+      <description>背景 动机：目前的一些容错算法或者说共识算法，无论是简单的主从结构还是Raft Paxos等，都需要两个RTT来完成，第一个RTT由Client</description>
+    </item>
     <item>
       <title>00-Etcd-Raft整体架构</title>
       <link>https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
@@ -210,20 +224,6 @@
       <pubDate>Sat, 18 Mar 2023 00:28:50 +0000</pubDate>
       <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</guid>
       <description>BusTub Lab0 cpp primer 实现一个字典树，主要定义了三个类： TrieNode TrieNodeWithValue Trie Task1 实现一个不支持并发的字典树 TrieNode 内部存储的数据为一个char字符， 并且有一个标识位置来表示是否</description>
-    </item>
-    <item>
-      <title></title>
-      <link>https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/</guid>
-      <description>背景 title: &amp;ldquo;01-CURP: 共识算法的重新思考&amp;rdquo; date: 2024-05-06T09:31:59Z 动机：目前的一些容错算法或者说共识算法，无论是简单的主从结构还是Raft Paxos等，都需要两个</description>
-    </item>
-    <item>
-      <title></title>
-      <link>https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</guid>
-      <description>Intro title: &amp;ldquo;02-从0.5实现CURP&amp;rdquo; date: 2024-06-03T09:31:59Z 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高</description>
     </item>
     <item>
       <title>About</title>

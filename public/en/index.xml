@@ -16,6 +16,38 @@
       <description>publications</description>
     </item>
     <item>
+      <title>2025年终总结</title>
+      <link>http://localhost:1313/en/posts/life/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</link>
+      <pubDate>Sun, 15 Feb 2026 23:47:15 +0800</pubDate>
+      <guid>http://localhost:1313/en/posts/life/2025%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</guid>
+      <description>&lt;p&gt;目前笔者结束新年假期，在返回工作地点高铁上，年前太忙，而年中又太懒，拖到现在终于有时候好好盘一盘今年，希望给自己带来一些启发，也给读者带来一些收获。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>杭漂实习日寄</title>
+      <link>http://localhost:1313/en/posts/life/%E6%9D%AD%E6%BC%82%E5%AE%9E%E4%B9%A0%E6%97%A5%E5%AF%84/</link>
+      <pubDate>Sat, 15 Mar 2025 23:50:25 +0800</pubDate>
+      <guid>http://localhost:1313/en/posts/life/%E6%9D%AD%E6%BC%82%E5%AE%9E%E4%B9%A0%E6%97%A5%E5%AF%84/</guid>
+      <description>&lt;p&gt;大概 bg 是 2 本 9 硕，方向是存储/db，之前在一家初创实习过，其他的 bg 和一般的鸡架选手差不多。&lt;/p&gt;
+&lt;h2 id=&#34;海投与选择&#34;&gt;海投与选择&lt;/h2&gt;
+&lt;p&gt;起因是对在学校的生活不太满意，感觉生命就在一行行 LaTex 中凋零。加上刚好组里刚好有一些合作，就索性想再回工业界看看，不料被阿里云 hr 光速挂了简历，遂道心破碎开始海投，投过的加上联系的大概有：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>2024年终总结</title>
+      <link>http://localhost:1313/en/posts/life/2024%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</link>
+      <pubDate>Sat, 15 Feb 2025 23:49:21 +0800</pubDate>
+      <guid>http://localhost:1313/en/posts/life/2024%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</guid>
+      <description>&lt;p&gt;终于完成camera ready的收尾工作，在这个沉淀思绪的节点，是该为这一年作个注脚了。人还是那个人，但是由于到了人生的新阶段，遇到了很好的人，做出了一些有意义的事情，同样也有一些遗憾，总的来说，今年同样对我来说是意义非凡的一年
+今年最特别的是身份上的转变，在保研结束后，身上学生的成分感觉又淡了一些。就像我之前说的，保研并不是终点，他更多的是提供一个平台，让我今后可以走的更远。因此大四自然是坐不住的，经过一些曲折，最终靠着比较扎实的毕设和朋友的内推，最终是入职了一家数据库的初创公司，总的来说这边入职体验还是相当nice的，老板和同事人都很不错，在这边很受照顾成长的也很快。
+来了之后刚好赶上公司用Rust重写原本的项目，能够发挥的空间很多，作为实习生，也有幸主导了一些模块的设计与实现，比如基于datafusion构建的计算引擎，delta方案的乱序数据的处理，prepared statement等等。此外，还实现了一些比较有意义的优化工作，成功使写吞吐翻倍。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>数据库，成都，和霸王茶姬：记本科的最后时光</title>
+      <link>http://localhost:1313/en/posts/life/%E6%95%B0%E6%8D%AE%E5%BA%93%E6%88%90%E9%83%BD%E5%92%8C%E9%9C%B8%E7%8E%8B%E8%8C%B6%E5%A7%AC-%E8%AE%B0%E6%9C%AC%E7%A7%91%E7%9A%84%E6%9C%80%E5%90%8E%E6%97%B6%E5%85%89/</link>
+      <pubDate>Mon, 05 Aug 2024 23:52:04 +0800</pubDate>
+      <guid>http://localhost:1313/en/posts/life/%E6%95%B0%E6%8D%AE%E5%BA%93%E6%88%90%E9%83%BD%E5%92%8C%E9%9C%B8%E7%8E%8B%E8%8C%B6%E5%A7%AC-%E8%AE%B0%E6%9C%AC%E7%A7%91%E7%9A%84%E6%9C%80%E5%90%8E%E6%97%B6%E5%85%89/</guid>
+      <description>&lt;p&gt;本来想的题目是《24 研0 小硕实习有感》或者《对实习的一些思考》，但突然想到每天下午陪伴我coding最多的时楼下的瑞幸和霸王茶姬，于是就起了这样一个无厘头的标题。&lt;/p&gt;</description>
+    </item>
+    <item>
       <title>02-从0.5实现CURP</title>
       <link>http://localhost:1313/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/</link>
       <pubDate>Mon, 03 Jun 2024 09:31:59 +0000</pubDate>
@@ -209,6 +241,52 @@
       <description>&lt;h1 id=&#34;manu-a-cloud-native-vector-database-management-system&#34;&gt;Manu: A Cloud Native Vector Database Management System&lt;/h1&gt;
 &lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;Manu或者其前身Milvus，定位目标是云原生的向量数据库，需要提供基础的向量存储和检索服务，同时，相比传统的云原生DBMS，主要有以下的特点：&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>保研总结：从 AI 到 System</title>
+      <link>http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/</link>
+      <pubDate>Fri, 29 Sep 2023 00:00:00 +0800</pubDate>
+      <guid>http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/</guid>
+      <description>&lt;h2 id=&#34;个人背景&#34;&gt;个人背景&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;项目&lt;/th&gt;
+          &lt;th&gt;内容&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;学校&lt;/td&gt;
+          &lt;td&gt;东部中流 211&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;专业&lt;/td&gt;
+          &lt;td&gt;AI&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;排名&lt;/td&gt;
+          &lt;td&gt;小专业前 5%，3/63&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;英语&lt;/td&gt;
+          &lt;td&gt;四级 590+，六级 540+&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;个人倾向&lt;/td&gt;
+          &lt;td&gt;方向 &amp;gt; 导师人品 &amp;gt; 导师学术 &amp;gt; 学校 title&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;保研方向&lt;/td&gt;
+          &lt;td&gt;数据库、分布式，或者其他 system 方向&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;核心目标&lt;/td&gt;
+          &lt;td&gt;逃离 AI&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;AI 专业，但是纯纯 system 人。&lt;/p&gt;</description>
     </item>
     <item>
       <title>深入理解分布式系统</title>

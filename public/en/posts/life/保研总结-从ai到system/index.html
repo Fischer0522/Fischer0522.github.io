@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>保研总结：从 AI 到 System | Fischer&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="个人背景
+
+  
+      
+          项目
+          内容
+      
+  
+  
+      
+          学校
+          东部中流 211
+      
+      
+          专业
+          AI
+      
+      
+          排名
+          小专业前 5%，3/63
+      
+      
+          英语
+          四级 590&#43;，六级 540&#43;
+      
+      
+          个人倾向
+          方向 &gt; 导师人品 &gt; 导师学术 &gt; 学校 title
+      
+      
+          保研方向
+          数据库、分布式，或者其他 system 方向
+      
+      
+          核心目标
+          逃离 AI
+      
+  
+
+AI 专业，但是纯纯 system 人。">
+<meta name="author" content="Fischer">
+<link rel="canonical" href="http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.c5de734fbd88c3d21543485ffbcb1ccdda89a86a780cf987fa00199c41dbc947.css" integrity="sha256-xd5zT72Iw9IVQ0hf&#43;8sczdqJqGp4DPmH&#43;gAZnEHbyUc=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/img/Navigation.svg">
+<link rel="apple-touch-icon" href="http://localhost:1313/Navigation.svg">
+<link rel="mask-icon" href="http://localhost:1313/Navigation.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="保研总结：从 AI 到 System" />
+<meta property="og:description" content="个人背景
+
+  
+      
+          项目
+          内容
+      
+  
+  
+      
+          学校
+          东部中流 211
+      
+      
+          专业
+          AI
+      
+      
+          排名
+          小专业前 5%，3/63
+      
+      
+          英语
+          四级 590&#43;，六级 540&#43;
+      
+      
+          个人倾向
+          方向 &gt; 导师人品 &gt; 导师学术 &gt; 学校 title
+      
+      
+          保研方向
+          数据库、分布式，或者其他 system 方向
+      
+      
+          核心目标
+          逃离 AI
+      
+  
+
+AI 专业，但是纯纯 system 人。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-09-29T00:00:00+08:00" />
+<meta property="article:modified_time" content="2023-09-29T00:00:00+08:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="保研总结：从 AI 到 System"/>
+<meta name="twitter:description" content="个人背景
+
+  
+      
+          项目
+          内容
+      
+  
+  
+      
+          学校
+          东部中流 211
+      
+      
+          专业
+          AI
+      
+      
+          排名
+          小专业前 5%，3/63
+      
+      
+          英语
+          四级 590&#43;，六级 540&#43;
+      
+      
+          个人倾向
+          方向 &gt; 导师人品 &gt; 导师学术 &gt; 学校 title
+      
+      
+          保研方向
+          数据库、分布式，或者其他 system 方向
+      
+      
+          核心目标
+          逃离 AI
+      
+  
+
+AI 专业，但是纯纯 system 人。"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Blog",
+      "item": "http://localhost:1313/en/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Life",
+      "item": "http://localhost:1313/en/posts/life/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "保研总结：从 AI 到 System",
+      "item": "http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "保研总结：从 AI 到 System",
+  "name": "保研总结：从 AI 到 System",
+  "description": "个人背景 项目 内容 学校 东部中流 211 专业 AI 排名 小专业前 5%，3/63 英语 四级 590+，六级 540+ 个人倾向 方向 \u0026gt; 导师人品 \u0026gt; 导师学术 \u0026gt; 学校 title 保研方向 数据库、分布式，或者其他 system 方向 核心目标 逃离 AI AI 专业，但是纯纯 system 人。\n",
+  "keywords": [
+    
+  ],
+  "articleBody": "个人背景 项目 内容 学校 东部中流 211 专业 AI 排名 小专业前 5%，3/63 英语 四级 590+，六级 540+ 个人倾向 方向 \u003e 导师人品 \u003e 导师学术 \u003e 学校 title 保研方向 数据库、分布式，或者其他 system 方向 核心目标 逃离 AI AI 专业，但是纯纯 system 人。\n竞赛 美赛 H 蓝桥省三 两个校二等奖学金凑行数 科研 科研情况基本为 0。读过一些 6.824 的相关论文，也看过一些近几年的文章，以及 LevelDB、etcd 这种工业实现。\n项目 MIT 6.830 MIT 6.824 CMU 15-445 Go 实现的单机型 Redis C 语言 Linux HTTP Server（写得太拉了，不想写在简历上） 其他主要都是 Web 项目和一些不太适合当作项目写进简历的 Lab 这里需要声明一下，确实不是标题党。虽然专业是人工智能，但严格来说个人并不是科班出身，专业课全是信号与系统、自动控制原理、嵌入式等课程，408 都没有开全，甚至连深度学习都没有开。整个大二大三需要写代码的时候屈指可数，估计还没我一个 Lab 当中的代码量多，鉴定为自动化套皮。当时也是被学院给忽悠瘸了没有转专业，现在回想起来，整个大二大三两年所做的都是在弥补我当时这个错误的决定。\n小结一下的话，就是学校背景并不突出，rk 也很一般，勉强蹭着前 5%。项目个人感觉做得比较扎实，但是吃亏在偏工程性，有的学校如果要求填写科研经历就不太好写。\nOffer 人大信院直博 软件所并行实验室 厦大信院 华科软院 / 国光 天大智算（合格，后续放弃） 最终去向：厦大信院\n夏令营 报名与入营情况 个人秉承了应报尽报、不漏一校的原则，也是海投了十几个学校，最后果然也是被拒麻了，强 com 的中九一个没入。\n院校 是否入营 结果 入营时间 中山软院 否 - 7.3 - 7.5 成电计院 否 - 7.4 - 7.5 东北大学 入营（放弃） 放弃 - 湖大信院 否 - 7.8 - 7.9 华师数据学院 否 - 7.17 - 7.19 华科国光 否 - 线上 科大苏研院 否 - 7.20 - 人大信院 入营 wl3，已补上 7.8 - 7.12 厦大信院 入营 wl1，已补上 7.12 - 7.15 天津大学 入营 合格，放弃 线上 中南计院 否 - 7.8 - 7.9 软件所 否 - 7.17 - 山大计院 入营（放弃） 放弃 7 月中上 哈工威 入营 放弃 7.14（报道）- 7.16 上科大 否 - 7 月 4 - 6 日，7 月 17 - 20 日 西北工业大学 否 - 7.2 - 7.4 入营了但没去的学校 东北大学 和 RUC 时间冲突了，实在错不开，故没去，唯一的一个保底也没了。\n哈工威 面试当天还是前一天睡到九点起床，发现自己被移出群聊，不知道是因为自己没改群名片还是已经结束了。本来也不想去，就没在意。\n山大 纯纯宣讲营，我都没发邮件提交资料，最后也入营了。当时那天正在去北京的高铁上，那个腾讯会议点都没点进去。\n天大智算学部 最恼火的一个夏令营。\n久闻天大海王之名，今年可算是见识到了。当时本来也没想着报 TJU，点开官网发现十分钟就填完了，就顺手填了一个。结果天大最开始根本没筛人，QQ群里面有 1800+ 的人。\n机试 之后首先通过机试筛一波人。公告上说的是只要不爆零就行，最后参加机试的有 1200 人左右，最后留下了 600 人左右。题本身并不难，大致都是 LeetCode easy 或者 mid 难度，还有两道是 LeetCode 原题。但是个人当时没怎么准备机试，AcWing 基础课也只过了一遍，最后也只 A 了两道，超时了一道，不过也是通过了初筛。\n面试 天大的面试是分组进行的。由于个人想做 sys 相关，所以就报了 HPC 的那组。考核内容感觉非常随意，鉴定为纯纯的背景面：2 分钟英语自我介绍 + 5 分钟 PPT + 提问，总共时间十分钟。最后实际考核只有一分钟英语自我介绍 + 5 分钟 PPT，最后提问环节更是无语，感觉那些老师都没认真听，就问了一个“如果给了 offer 你的规划是怎么样的”。\n最后那个组大约是 30 个人，最后给了 12 个“合格”。这里“合格”的意思是，合格并不代表是优营，后续还要持续跟导师保持联系到八月中旬或者八月底，最后才发优营。具体怎么个保持联系法就要看导师了。最后想着的是先拿个保底，所以就联系了一位做分布式调度相关的老师。\nHPC 组 再说说 HPC 这个组还有这个老师。首先 TJU 个人感觉本身就不算是 sys 强校，HPC 这个组我个人查 DBLP、Google Scholar 等感觉大多老师也都脱离了科研一线。最终个人感觉有两个老师还可以，就挑其中一个方向比较 match 的联系了一下。之后老师就发了点论文让我看，说过几天聊一下。本来以为是考核性质的，我还做了个 PPT，结果到了当天不仅老师两次迟到，先是说推迟半小时，后来发消息也不回，大约半小时后问我是否有时间。在那等了一个点，后面内容也就是简单聊一聊，说可以留个名额，然后给了个大致的方向，让我现在就开始干活，后面参加组会。\n聊天内容上个人感觉画饼味有点重。先说研究生的“果酱”是 2w，之后又说往届的学长学姐都是提前入组，毕设也跟着他做，最后毕设整理整理又是一篇高质量论文，之后入学去拿“果酱”也有很大的竞争力。反正这些话我听着并不是很舒服。后面给了点方向，让我先跟着学，后面参加下周组会。初印象并不是很好，当时由于手头没 offer，想着先拿个保底，也就先答应下来了。\n最有意思的来了。大约一周后，我当时正在参加 XMU 的夏令营，他在群里发了个开组会的通知。由于我第二天就要机试 + 参观实验室，并且我确实是啥也没学，就直接和他请了个假，说目前还有别的夏令营。\n之所以这么说，主要原因是之前参加 RUC 的夏令营，联系的老师问我后面还有哪个夏令营，我如实说后面还有 XMU，老师简单问了问情况之后祝我那边好好表现，争取也拿个优营。于是和 TJU 的老师我也如实交代了，没想到第二天他回了我一句：“啥意思？天大已经给了 offer 还要去其他的？”由于我当时马上要去机试了，感觉和他解释 + 拉扯还需要一段时间，而且下午还要从思明去翔安那边实验室参观 + 实验室面试，我就没回他，打算晚上再和他拉扯。结果下午他打了个电话，我当时在实验室机试没接上，后来看微信就已经被移出群聊了。\n首先确实是我个人没及时回消息，主要也是实在没空回。但这种处理方式我也是确实没想到，有点绷不住。只能说他也不是真心想招我，互相海罢了。再者，TJU 去年手撕 offer 的事基本已经人尽皆知，“已经给了 offer 还要参加其他的”这句话哪个学校都能说，唯独 TJU 不行。本来打算好好跟他解释一下，道个歉给鸽掉，后来看他直接移除群聊了，也没什么好说的了。加上本身也不是很想去，就再也没回他。\n再说说 HPC 这个组，组本身并不大，学术可以移步 DBLP 自行了解。只能说其中几位老师已经脱离了科研一线，还有一个是我上面联系的老师，另外一个之后和一位 TJU 本科的同学聊天时说他在本科当中的风评不是很好。总的来说，不推荐任何人报名 TJU 的 HPC 组，这里就不拉踩了，可以去自行了解一下还有哪些做 HPC 的组和学校。\n人大信息学院 个人感觉总体上体验最好的一个学校。由于我本来做的是数据库相关的，所以 RUC 一直算是我的梦校。也在五月份左右就联系了柴云鹏老师，当时聊了聊之后就感觉老师人非常不错，方向也比较 match。当时他看我做过 6.824，就直接把我拉进了他的一个组里，说有时间就可以跟着学一点，看我的时间安排。由于后面我考试比较多，也就基本就在摸鱼看看论文和 etcd 的代码。\n再说夏令营，最开始我是打算报专硕的。RUC 专硕 2 年 + 有宿舍 + 中关村，性价比爆炸。后面也是觉得入营无望，再加上和老师接触下来感觉老师人非常好，方向我个人有点基础也比较感兴趣，就联系了老师报了直博。最后也是入了营。\n考核今年恢复了往年的线下考核形式，笔试 + 机试 + 面试。考核内容由于保密协议并不能说。\n笔试、机试比较简单，信院可以用 CSP 抵，但是今年的题感觉 CSP 400 以下抵都很亏。 面试个人感觉还是很考察个人能力，面试的时候刚好那一组全是做 sys 的老师，也确实被问到了一些盲区，加上当时比较紧张，发挥得很烂，走出教室就感觉凉了。 不出意外，最后也是只拿到了 wl3。感觉补肯定是能补上的，但是目前想去的老师都已经有人联系了，可能选不到好老师。之前联系的柴老师跟我说，今年可能会有老师会有两个名额，如果谁多了名额或者谁鸽了，第一时间通知我，我哭死。不过现在 RUC 好像还没开始补人，目前还没收到邮件。\n个人对直博还是比较恐惧的。之前报完全是因为感觉专硕入营无望 + 被柴老师的个人魅力打动才头铁报了直博。如果选不到好导师的话，我大概率就会放弃 RUC 信院了。\n厦大信息学院 厦大今年是推荐制入营，最后录取也是按组进行录取。考核内容分为机试和面试，各占 50%。\n机试 计算机系要求只能用 C，但是有的考场说 C++ 也可以。总的来说并不难，但是我本身机试就很烂 + C 语言字符串处理不熟悉，被一个字符串的题卡了很久，整得心态爆炸，最后发挥得很烂，换算成百分制只有 70 多。\n面试 厦大面试有个软件，各项计时 + 抽题，面试整个过程按流程来：\n英语自我介绍 文献翻译 专业课提问 PPT 展示 自由提问 厦大也有保密协议，具体内容也就不说了。总体来说氛围比较轻松，后来还扯到了 CockroachDB，给老师讲了几分钟的 CockroachDB。\n答完自我感觉良好，最后没能优营，确实是被机试给拖后腿了。同组的基本都 80 多 90 多，机试占比 50% 直接寄。算了算，除非面试给个 98、99，不然也追不上最后一名。问老师，老师说现在组内 wl1，而且后面我得知组里已经有其他同学准备鸽了，姑且也算是个 offer。\nupdate：厦大已经补上了，感觉除非那几个中九强校能找到强组的好导师，不然可能就这边了。\n夏令营小结 由于今年大家都在海投 + 个人学校和绩点并不是很突出，最后入营结果也比较惨淡，入营后的表现也不是很好，最后只收到了两个高 wl。XMU 如果能补上，大概率还是会去的，sys 强导 + 实验室氛围很不错。RUC 能去肯定能去，不过得看能不能选到好导师了。\n后面就备战预推免，看看 HUST、SYSU、ZJU、NJU 能不能入营吧。\n预推免 由于这个时候厦大已经补上了，并且我也很想去，因此预推免主要是想同时兼顾 title + 老师，非好 title + 强导不去，因此投得也是非常狂，大概如下：\n院校 是否入营 结果 时间 浙大计专 否 x x 南大计专 否 x x 中山计院 否 x x 软件所（并行计算实验室） 是 offer 9.14 华科软院（国光） 是 offer 9.26 软件所并行实验室 可以看到投得非常普信，最后被拒得也是非常惨。目前只有软件所的一个组让我入营了，主要做的方向为并行计算相关。其实个人对中科院系是很不感冒的，当时投的时候也就是瞎投着玩，没想到最后入营了。本来是不打算去的，后来有几个朋友入营了计算所、软件所、PKU，还有个朋友在北京实习，就想着去一起聚一聚。当天晚上就一起锐评计算所、软件所，更加坚定了自己不想去的想法。\n9.20 开奖了，顺利拿到优营了，但是硕还是直博，老师是谁暂时都没说，9.27 才截止，先拿着想几天。\nupdate：给的硕士，只有一个老师有名额，不太想去，就已经鸽掉了。\n面试 第二天最终参加面试的有五个人，整个面试过程非常水。最开始问的两个英语问题竟然成了面试当中最难的问题。介绍完 PPT 之后就两个老师提问，一个老师全程看电脑不说话，另外一个基本上就是纯聊天，扯东扯西的，到点就结束了。面完得知其他人都是这样，不知道是背景面还是完全不想招人。\n笔试 笔试主要是考 OS 和并行算法设计，一共五道题，一个半小时。总的来说不难，我前面 OS 的题废话太多了，导致后面没太做完。OS 主要是进程间通信和局部性，并行算法的题也比较基础，如果学过 CMU 15-418，大概都可以应付得了。\n一点吐槽 最后再吐槽一下计算所和软件所，主要是我的某位朋友。他在计算所某个组实习了一个月后，线下实习只配了地下室作为宿舍，最后的工资也没发。更荒谬的是，最后夏令营的时候由于没坚定表达自己想来，就以心理测评不过关给挂掉了，也不知道具体情况是什么样。由于暑假 all in 了计算所，导致夏令营 0 offer。\n这几天又“入”了软件所，收到了发送的邮件，但是又迟迟未告知具体的面试时间，不过他还是先来了北京，之后再询问竟然得知根本没有面试资格。请问没有面试资格您发什么邮件？\n不是针对中科院的所有组，只能说有的组在招生上的行为极其敷衍和不负责。对于打工和 all in 这种事情，请慎重再慎重。而他有着还不错的 rk + 比较丰富的 sys 经历，至今还没上岸，在这里只能祝他后面一切顺利吧。\n华科软院 报华科主要是想来国光那边做存储，因此当时也是提前联系了一位老师。和老师简单聊了聊之后，做了一轮实验室的机试考核：一个 LRU cache、一个负载均衡的题，还有个树 DFS 板子题，剩下两个不记得了。A 了两道，和其他人差距不大。之后询问老师，老师说可以为我保留一个名额，但是今年国光不单独招生，因此还需要走 CS / SE 的名额。本来报的是 CS，在开预推免的几天之后，老师说今年 CS 竞争比较激烈，然后就让我转投 SE。\n入营了，但是 25/200，机会渺茫，当作保研的最后一站去玩玩吧，拿优营就不指望了，而且那边的条件我也不是很想去。\nupdate：出结果了，最后排名 14/98（入营了 200 人，最后只有 98 个参加面试），可以稳录取了。目前还是不太想去，明天找老师详细聊一聊再确认一下。如果和我原本想的差不多的话，就准备鸽了。\n面试 华科是我今年遇到的第一个先面试后机试的学校，那就先说说面试。面试每个组的内容都不太一样，我被分到的组主要是自我介绍 + 围绕项目的自由提问。总体上氛围还是很轻松的，年轻老师很亲切，老教授很和蔼，整个面试过程聊得很开心。这次终于没有保密协议了，可以好好说一下内容：\n学习过程中遇到的最有挑战的事 / 工程量最大的项目 你做的这些 Lab，具体是什么形式 对于一个系统，如何检测运行中的故障 既然你做分布式，那么你有接触过区块链吗，了解区块链当中分布式的应用吗 有没有接触过较为前沿的内容 你在 sys 方向积累很深，你是怎么确定你的方向的 既然你是人工智能专业，又主要学数据库，你对 AI4DB 有什么看法 读研的未来规划 / 方向 面试的老师刚好有一位是做分布式 / 区块链相关的，他对我做的这些东西也很感兴趣。总的来说，给我的感觉就是做的这些 Lab 确实是帮了大忙了。最开始介绍了很长时间 6.824 当中的相关工作，我当时说到了分布式环境下 debug 很困难，老师就追问了一个如何检测系统故障。由于当时 debug 确实很头疼，就了解到了市面上的一些智能日志分析软件，就主要围绕着这个答的。对于前沿工作的问题，主要是说了说 Raft 作者博士论文当中的优化和 etcd 当中的实现（其实也不是很前沿），然后是 Raft 在跨域上的应用和 CockroachDB（这里再次感谢柴老师当时拉我进组呜呜呜）。刚好最近在学 15-721，又说了说在课上看的几篇近几年的 SIGMOD 文章（Snowflake 这种的）。关于确定方向的问题，就主要说了自己从 AI 到后端再到 DB 的一个跑路过程小故事。综合来讲的话，感觉老师还是比较认可我在各个问题上的回答的，也给予了比较正面的评价“挺好的”。我个人也感觉整个面试过程很不错，和老师聊得非常开心。\n机试 华科的系统感觉有点奇葩，不是那种传统意义上的 OJ，而是个 LJ（local judge），Win 平台，IDE 用的是 VS2010。每次在系统中答题都会弹出来一个 VS2010，在里面编辑，然后编译运行一遍就算作答了。形式上又有点类似 LeetCode，不需要自己进行 IO，只需要补充核心函数，然后不能自己去额外引入头文件，基本上就是 C 语言环境。\n题目很简单，就三题：\n青蛙跳台阶 / 斐波那契数列 字符串处理，判断能不能把一个字符串变成相邻字符都不同的形式 N 皇后 由于我平时主要还是写 C++ 为主，因此看到 C 语言字符串的题就犯恶心。因此把第一题和第三题快速 A 掉之后，第二题尝试做了一下，然后结果都是典中典的“烫烫烫烫”，之后直接不想做了，提前交卷溜了。\nSummary 高考结束后，带着一种“考败来矿”的心态开启了大学生涯。在我听说到可以保研之后，便一直将保研当作我大学生涯的一个终极目标。在这三年中，保研作为目标的这个想法从来没变，但是究竟为什么要保研，这个问题我思考了很多。\n现在如果让我来回答的话，我认为保研只是一个能够去更好地进行学习的途径，并不是大学生涯的一个终点或者终极目标。带着这样的心态，学习过程当中就不容易陷入到只卷绩点，或者随波逐流地跟着他人做一些项目。也多亏于此，今年参加的夏令营 / 预推免都收获了 offer，offer 率 100%。\n最后再说说一个 trade-off 的问题。今年也确实收获了几个 offer，放弃的 offer 在 title 上都大于最终去向。我的观点是只要遵从自己的内心就好，虽然可能会感觉有点遗憾，有时会去想如果我是人大的研究生会怎么样，如果我是华科的研究生又会怎么样。不是做了正确的选择，而是自己做出的选择就是正确的选择。我只需要知道我最后选择了厦大，选到了很好的老师，做着自己感兴趣的方向就可以了。现在如果再给我一次机会的话，我相信我还是会做出同样的选择。\n",
+  "wordCount" : "6506",
+  "inLanguage": "en",
+  "datePublished": "2023-09-29T00:00:00+08:00",
+  "dateModified": "2023-09-29T00:00:00+08:00",
+  "author":{
+    "@type": "Person",
+    "name": "Fischer"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "http://localhost:1313/en/posts/life/%E4%BF%9D%E7%A0%94%E6%80%BB%E7%BB%93-%E4%BB%8Eai%E5%88%B0system/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Fischer's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "http://localhost:1313/img/Navigation.svg"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://localhost:1313/img/Navigation.svg" alt="" aria-label="logo"
+                    height="35">Fischer&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <ul class="lang-switch"><li>|</li>
+                </ul>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/en/search" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/publications" title="Publications">
+                    <span>Publications</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/posts" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/archives/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/tags" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/about" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/en/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/life/">Life</a></div>
+    <h1 class="post-title entry-hint-parent">
+      保研总结：从 AI 到 System
+    </h1>
+    <div class="post-meta"><span title='2023-09-29 00:00:00 +0800 CST'>2023-09-29</span>&nbsp;·&nbsp;13 min&nbsp;·&nbsp;Fischer
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e4%b8%aa%e4%ba%ba%e8%83%8c%e6%99%af" aria-label="个人背景">个人背景</a><ul>
+                        
+                <li>
+                    <a href="#%e7%ab%9e%e8%b5%9b" aria-label="竞赛">竞赛</a></li>
+                <li>
+                    <a href="#%e7%a7%91%e7%a0%94" aria-label="科研">科研</a></li>
+                <li>
+                    <a href="#%e9%a1%b9%e7%9b%ae" aria-label="项目">项目</a></li>
+                <li>
+                    <a href="#offer" aria-label="Offer">Offer</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%a4%8f%e4%bb%a4%e8%90%a5" aria-label="夏令营">夏令营</a><ul>
+                        
+                <li>
+                    <a href="#%e6%8a%a5%e5%90%8d%e4%b8%8e%e5%85%a5%e8%90%a5%e6%83%85%e5%86%b5" aria-label="报名与入营情况">报名与入营情况</a></li>
+                <li>
+                    <a href="#%e5%85%a5%e8%90%a5%e4%ba%86%e4%bd%86%e6%b2%a1%e5%8e%bb%e7%9a%84%e5%ad%a6%e6%a0%a1" aria-label="入营了但没去的学校">入营了但没去的学校</a><ul>
+                        
+                <li>
+                    <a href="#%e4%b8%9c%e5%8c%97%e5%a4%a7%e5%ad%a6" aria-label="东北大学">东北大学</a></li>
+                <li>
+                    <a href="#%e5%93%88%e5%b7%a5%e5%a8%81" aria-label="哈工威">哈工威</a></li>
+                <li>
+                    <a href="#%e5%b1%b1%e5%a4%a7" aria-label="山大">山大</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%a4%a9%e5%a4%a7%e6%99%ba%e7%ae%97%e5%ad%a6%e9%83%a8" aria-label="天大智算学部">天大智算学部</a><ul>
+                        
+                <li>
+                    <a href="#%e6%9c%ba%e8%af%95" aria-label="机试">机试</a></li>
+                <li>
+                    <a href="#%e9%9d%a2%e8%af%95" aria-label="面试">面试</a></li>
+                <li>
+                    <a href="#hpc-%e7%bb%84" aria-label="HPC 组">HPC 组</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e4%ba%ba%e5%a4%a7%e4%bf%a1%e6%81%af%e5%ad%a6%e9%99%a2" aria-label="人大信息学院">人大信息学院</a></li>
+                <li>
+                    <a href="#%e5%8e%a6%e5%a4%a7%e4%bf%a1%e6%81%af%e5%ad%a6%e9%99%a2" aria-label="厦大信息学院">厦大信息学院</a><ul>
+                        
+                <li>
+                    <a href="#%e6%9c%ba%e8%af%95-1" aria-label="机试">机试</a></li>
+                <li>
+                    <a href="#%e9%9d%a2%e8%af%95-1" aria-label="面试">面试</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%a4%8f%e4%bb%a4%e8%90%a5%e5%b0%8f%e7%bb%93" aria-label="夏令营小结">夏令营小结</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e9%a2%84%e6%8e%a8%e5%85%8d" aria-label="预推免">预推免</a><ul>
+                        
+                <li>
+                    <a href="#%e8%bd%af%e4%bb%b6%e6%89%80%e5%b9%b6%e8%a1%8c%e5%ae%9e%e9%aa%8c%e5%ae%a4" aria-label="软件所并行实验室">软件所并行实验室</a><ul>
+                        
+                <li>
+                    <a href="#%e9%9d%a2%e8%af%95-2" aria-label="面试">面试</a></li>
+                <li>
+                    <a href="#%e7%ac%94%e8%af%95" aria-label="笔试">笔试</a></li>
+                <li>
+                    <a href="#%e4%b8%80%e7%82%b9%e5%90%90%e6%a7%bd" aria-label="一点吐槽">一点吐槽</a></li></ul>
+                </li>
+                <li>
+                    <a href="#%e5%8d%8e%e7%a7%91%e8%bd%af%e9%99%a2" aria-label="华科软院">华科软院</a><ul>
+                        
+                <li>
+                    <a href="#%e9%9d%a2%e8%af%95-3" aria-label="面试">面试</a></li>
+                <li>
+                    <a href="#%e6%9c%ba%e8%af%95-2" aria-label="机试">机试</a></li></ul>
+                </li></ul>
+                </li>
+                <li>
+                    <a href="#summary" aria-label="Summary">Summary</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="个人背景">个人背景<a hidden class="anchor" aria-hidden="true" href="#个人背景">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>项目</th>
+          <th>内容</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>学校</td>
+          <td>东部中流 211</td>
+      </tr>
+      <tr>
+          <td>专业</td>
+          <td>AI</td>
+      </tr>
+      <tr>
+          <td>排名</td>
+          <td>小专业前 5%，3/63</td>
+      </tr>
+      <tr>
+          <td>英语</td>
+          <td>四级 590+，六级 540+</td>
+      </tr>
+      <tr>
+          <td>个人倾向</td>
+          <td>方向 &gt; 导师人品 &gt; 导师学术 &gt; 学校 title</td>
+      </tr>
+      <tr>
+          <td>保研方向</td>
+          <td>数据库、分布式，或者其他 system 方向</td>
+      </tr>
+      <tr>
+          <td>核心目标</td>
+          <td>逃离 AI</td>
+      </tr>
+  </tbody>
+</table>
+<p>AI 专业，但是纯纯 system 人。</p>
+<h3 id="竞赛">竞赛<a hidden class="anchor" aria-hidden="true" href="#竞赛">#</a></h3>
+<ul>
+<li>美赛 H</li>
+<li>蓝桥省三</li>
+<li>两个校二等奖学金凑行数</li>
+</ul>
+<h3 id="科研">科研<a hidden class="anchor" aria-hidden="true" href="#科研">#</a></h3>
+<p>科研情况基本为 0。读过一些 6.824 的相关论文，也看过一些近几年的文章，以及 LevelDB、etcd 这种工业实现。</p>
+<h3 id="项目">项目<a hidden class="anchor" aria-hidden="true" href="#项目">#</a></h3>
+<ul>
+<li>MIT 6.830</li>
+<li>MIT 6.824</li>
+<li>CMU 15-445</li>
+<li>Go 实现的单机型 Redis</li>
+<li>C 语言 Linux HTTP Server（写得太拉了，不想写在简历上）</li>
+<li>其他主要都是 Web 项目和一些不太适合当作项目写进简历的 Lab</li>
+</ul>
+<p>这里需要声明一下，确实不是标题党。虽然专业是人工智能，但严格来说个人并不是科班出身，专业课全是信号与系统、自动控制原理、嵌入式等课程，408 都没有开全，甚至连深度学习都没有开。整个大二大三需要写代码的时候屈指可数，估计还没我一个 Lab 当中的代码量多，鉴定为自动化套皮。当时也是被学院给忽悠瘸了没有转专业，现在回想起来，整个大二大三两年所做的都是在弥补我当时这个错误的决定。</p>
+<p>小结一下的话，就是学校背景并不突出，rk 也很一般，勉强蹭着前 5%。项目个人感觉做得比较扎实，但是吃亏在偏工程性，有的学校如果要求填写科研经历就不太好写。</p>
+<h3 id="offer">Offer<a hidden class="anchor" aria-hidden="true" href="#offer">#</a></h3>
+<ul>
+<li>人大信院直博</li>
+<li>软件所并行实验室</li>
+<li>厦大信院</li>
+<li>华科软院 / 国光</li>
+<li>天大智算（合格，后续放弃）</li>
+</ul>
+<p>最终去向：<strong>厦大信院</strong></p>
+<h2 id="夏令营">夏令营<a hidden class="anchor" aria-hidden="true" href="#夏令营">#</a></h2>
+<h3 id="报名与入营情况">报名与入营情况<a hidden class="anchor" aria-hidden="true" href="#报名与入营情况">#</a></h3>
+<p>个人秉承了应报尽报、不漏一校的原则，也是海投了十几个学校，最后果然也是被拒麻了，强 com 的中九一个没入。</p>
+<table>
+  <thead>
+      <tr>
+          <th>院校</th>
+          <th>是否入营</th>
+          <th>结果</th>
+          <th>入营时间</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>中山软院</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.3 - 7.5</td>
+      </tr>
+      <tr>
+          <td>成电计院</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.4 - 7.5</td>
+      </tr>
+      <tr>
+          <td>东北大学</td>
+          <td>入营（放弃）</td>
+          <td>放弃</td>
+          <td>-</td>
+      </tr>
+      <tr>
+          <td>湖大信院</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.8 - 7.9</td>
+      </tr>
+      <tr>
+          <td>华师数据学院</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.17 - 7.19</td>
+      </tr>
+      <tr>
+          <td>华科国光</td>
+          <td>否</td>
+          <td>-</td>
+          <td>线上</td>
+      </tr>
+      <tr>
+          <td>科大苏研院</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.20 -</td>
+      </tr>
+      <tr>
+          <td>人大信院</td>
+          <td>入营</td>
+          <td>wl3，已补上</td>
+          <td>7.8 - 7.12</td>
+      </tr>
+      <tr>
+          <td>厦大信院</td>
+          <td>入营</td>
+          <td>wl1，已补上</td>
+          <td>7.12 - 7.15</td>
+      </tr>
+      <tr>
+          <td>天津大学</td>
+          <td>入营</td>
+          <td>合格，放弃</td>
+          <td>线上</td>
+      </tr>
+      <tr>
+          <td>中南计院</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.8 - 7.9</td>
+      </tr>
+      <tr>
+          <td>软件所</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.17 -</td>
+      </tr>
+      <tr>
+          <td>山大计院</td>
+          <td>入营（放弃）</td>
+          <td>放弃</td>
+          <td>7 月中上</td>
+      </tr>
+      <tr>
+          <td>哈工威</td>
+          <td>入营</td>
+          <td>放弃</td>
+          <td>7.14（报道）- 7.16</td>
+      </tr>
+      <tr>
+          <td>上科大</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7 月 4 - 6 日，7 月 17 - 20 日</td>
+      </tr>
+      <tr>
+          <td>西北工业大学</td>
+          <td>否</td>
+          <td>-</td>
+          <td>7.2 - 7.4</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="入营了但没去的学校">入营了但没去的学校<a hidden class="anchor" aria-hidden="true" href="#入营了但没去的学校">#</a></h3>
+<h4 id="东北大学">东北大学<a hidden class="anchor" aria-hidden="true" href="#东北大学">#</a></h4>
+<p>和 RUC 时间冲突了，实在错不开，故没去，唯一的一个保底也没了。</p>
+<h4 id="哈工威">哈工威<a hidden class="anchor" aria-hidden="true" href="#哈工威">#</a></h4>
+<p>面试当天还是前一天睡到九点起床，发现自己被移出群聊，不知道是因为自己没改群名片还是已经结束了。本来也不想去，就没在意。</p>
+<h4 id="山大">山大<a hidden class="anchor" aria-hidden="true" href="#山大">#</a></h4>
+<p>纯纯宣讲营，我都没发邮件提交资料，最后也入营了。当时那天正在去北京的高铁上，那个腾讯会议点都没点进去。</p>
+<h3 id="天大智算学部">天大智算学部<a hidden class="anchor" aria-hidden="true" href="#天大智算学部">#</a></h3>
+<p>最恼火的一个夏令营。</p>
+<p>久闻天大海王之名，今年可算是见识到了。当时本来也没想着报 TJU，点开官网发现十分钟就填完了，就顺手填了一个。结果天大最开始根本没筛人，QQ群里面有 1800+ 的人。</p>
+<h4 id="机试">机试<a hidden class="anchor" aria-hidden="true" href="#机试">#</a></h4>
+<p>之后首先通过机试筛一波人。公告上说的是只要不爆零就行，最后参加机试的有 1200 人左右，最后留下了 600 人左右。题本身并不难，大致都是 LeetCode easy 或者 mid 难度，还有两道是 LeetCode 原题。但是个人当时没怎么准备机试，AcWing 基础课也只过了一遍，最后也只 A 了两道，超时了一道，不过也是通过了初筛。</p>
+<h4 id="面试">面试<a hidden class="anchor" aria-hidden="true" href="#面试">#</a></h4>
+<p>天大的面试是分组进行的。由于个人想做 sys 相关，所以就报了 HPC 的那组。考核内容感觉非常随意，鉴定为纯纯的背景面：2 分钟英语自我介绍 + 5 分钟 PPT + 提问，总共时间十分钟。最后实际考核只有一分钟英语自我介绍 + 5 分钟 PPT，最后提问环节更是无语，感觉那些老师都没认真听，就问了一个“如果给了 offer 你的规划是怎么样的”。</p>
+<p>最后那个组大约是 30 个人，最后给了 12 个“合格”。这里“合格”的意思是，合格并不代表是优营，后续还要持续跟导师保持联系到八月中旬或者八月底，最后才发优营。具体怎么个保持联系法就要看导师了。最后想着的是先拿个保底，所以就联系了一位做分布式调度相关的老师。</p>
+<h4 id="hpc-组">HPC 组<a hidden class="anchor" aria-hidden="true" href="#hpc-组">#</a></h4>
+<p>再说说 HPC 这个组还有这个老师。首先 TJU 个人感觉本身就不算是 sys 强校，HPC 这个组我个人查 DBLP、Google Scholar 等感觉大多老师也都脱离了科研一线。最终个人感觉有两个老师还可以，就挑其中一个方向比较 match 的联系了一下。之后老师就发了点论文让我看，说过几天聊一下。本来以为是考核性质的，我还做了个 PPT，结果到了当天不仅老师两次迟到，先是说推迟半小时，后来发消息也不回，大约半小时后问我是否有时间。在那等了一个点，后面内容也就是简单聊一聊，说可以留个名额，然后给了个大致的方向，让我现在就开始干活，后面参加组会。</p>
+<p>聊天内容上个人感觉画饼味有点重。先说研究生的“果酱”是 2w，之后又说往届的学长学姐都是提前入组，毕设也跟着他做，最后毕设整理整理又是一篇高质量论文，之后入学去拿“果酱”也有很大的竞争力。反正这些话我听着并不是很舒服。后面给了点方向，让我先跟着学，后面参加下周组会。初印象并不是很好，当时由于手头没 offer，想着先拿个保底，也就先答应下来了。</p>
+<p>最有意思的来了。大约一周后，我当时正在参加 XMU 的夏令营，他在群里发了个开组会的通知。由于我第二天就要机试 + 参观实验室，并且我确实是啥也没学，就直接和他请了个假，说目前还有别的夏令营。</p>
+<p>之所以这么说，主要原因是之前参加 RUC 的夏令营，联系的老师问我后面还有哪个夏令营，我如实说后面还有 XMU，老师简单问了问情况之后祝我那边好好表现，争取也拿个优营。于是和 TJU 的老师我也如实交代了，没想到第二天他回了我一句：“啥意思？天大已经给了 offer 还要去其他的？”由于我当时马上要去机试了，感觉和他解释 + 拉扯还需要一段时间，而且下午还要从思明去翔安那边实验室参观 + 实验室面试，我就没回他，打算晚上再和他拉扯。结果下午他打了个电话，我当时在实验室机试没接上，后来看微信就已经被移出群聊了。</p>
+<p>首先确实是我个人没及时回消息，主要也是实在没空回。但这种处理方式我也是确实没想到，有点绷不住。只能说他也不是真心想招我，互相海罢了。再者，TJU 去年手撕 offer 的事基本已经人尽皆知，“已经给了 offer 还要参加其他的”这句话哪个学校都能说，唯独 TJU 不行。本来打算好好跟他解释一下，道个歉给鸽掉，后来看他直接移除群聊了，也没什么好说的了。加上本身也不是很想去，就再也没回他。</p>
+<p>再说说 HPC 这个组，组本身并不大，学术可以移步 DBLP 自行了解。只能说其中几位老师已经脱离了科研一线，还有一个是我上面联系的老师，另外一个之后和一位 TJU 本科的同学聊天时说他在本科当中的风评不是很好。总的来说，不推荐任何人报名 TJU 的 HPC 组，这里就不拉踩了，可以去自行了解一下还有哪些做 HPC 的组和学校。</p>
+<h3 id="人大信息学院">人大信息学院<a hidden class="anchor" aria-hidden="true" href="#人大信息学院">#</a></h3>
+<p>个人感觉总体上体验最好的一个学校。由于我本来做的是数据库相关的，所以 RUC 一直算是我的梦校。也在五月份左右就联系了柴云鹏老师，当时聊了聊之后就感觉老师人非常不错，方向也比较 match。当时他看我做过 6.824，就直接把我拉进了他的一个组里，说有时间就可以跟着学一点，看我的时间安排。由于后面我考试比较多，也就基本就在摸鱼看看论文和 etcd 的代码。</p>
+<p>再说夏令营，最开始我是打算报专硕的。RUC 专硕 2 年 + 有宿舍 + 中关村，性价比爆炸。后面也是觉得入营无望，再加上和老师接触下来感觉老师人非常好，方向我个人有点基础也比较感兴趣，就联系了老师报了直博。最后也是入了营。</p>
+<p>考核今年恢复了往年的线下考核形式，笔试 + 机试 + 面试。考核内容由于保密协议并不能说。</p>
+<ul>
+<li>笔试、机试比较简单，信院可以用 CSP 抵，但是今年的题感觉 CSP 400 以下抵都很亏。</li>
+<li>面试个人感觉还是很考察个人能力，面试的时候刚好那一组全是做 sys 的老师，也确实被问到了一些盲区，加上当时比较紧张，发挥得很烂，走出教室就感觉凉了。</li>
+</ul>
+<p>不出意外，最后也是只拿到了 wl3。感觉补肯定是能补上的，但是目前想去的老师都已经有人联系了，可能选不到好老师。之前联系的柴老师跟我说，今年可能会有老师会有两个名额，如果谁多了名额或者谁鸽了，第一时间通知我，我哭死。不过现在 RUC 好像还没开始补人，目前还没收到邮件。</p>
+<p>个人对直博还是比较恐惧的。之前报完全是因为感觉专硕入营无望 + 被柴老师的个人魅力打动才头铁报了直博。如果选不到好导师的话，我大概率就会放弃 RUC 信院了。</p>
+<h3 id="厦大信息学院">厦大信息学院<a hidden class="anchor" aria-hidden="true" href="#厦大信息学院">#</a></h3>
+<p>厦大今年是推荐制入营，最后录取也是按组进行录取。考核内容分为机试和面试，各占 50%。</p>
+<h4 id="机试-1">机试<a hidden class="anchor" aria-hidden="true" href="#机试-1">#</a></h4>
+<p>计算机系要求只能用 C，但是有的考场说 C++ 也可以。总的来说并不难，但是我本身机试就很烂 + C 语言字符串处理不熟悉，被一个字符串的题卡了很久，整得心态爆炸，最后发挥得很烂，换算成百分制只有 70 多。</p>
+<h4 id="面试-1">面试<a hidden class="anchor" aria-hidden="true" href="#面试-1">#</a></h4>
+<p>厦大面试有个软件，各项计时 + 抽题，面试整个过程按流程来：</p>
+<ul>
+<li>英语自我介绍</li>
+<li>文献翻译</li>
+<li>专业课提问</li>
+<li>PPT 展示</li>
+<li>自由提问</li>
+</ul>
+<p>厦大也有保密协议，具体内容也就不说了。总体来说氛围比较轻松，后来还扯到了 CockroachDB，给老师讲了几分钟的 CockroachDB。</p>
+<p>答完自我感觉良好，最后没能优营，确实是被机试给拖后腿了。同组的基本都 80 多 90 多，机试占比 50% 直接寄。算了算，除非面试给个 98、99，不然也追不上最后一名。问老师，老师说现在组内 wl1，而且后面我得知组里已经有其他同学准备鸽了，姑且也算是个 offer。</p>
+<p>update：厦大已经补上了，感觉除非那几个中九强校能找到强组的好导师，不然可能就这边了。</p>
+<h3 id="夏令营小结">夏令营小结<a hidden class="anchor" aria-hidden="true" href="#夏令营小结">#</a></h3>
+<p>由于今年大家都在海投 + 个人学校和绩点并不是很突出，最后入营结果也比较惨淡，入营后的表现也不是很好，最后只收到了两个高 wl。XMU 如果能补上，大概率还是会去的，sys 强导 + 实验室氛围很不错。RUC 能去肯定能去，不过得看能不能选到好导师了。</p>
+<p>后面就备战预推免，看看 HUST、SYSU、ZJU、NJU 能不能入营吧。</p>
+<h2 id="预推免">预推免<a hidden class="anchor" aria-hidden="true" href="#预推免">#</a></h2>
+<p>由于这个时候厦大已经补上了，并且我也很想去，因此预推免主要是想同时兼顾 title + 老师，非好 title + 强导不去，因此投得也是非常狂，大概如下：</p>
+<table>
+  <thead>
+      <tr>
+          <th>院校</th>
+          <th>是否入营</th>
+          <th>结果</th>
+          <th>时间</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>浙大计专</td>
+          <td>否</td>
+          <td>x</td>
+          <td>x</td>
+      </tr>
+      <tr>
+          <td>南大计专</td>
+          <td>否</td>
+          <td>x</td>
+          <td>x</td>
+      </tr>
+      <tr>
+          <td>中山计院</td>
+          <td>否</td>
+          <td>x</td>
+          <td>x</td>
+      </tr>
+      <tr>
+          <td>软件所（并行计算实验室）</td>
+          <td>是</td>
+          <td>offer</td>
+          <td>9.14</td>
+      </tr>
+      <tr>
+          <td>华科软院（国光）</td>
+          <td>是</td>
+          <td>offer</td>
+          <td>9.26</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="软件所并行实验室">软件所并行实验室<a hidden class="anchor" aria-hidden="true" href="#软件所并行实验室">#</a></h3>
+<p>可以看到投得非常普信，最后被拒得也是非常惨。目前只有软件所的一个组让我入营了，主要做的方向为并行计算相关。其实个人对中科院系是很不感冒的，当时投的时候也就是瞎投着玩，没想到最后入营了。本来是不打算去的，后来有几个朋友入营了计算所、软件所、PKU，还有个朋友在北京实习，就想着去一起聚一聚。当天晚上就一起锐评计算所、软件所，更加坚定了自己不想去的想法。</p>
+<p>9.20 开奖了，顺利拿到优营了，但是硕还是直博，老师是谁暂时都没说，9.27 才截止，先拿着想几天。</p>
+<p>update：给的硕士，只有一个老师有名额，不太想去，就已经鸽掉了。</p>
+<h4 id="面试-2">面试<a hidden class="anchor" aria-hidden="true" href="#面试-2">#</a></h4>
+<p>第二天最终参加面试的有五个人，整个面试过程非常水。最开始问的两个英语问题竟然成了面试当中最难的问题。介绍完 PPT 之后就两个老师提问，一个老师全程看电脑不说话，另外一个基本上就是纯聊天，扯东扯西的，到点就结束了。面完得知其他人都是这样，不知道是背景面还是完全不想招人。</p>
+<h4 id="笔试">笔试<a hidden class="anchor" aria-hidden="true" href="#笔试">#</a></h4>
+<p>笔试主要是考 OS 和并行算法设计，一共五道题，一个半小时。总的来说不难，我前面 OS 的题废话太多了，导致后面没太做完。OS 主要是进程间通信和局部性，并行算法的题也比较基础，如果学过 CMU 15-418，大概都可以应付得了。</p>
+<h4 id="一点吐槽">一点吐槽<a hidden class="anchor" aria-hidden="true" href="#一点吐槽">#</a></h4>
+<p>最后再吐槽一下计算所和软件所，主要是我的某位朋友。他在计算所某个组实习了一个月后，线下实习只配了地下室作为宿舍，最后的工资也没发。更荒谬的是，最后夏令营的时候由于没坚定表达自己想来，就以心理测评不过关给挂掉了，也不知道具体情况是什么样。由于暑假 all in 了计算所，导致夏令营 0 offer。</p>
+<p>这几天又“入”了软件所，收到了发送的邮件，但是又迟迟未告知具体的面试时间，不过他还是先来了北京，之后再询问竟然得知根本没有面试资格。请问没有面试资格您发什么邮件？</p>
+<p>不是针对中科院的所有组，只能说有的组在招生上的行为极其敷衍和不负责。对于打工和 all in 这种事情，请慎重再慎重。而他有着还不错的 rk + 比较丰富的 sys 经历，至今还没上岸，在这里只能祝他后面一切顺利吧。</p>
+<h3 id="华科软院">华科软院<a hidden class="anchor" aria-hidden="true" href="#华科软院">#</a></h3>
+<p>报华科主要是想来国光那边做存储，因此当时也是提前联系了一位老师。和老师简单聊了聊之后，做了一轮实验室的机试考核：一个 LRU cache、一个负载均衡的题，还有个树 DFS 板子题，剩下两个不记得了。A 了两道，和其他人差距不大。之后询问老师，老师说可以为我保留一个名额，但是今年国光不单独招生，因此还需要走 CS / SE 的名额。本来报的是 CS，在开预推免的几天之后，老师说今年 CS 竞争比较激烈，然后就让我转投 SE。</p>
+<p>入营了，但是 25/200，机会渺茫，当作保研的最后一站去玩玩吧，拿优营就不指望了，而且那边的条件我也不是很想去。</p>
+<p>update：出结果了，最后排名 14/98（入营了 200 人，最后只有 98 个参加面试），可以稳录取了。目前还是不太想去，明天找老师详细聊一聊再确认一下。如果和我原本想的差不多的话，就准备鸽了。</p>
+<h4 id="面试-3">面试<a hidden class="anchor" aria-hidden="true" href="#面试-3">#</a></h4>
+<p>华科是我今年遇到的第一个先面试后机试的学校，那就先说说面试。面试每个组的内容都不太一样，我被分到的组主要是自我介绍 + 围绕项目的自由提问。总体上氛围还是很轻松的，年轻老师很亲切，老教授很和蔼，整个面试过程聊得很开心。这次终于没有保密协议了，可以好好说一下内容：</p>
+<ul>
+<li>学习过程中遇到的最有挑战的事 / 工程量最大的项目</li>
+<li>你做的这些 Lab，具体是什么形式</li>
+<li>对于一个系统，如何检测运行中的故障</li>
+<li>既然你做分布式，那么你有接触过区块链吗，了解区块链当中分布式的应用吗</li>
+<li>有没有接触过较为前沿的内容</li>
+<li>你在 sys 方向积累很深，你是怎么确定你的方向的</li>
+<li>既然你是人工智能专业，又主要学数据库，你对 AI4DB 有什么看法</li>
+<li>读研的未来规划 / 方向</li>
+</ul>
+<p>面试的老师刚好有一位是做分布式 / 区块链相关的，他对我做的这些东西也很感兴趣。总的来说，给我的感觉就是做的这些 Lab 确实是帮了大忙了。最开始介绍了很长时间 6.824 当中的相关工作，我当时说到了分布式环境下 debug 很困难，老师就追问了一个如何检测系统故障。由于当时 debug 确实很头疼，就了解到了市面上的一些智能日志分析软件，就主要围绕着这个答的。对于前沿工作的问题，主要是说了说 Raft 作者博士论文当中的优化和 etcd 当中的实现（其实也不是很前沿），然后是 Raft 在跨域上的应用和 CockroachDB（这里再次感谢柴老师当时拉我进组呜呜呜）。刚好最近在学 15-721，又说了说在课上看的几篇近几年的 SIGMOD 文章（Snowflake 这种的）。关于确定方向的问题，就主要说了自己从 AI 到后端再到 DB 的一个跑路过程小故事。综合来讲的话，感觉老师还是比较认可我在各个问题上的回答的，也给予了比较正面的评价“挺好的”。我个人也感觉整个面试过程很不错，和老师聊得非常开心。</p>
+<h4 id="机试-2">机试<a hidden class="anchor" aria-hidden="true" href="#机试-2">#</a></h4>
+<p>华科的系统感觉有点奇葩，不是那种传统意义上的 OJ，而是个 LJ（local judge），Win 平台，IDE 用的是 VS2010。每次在系统中答题都会弹出来一个 VS2010，在里面编辑，然后编译运行一遍就算作答了。形式上又有点类似 LeetCode，不需要自己进行 IO，只需要补充核心函数，然后不能自己去额外引入头文件，基本上就是 C 语言环境。</p>
+<p>题目很简单，就三题：</p>
+<ul>
+<li>青蛙跳台阶 / 斐波那契数列</li>
+<li>字符串处理，判断能不能把一个字符串变成相邻字符都不同的形式</li>
+<li>N 皇后</li>
+</ul>
+<p>由于我平时主要还是写 C++ 为主，因此看到 C 语言字符串的题就犯恶心。因此把第一题和第三题快速 A 掉之后，第二题尝试做了一下，然后结果都是典中典的“烫烫烫烫”，之后直接不想做了，提前交卷溜了。</p>
+<h2 id="summary">Summary<a hidden class="anchor" aria-hidden="true" href="#summary">#</a></h2>
+<p>高考结束后，带着一种“考败来矿”的心态开启了大学生涯。在我听说到可以保研之后，便一直将保研当作我大学生涯的一个终极目标。在这三年中，保研作为目标的这个想法从来没变，但是究竟为什么要保研，这个问题我思考了很多。</p>
+<p>现在如果让我来回答的话，我认为保研只是一个能够去更好地进行学习的途径，并不是大学生涯的一个终点或者终极目标。带着这样的心态，学习过程当中就不容易陷入到只卷绩点，或者随波逐流地跟着他人做一些项目。也多亏于此，今年参加的夏令营 / 预推免都收获了 offer，offer 率 100%。</p>
+<p>最后再说说一个 trade-off 的问题。今年也确实收获了几个 offer，放弃的 offer 在 title 上都大于最终去向。我的观点是只要遵从自己的内心就好，虽然可能会感觉有点遗憾，有时会去想如果我是人大的研究生会怎么样，如果我是华科的研究生又会怎么样。不是做了正确的选择，而是自己做出的选择就是正确的选择。我只需要知道我最后选择了厦大，选到了很好的老师，做着自己感兴趣的方向就可以了。现在如果再给我一次机会的话，我相信我还是会做出同样的选择。</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/en/posts/tech/manu/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Manu: A Cloud Native Vector Database Management System</span>
+  </a>
+  <a class="next" href="http://localhost:1313/en/posts/tech/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/">
+    <span class="title">Next »</span>
+    <br>
+    <span>深入理解分布式系统</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on x"
+            href="https://x.com/intent/tweet/?text=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f&amp;title=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System&amp;summary=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System&amp;source=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f&title=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on whatsapp"
+            href="https://api.whatsapp.com/send?text=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System%20-%20http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on telegram"
+            href="https://telegram.me/share/url?text=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 保研总结：从 AI 到 System on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=%e4%bf%9d%e7%a0%94%e6%80%bb%e7%bb%93%ef%bc%9a%e4%bb%8e%20AI%20%e5%88%b0%20System&u=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2flife%2f%25E4%25BF%259D%25E7%25A0%2594%25E6%2580%25BB%25E7%25BB%2593-%25E4%25BB%258Eai%25E5%2588%25B0system%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2026 <a href="http://localhost:1313/en/">Fischer&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

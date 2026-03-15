@@ -2,60 +2,63 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>toydb on Fischer&#39;s Blog</title>
-    <link>https://fischer0522.github.io/en/posts/tech/toydb/</link>
+    <link>http://localhost:1313/en/posts/tech/toydb/</link>
     <description>Recent content in toydb on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sun, 31 Dec 2023 19:31:59 +0000</lastBuildDate>
-    <atom:link href="https://fischer0522.github.io/en/posts/tech/toydb/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/en/posts/tech/toydb/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>06-SQL Execution</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/06-sql-execution/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/06-sql-execution/</link>
       <pubDate>Sun, 31 Dec 2023 19:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/06-sql-execution/</guid>
-      <description>本系列的第一章00-Architecture以SQL执行流程为整个系列做了一个引子，目前本系列通过六篇文章，已经将toydb的各个模块都分析</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/06-sql-execution/</guid>
+      <description>&lt;p&gt;本系列的第一章&lt;em&gt;00-Architecture&lt;/em&gt;以SQL执行流程为整个系列做了一个引子，目前本系列通过六篇文章，已经将toydb的各个模块都分析完毕，在本章中，不妨在了解了各个模块的基础上，补全SQL执行的全流程，为整个系列收尾。&lt;/p&gt;</description>
     </item>
     <item>
       <title>05-SQL Engine</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/05-sql-engine/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/05-sql-engine/</link>
       <pubDate>Sun, 31 Dec 2023 09:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/05-sql-engine/</guid>
-      <description>在前面的几章，分别分析了Bitcask，构建于Bitcask之上的MVCC，Raft，以及Raft状态机。在本章中，笔者会将这几个模块组合起</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/05-sql-engine/</guid>
+      <description>&lt;p&gt;在前面的几章，分别分析了Bitcask，构建于Bitcask之上的MVCC，Raft，以及Raft状态机。在本章中，笔者会将这几个模块组合起来，分析MVCC持久化存储，Raft，Raft状态机之间如何交互，来为SQL算子提供支持，处理一次请求。&lt;/p&gt;</description>
     </item>
     <item>
       <title>04-Raft State Machine</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/04-raft-state-machine/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/04-raft-state-machine/</link>
       <pubDate>Sat, 30 Dec 2023 19:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/04-raft-state-machine/</guid>
-      <description>在正式写这一篇文章之前，原本的规划是在这一部分介绍sql执行引擎，即如何将Raft，Raft状态机，存储引擎组合起来，为SQL的执行去提供支</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/04-raft-state-machine/</guid>
+      <description>&lt;p&gt;在正式写这一篇文章之前，原本的规划是在这一部分介绍sql执行引擎，即如何将Raft，Raft状态机，存储引擎组合起来，为SQL的执行去提供支持，但是这一部分又不可避免的牵扯到SQL执行过程，如果全部展示出来，内容将会非常多，思来想去，还是Raft状态机这一部分比较独立，使用了一个Trait屏蔽掉了底层的存储实现，因此就先将这一模块单独拆出来。&lt;/p&gt;</description>
     </item>
     <item>
       <title>03-Raft</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/03-raft/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/03-raft/</link>
       <pubDate>Thu, 28 Dec 2023 09:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/03-raft/</guid>
-      <description>toydb的Raft实现，相比于6.824更接近于生产级别的，和etcd/raft在结构上比较相似，但是并没有实现Raft大论文当中的优化，</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/03-raft/</guid>
+      <description>&lt;p&gt;toydb的Raft实现，相比于6.824更接近于生产级别的，和etcd/raft在结构上比较相似，但是并没有实现Raft大论文当中的优化，并且相比Raft小论文也砍掉了一些优化，比如fast backup,snapshot等。不过在写法上还是很有rust的味道的。可以分为一下几个模块：&lt;/p&gt;</description>
     </item>
     <item>
       <title>02-MVCC</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/02-mvcc/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/02-mvcc/</link>
       <pubDate>Mon, 25 Dec 2023 09:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/02-mvcc/</guid>
-      <description>基础理论 简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/02-mvcc/</guid>
+      <description>&lt;h2 id=&#34;基础理论&#34;&gt;基础理论&lt;/h2&gt;
+&lt;p&gt;简而言之，实现MVCC的DBMS在内部维持着单个逻辑数据的多个物理版本，当事务修改某条数据时，就创建一个新的版本。当事务读取时，就根据事务的开始时间，去读取事务开始时刻之前的最新版本。&lt;/p&gt;</description>
     </item>
     <item>
       <title>01-Bitcask</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/01-bitcask/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/01-bitcask/</link>
       <pubDate>Fri, 22 Dec 2023 12:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/01-bitcask/</guid>
-      <description>基础结构 Bitcask本身非常简单，要是想实现一个最基础的bitcask存储引擎，大概200-300行代码就能实现，这里先简单介绍一下Bit</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/01-bitcask/</guid>
+      <description>&lt;h2 id=&#34;基础结构&#34;&gt;基础结构&lt;/h2&gt;
+&lt;p&gt;Bitcask本身非常简单，要是想实现一个最基础的bitcask存储引擎，大概200-300行代码就能实现，这里先简单介绍一下Bitcask的基础结构：&lt;/p&gt;</description>
     </item>
     <item>
       <title>00-Architecture</title>
-      <link>https://fischer0522.github.io/en/posts/tech/toydb/00-architecture/</link>
+      <link>http://localhost:1313/en/posts/tech/toydb/00-architecture/</link>
       <pubDate>Thu, 21 Dec 2023 09:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/toydb/00-architecture/</guid>
-      <description>引言 toydb是一个完全由rust编写的分布式关系型数据库，相对于其代码规模，其功能实现上可以说是非常的完善了，使用大约1.5w的rust代</description>
+      <guid>http://localhost:1313/en/posts/tech/toydb/00-architecture/</guid>
+      <description>&lt;h2 id=&#34;引言&#34;&gt;引言&lt;/h2&gt;
+&lt;p&gt;toydb是一个完全由rust编写的分布式关系型数据库，相对于其代码规模，其功能实现上可以说是非常的完善了，使用大约1.5w的rust代码，实现了：&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

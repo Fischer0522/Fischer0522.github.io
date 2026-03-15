@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto">
 
-<head><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
 <title>02-从0.5实现CURP | Fischer&#39;s Blog</title>
 <meta name="keywords" content="">
-<meta name="description" content="Intro 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个R">
+<meta name="description" content="Intro
+什么是CURP
+Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个RTT，在高网络延迟的场景下，两个RTT对系统来说是难以忍受的，网络通信会成为系统的瓶颈。">
 <meta name="author" content="Fischer">
-<link rel="canonical" href="https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
-<link rel="icon" href="https://fischer0522.github.io/img/Navigation.svg">
-<link rel="icon" type="image/png" sizes="16x16" href="https://fischer0522.github.io/img/Navigation.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="https://fischer0522.github.io/img/Navigation.svg">
-<link rel="apple-touch-icon" href="https://fischer0522.github.io/Navigation.svg">
-<link rel="mask-icon" href="https://fischer0522.github.io/Navigation.svg">
+<link rel="canonical" href="http://localhost:1313/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.c5de734fbd88c3d21543485ffbcb1ccdda89a86a780cf987fa00199c41dbc947.css" integrity="sha256-xd5zT72Iw9IVQ0hf&#43;8sczdqJqGp4DPmH&#43;gAZnEHbyUc=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/img/Navigation.svg">
+<link rel="apple-touch-icon" href="http://localhost:1313/Navigation.svg">
+<link rel="mask-icon" href="http://localhost:1313/Navigation.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/">
 <noscript>
     <style>
         #theme-toggle,
@@ -55,15 +58,19 @@
 
     </style>
 </noscript><meta property="og:title" content="02-从0.5实现CURP" />
-<meta property="og:description" content="Intro 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个R" />
+<meta property="og:description" content="Intro
+什么是CURP
+Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个RTT，在高网络延迟的场景下，两个RTT对系统来说是难以忍受的，网络通信会成为系统的瓶颈。" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="http://localhost:1313/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2024-06-03T09:31:59+00:00" />
 <meta property="article:modified_time" content="2024-06-03T09:31:59+00:00" />
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="02-从0.5实现CURP"/>
-<meta name="twitter:description" content="Intro 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个R"/>
+<meta name="twitter:description" content="Intro
+什么是CURP
+Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个RTT，在高网络延迟的场景下，两个RTT对系统来说是难以忍受的，网络通信会成为系统的瓶颈。"/>
 
 
 <script type="application/ld+json">
@@ -75,25 +82,25 @@
       "@type": "ListItem",
       "position":  1 ,
       "name": "Blog",
-      "item": "https://fischer0522.github.io/en/posts/"
+      "item": "http://localhost:1313/en/posts/"
     }, 
     {
       "@type": "ListItem",
       "position":  2 ,
       "name": "Tech",
-      "item": "https://fischer0522.github.io/en/posts/tech/"
+      "item": "http://localhost:1313/en/posts/tech/"
     }, 
     {
       "@type": "ListItem",
       "position":  3 ,
       "name": "CURP",
-      "item": "https://fischer0522.github.io/en/posts/tech/curp/"
+      "item": "http://localhost:1313/en/posts/tech/curp/"
     }, 
     {
       "@type": "ListItem",
       "position":  4 ,
       "name": "02-从0.5实现CURP",
-      "item": "https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/"
+      "item": "http://localhost:1313/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/"
     }
   ]
 }
@@ -104,7 +111,7 @@
   "@type": "BlogPosting",
   "headline": "02-从0.5实现CURP",
   "name": "02-从0.5实现CURP",
-  "description": "Intro 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个R",
+  "description": "Intro 什么是CURP Curp是一种新的分布式共识算法，curp的提出是针对于跨域等高网络延迟场景，传统的raft和paxos等共识算法需要两个RTT，在高网络延迟的场景下，两个RTT对系统来说是难以忍受的，网络通信会成为系统的瓶颈。\n",
   "keywords": [
     
   ],
@@ -119,14 +126,14 @@
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://fischer0522.github.io/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/"
+    "@id": "http://localhost:1313/en/posts/tech/curp/%E4%BB%8E0.5%E5%88%B01%E5%AE%9E%E7%8E%B0curp/"
   },
   "publisher": {
     "@type": "Organization",
     "name": "Fischer's Blog",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://fischer0522.github.io/img/Navigation.svg"
+      "url": "http://localhost:1313/img/Navigation.svg"
     }
   }
 }
@@ -148,8 +155,8 @@
 <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="https://fischer0522.github.io/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
-                <img src="https://fischer0522.github.io/img/Navigation.svg" alt="" aria-label="logo"
+            <a href="http://localhost:1313/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://localhost:1313/img/Navigation.svg" alt="" aria-label="logo"
                     height="35">Fischer&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)">
@@ -172,36 +179,43 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
+                <ul class="lang-switch"><li>|</li>
+                </ul>
             </div>
         </div>
         <ul id="menu">
             <li>
-                <a href="https://fischer0522.github.io/en/search" title="Search (Alt &#43; /)" accesskey=/>
+                <a href="http://localhost:1313/en/search" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/" title="Home">
+                <a href="http://localhost:1313/en/" title="Home">
                     <span>Home</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/posts" title="Posts">
+                <a href="http://localhost:1313/en/publications" title="Publications">
+                    <span>Publications</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/posts" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/archives/" title="Archives">
+                <a href="http://localhost:1313/en/archives/" title="Archives">
                     <span>Archives</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/tags" title="Tags">
+                <a href="http://localhost:1313/en/tags" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/about" title="About">
+                <a href="http://localhost:1313/en/about" title="About">
                     <span>About</span>
                 </a>
             </li>
@@ -212,7 +226,7 @@
 
 <article class="post-single">
   <header class="post-header">
-    <div class="breadcrumbs"><a href="https://fischer0522.github.io/en/">Home</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/curp/">CURP</a></div>
+    <div class="breadcrumbs"><a href="http://localhost:1313/en/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/tech/curp/">CURP</a></div>
     <h1 class="post-title entry-hint-parent">
       02-从0.5实现CURP
     </h1>
@@ -321,17 +335,17 @@
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StateMachine</span> <span style="color:#66d9ef">struct</span> {
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">NodeId</span>   <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">proposeC</span> <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// channel for proposing updates
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mu</span>       <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// kvStore      map[string]string // current committed key-value pairs
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">KVStore</span>      <span style="color:#f92672">*</span><span style="color:#a6e22e">xkv</span>.<span style="color:#a6e22e">KVStore</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">proposeC</span> <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// channel for proposing updates</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mu</span>       <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// kvStore      map[string]string // current committed key-value pairs</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">KVStore</span>      <span style="color:#f92672">*</span><span style="color:#a6e22e">xkv</span>.<span style="color:#a6e22e">KVStore</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">commandBoard</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">command</span>.<span style="color:#a6e22e">CommandBoard</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">snapshotter</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">raftState</span>    <span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">StateType</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fastPath</span>     <span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">curp_proto</span>.<span style="color:#a6e22e">CurpClientCommand</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">slowPath</span>     <span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">curp_proto</span>.<span style="color:#a6e22e">CurpClientCommand</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// both fast and slow path will execute commands,this set is used to avoid executing the same command twice
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">commandSet</span>   <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">command</span>.<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">struct</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// both fast and slow path will execute commands,this set is used to avoid executing the same command twice</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">commandSet</span>   <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">command</span>.<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">struct</span>{}
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">witness</span>      <span style="color:#a6e22e">witness</span>.<span style="color:#a6e22e">Witness</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">stateChangeC</span> <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">StateType</span>
 </span></span><span style="display:flex;"><span>}
@@ -374,10 +388,10 @@
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">CommandBoard</span> <span style="color:#66d9ef">struct</span> {
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mu</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// store all notifiers for execution results
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">erNotifiers</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// store all notifiers for after sync results
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">asrNotifiers</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// store all notifiers for execution results</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">erNotifiers</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// store all notifiers for after sync results</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">asrNotifiers</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">erBuffer</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">ProposeId</span>]<span style="color:#66d9ef">string</span>
 </span></span><span style="display:flex;"><span>
@@ -481,15 +495,15 @@
 <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">CommandBoard</span>) <span style="color:#a6e22e">WaitForAsr</span>(<span style="color:#a6e22e">id</span> <span style="color:#a6e22e">ProposeId</span>) <span style="color:#66d9ef">string</span> {
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//trace.Trace(trace.Client, &#34;Wait Synced [clientId: %d,seqId: %d]&#34;, id.ClientId, id.SeqId)
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">asrOk</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">asrBuffer</span>[<span style="color:#a6e22e">id</span>]
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//trace.Trace(trace.Client, &#34;Wait Synced [clientId: %d,seqId: %d]&#34;, id.ClientId, id.SeqId)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">asrOk</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">asrBuffer</span>[<span style="color:#a6e22e">id</span>]
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span>, <span style="color:#a6e22e">erOk</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">erBuffer</span>[<span style="color:#a6e22e">id</span>]
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> delete(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">asrBuffer</span>, <span style="color:#a6e22e">id</span>)
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> delete(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">erBuffer</span>, <span style="color:#a6e22e">id</span>)
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// command has already been executed in both fast path and slow path
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">asrOk</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">erOk</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// command has already been executed in both fast path and slow path</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">asrOk</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">erOk</span> {
 </span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">result</span>
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>
@@ -497,15 +511,15 @@
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">asrNotifiers</span>[<span style="color:#a6e22e">id</span>] = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}, <span style="color:#ae81ff">1</span>)
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">notifyChan</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">asrNotifiers</span>[<span style="color:#a6e22e">id</span>]
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// release lock and wait
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// release lock and wait</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
 </span></span><span style="display:flex;"><span>	<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">notifyChan</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">result</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">erBuffer</span>[<span style="color:#a6e22e">id</span>]; <span style="color:#a6e22e">ok</span> {
 </span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">result</span>
 </span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// UNREACHABLE
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;NOT FOUND IN BUFFER&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// UNREACHABLE</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;NOT FOUND IN BUFFER&#34;</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -615,8 +629,8 @@
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">SeqId</span>:    <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SeqId</span>,
 </span></span><span style="display:flex;"><span>			}
 </span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">commandSet</span>[<span style="color:#a6e22e">proposeId</span>]; <span style="color:#a6e22e">ok</span> {
-</span></span><span style="display:flex;"><span>				<span style="color:#75715e">// command executed before,nothing to do
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>				<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Fast</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;cmd already executed %v&#34;</span>, <span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>				<span style="color:#75715e">// command executed before,nothing to do</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Fast</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;cmd already executed %v&#34;</span>, <span style="color:#a6e22e">cmd</span>)
 </span></span><span style="display:flex;"><span>			} <span style="color:#66d9ef">else</span> {
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">commandSet</span>[<span style="color:#a6e22e">proposeId</span>] = <span style="color:#66d9ef">struct</span>{}{}
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">cmd</span>)
@@ -630,8 +644,8 @@
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Slow</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;got cmd from slow path %v&#34;</span>, <span style="color:#a6e22e">cmd</span>)
 </span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">commandSet</span>[<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ProposeId</span>()]; <span style="color:#a6e22e">ok</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">isLeader</span> {
-</span></span><span style="display:flex;"><span>				<span style="color:#75715e">// command executed before,nothing to do
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>				<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Slow</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;cmd already executed %v&#34;</span>, <span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>				<span style="color:#75715e">// command executed before,nothing to do</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Slow</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;cmd already executed %v&#34;</span>, <span style="color:#a6e22e">cmd</span>)
 </span></span><span style="display:flex;"><span>			} <span style="color:#66d9ef">else</span> {
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">commandSet</span>[<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ProposeId</span>()] = <span style="color:#66d9ef">struct</span>{}{}
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">cmd</span>)
@@ -639,15 +653,15 @@
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Slow</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;WAIT Notify result in slow path,proposeId:[clientId: %d,seqId: %d]&#34;</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ClientId</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SeqId</span>)
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">commandBoard</span>.<span style="color:#a6e22e">NotifyAsr</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ProposeId</span>())
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Slow</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;Notify result in slow path,proposeId:[clientId: %d,seqId: %d]&#34;</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ClientId</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SeqId</span>)
-</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// when command is committed, it can be remove from witness and command set safely
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">removeRecord</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ProposeId</span>())
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// when command is committed, it can be remove from witness and command set safely</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">removeRecord</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ProposeId</span>())
 </span></span><span style="display:flex;"><span>		}
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// we don&#39;t need to lock this function,because it&#39;s the only func which modifies KVStore
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">StateMachine</span>) <span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">curp_proto</span>.<span style="color:#a6e22e">CurpClientCommand</span>) <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// we don&#39;t need to lock this function,because it&#39;s the only func which modifies KVStore</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">StateMachine</span>) <span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">curp_proto</span>.<span style="color:#a6e22e">CurpClientCommand</span>) <span style="color:#66d9ef">string</span> {
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Op</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">command</span>.<span style="color:#a6e22e">PUT</span> {
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">KVStore</span>.<span style="color:#a6e22e">Put</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Key</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Value</span>)
 </span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Op</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">command</span>.<span style="color:#a6e22e">DELETE</span> {
@@ -660,8 +674,8 @@
 </span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">result</span>
 </span></span><span style="display:flex;"><span>		}
 </span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// unreachable!
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// unreachable!</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -754,8 +768,8 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">fastPath</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">cmd</span>
 </span></span><span style="display:flex;"><span>	}()
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// command will update the state machine or get command is conflict
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Leader</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;send propose[clientId:%d seqId: %d] msg to raft node&#34;</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ClientId</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SeqId</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// command will update the state machine or get command is conflict</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Leader</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;send propose[clientId:%d seqId: %d] msg to raft node&#34;</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ClientId</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">SeqId</span>)
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">buf</span>
 </span></span><span style="display:flex;"><span>	}()
@@ -778,8 +792,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </div>
 </div><p>这里有一个细节，在CURP-Q的论文当中描述：Leader的witness应当是关闭的，即Leader并不进行冲突检测，对于所有请求都直接执行，但是在Xline的实现中，Leader是启动了Witness并进行冲突检测的。对于这个细节，个人认为并不会对并不会对系统正确性产生影响，暂时没有深究。</p>
 <blockquote>
-<p>Witnesses in leaders are inactive, and all client requests are serialized and logged in their command logs directly.</p>
-</blockquote>
+<p>Witnesses in leaders are inactive, and all client requests are serialized and logged in their command logs directly.</p></blockquote>
 <p><img loading="lazy" src="https://pic-bed-1309931445.cos.ap-nanjing.myqcloud.com/blog/20240607000134.png" alt="image.png"  />
 </p>
 <h3 id="slow-path">Slow Path<a hidden class="anchor" aria-hidden="true" href="#slow-path">#</a></h3>
@@ -800,8 +813,8 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">StateMachine</span>) <span style="color:#a6e22e">WaitSynced</span>(<span style="color:#a6e22e">id</span> <span style="color:#a6e22e">command</span>.<span style="color:#a6e22e">ProposeId</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">curp_proto</span>.<span style="color:#a6e22e">CurpReply</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// only send wait synced message to leader
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Leader</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;got wait synced message: %v&#34;</span>, <span style="color:#a6e22e">id</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// only send wait synced message to leader</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Leader</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;got wait synced message: %v&#34;</span>, <span style="color:#a6e22e">id</span>)
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">commandBoard</span>.<span style="color:#a6e22e">WaitForAsr</span>(<span style="color:#a6e22e">id</span>)
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">curp_proto</span>.<span style="color:#a6e22e">CurpReply</span>{
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Content</span>:    <span style="color:#a6e22e">result</span>,
@@ -851,8 +864,8 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">StateMachine</span>) <span style="color:#a6e22e">readCommits</span>(<span style="color:#a6e22e">commitC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>, <span style="color:#a6e22e">errorC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>) {
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">commit</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">commitC</span> {
 </span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">commit</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// signaled to load snapshot
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">snapshot</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loadSnapshot</span>()
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// signaled to load snapshot</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">snapshot</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loadSnapshot</span>()
 </span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panic</span>(<span style="color:#a6e22e">err</span>)
 </span></span><span style="display:flex;"><span>			}
@@ -1223,13 +1236,13 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">err</span>)
 </span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
 </span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// fmt.Printf(&#34;Received: %+v\n&#34;, aCmd)
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// fmt.Printf(&#34;Received: %+v\n&#34;, aCmd)</span>
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Op</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">GET</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call client.get
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// value := &#34;myValue&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call client.get</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// value := &#34;myValue&#34;</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>)
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Command</span>{
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">Op</span>:    <span style="color:#a6e22e">GET</span>,
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">Key</span>:   <span style="color:#a6e22e">key</span>,
@@ -1243,12 +1256,12 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Encode</span>()
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">buf</span>)
 </span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Op</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">PUT</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call client.put
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Put</span>(<span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>, <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Value</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call client.put</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Put</span>(<span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>, <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Value</span>)
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;Received PUT Response!&#34;</span>))
 </span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Op</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">DELETE</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call client.delete
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Del</span>(<span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// call client.delete</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Del</span>(<span style="color:#a6e22e">aCmd</span>.<span style="color:#a6e22e">Key</span>)
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;Received DELETE Response!&#34;</span>))
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>}
@@ -1258,30 +1271,30 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 <p>可以看到无论是哪个workload，curp的性能均好于raft，对于a，大约是个 20-30%的提升，b, c由于主要是读请求为主，curp中只需要一轮rtt加查询状态机即可，而raft需要走一遍日志复制+查询状态机，因此差距被进一步拉大（这里二者都没有开启线性一致性读优化的，即lease read或read index）</p>
 <p>这个benchmark是在单机上跑的，如果真正到了跨域的高网络延迟的场景下，差距会被进一步的拉大</p>
 <table>
-<thead>
-<tr>
-<th></th>
-<th>curp</th>
-<th>raft</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>workload a</td>
-<td>5.2s</td>
-<td>6.7s</td>
-</tr>
-<tr>
-<td>workload b</td>
-<td>1.2s</td>
-<td>4.4s</td>
-</tr>
-<tr>
-<td>wrokload c</td>
-<td>0.6s</td>
-<td>4.1s<br></td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th></th>
+          <th>curp</th>
+          <th>raft</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>workload a</td>
+          <td>5.2s</td>
+          <td>6.7s</td>
+      </tr>
+      <tr>
+          <td>workload b</td>
+          <td>1.2s</td>
+          <td>4.4s</td>
+      </tr>
+      <tr>
+          <td>wrokload c</td>
+          <td>0.6s</td>
+          <td>4.1s<br></td>
+      </tr>
+  </tbody>
 </table>
 <p>go-ycsb的详细结果如下：</p>
 <p><strong>CURP</strong></p>
@@ -1305,22 +1318,22 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>workloada
-</span></span><span style="display:flex;"><span>READ   - Takes(s): 5.2, Count: 488, OPS: 94.2, Avg(us): 600, Min(us): 433, Max(us): 25103, 50th(us): 534, 90th(us): 612, 95th(us): 652, 99th(us): 948, 99.9th(us): 25103, 99.99th(us): 25103
-</span></span><span style="display:flex;"><span>TOTAL  - Takes(s): 5.2, Count: 1000, OPS: 192.8, Avg(us): 5185, Min(us): 433, Max(us): 52991, 50th(us): 6859, 90th(us): 11503, 95th(us): 12847, 99th(us): 16559, 99.9th(us): 27471, 99.99th(us): 52991
-</span></span><span style="display:flex;"><span>UPDATE - Takes(s): 5.2, Count: 512, OPS: 98.7, Avg(us): 9556, Min(us): 5396, Max(us): 52991, 50th(us): 8703, 90th(us): 12823, 95th(us): 14599, 99th(us): 18991, 99.9th(us): 27471, 99.99th(us): 52991
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>workloada
+</span></span><span style="display:flex;"><span>READ   <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">5.2</span>, Count: <span style="color:#ae81ff">488</span>, OPS: <span style="color:#ae81ff">94.2</span>, Avg(us): <span style="color:#ae81ff">600</span>, Min(us): <span style="color:#ae81ff">433</span>, Max(us): <span style="color:#ae81ff">25103</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">534</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">612</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">652</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">948</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">25103</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">25103</span>
+</span></span><span style="display:flex;"><span>TOTAL  <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">5.2</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">192.8</span>, Avg(us): <span style="color:#ae81ff">5185</span>, Min(us): <span style="color:#ae81ff">433</span>, Max(us): <span style="color:#ae81ff">52991</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">6859</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">11503</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">12847</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">16559</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">27471</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">52991</span>
+</span></span><span style="display:flex;"><span>UPDATE <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">5.2</span>, Count: <span style="color:#ae81ff">512</span>, OPS: <span style="color:#ae81ff">98.7</span>, Avg(us): <span style="color:#ae81ff">9556</span>, Min(us): <span style="color:#ae81ff">5396</span>, Max(us): <span style="color:#ae81ff">52991</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">8703</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">12823</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">14599</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">18991</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">27471</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">52991</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>workloadb
-</span></span><span style="display:flex;"><span>Run finished, takes 1.198906187s
-</span></span><span style="display:flex;"><span>READ   - Takes(s): 1.2, Count: 950, OPS: 793.1, Avg(us): 567, Min(us): 304, Max(us): 43807, 50th(us): 507, 90th(us): 582, 95th(us): 640, 99th(us): 1156, 99.9th(us): 1788, 99.99th(us): 43807
-</span></span><span style="display:flex;"><span>TOTAL  - Takes(s): 1.2, Count: 1000, OPS: 834.4, Avg(us): 1192, Min(us): 304, Max(us): 43807, 50th(us): 511, 90th(us): 631, 95th(us): 6403, 99th(us): 15151, 99.9th(us): 20879, 99.99th(us): 43807
-</span></span><span style="display:flex;"><span>UPDATE - Takes(s): 1.1, Count: 50, OPS: 43.9, Avg(us): 13067, Min(us): 6400, Max(us): 20879, 50th(us): 13175, 90th(us): 15527, 95th(us): 16767, 99th(us): 20879, 99.9th(us): 20879, 99.99th(us): 20879
+</span></span><span style="display:flex;"><span>Run finished, takes <span style="color:#ae81ff">1.198906187</span>s
+</span></span><span style="display:flex;"><span>READ   <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">1.2</span>, Count: <span style="color:#ae81ff">950</span>, OPS: <span style="color:#ae81ff">793.1</span>, Avg(us): <span style="color:#ae81ff">567</span>, Min(us): <span style="color:#ae81ff">304</span>, Max(us): <span style="color:#ae81ff">43807</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">507</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">582</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">640</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">1156</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">1788</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">43807</span>
+</span></span><span style="display:flex;"><span>TOTAL  <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">1.2</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">834.4</span>, Avg(us): <span style="color:#ae81ff">1192</span>, Min(us): <span style="color:#ae81ff">304</span>, Max(us): <span style="color:#ae81ff">43807</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">511</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">631</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">6403</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">15151</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">20879</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">43807</span>
+</span></span><span style="display:flex;"><span>UPDATE <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">1.1</span>, Count: <span style="color:#ae81ff">50</span>, OPS: <span style="color:#ae81ff">43.9</span>, Avg(us): <span style="color:#ae81ff">13067</span>, Min(us): <span style="color:#ae81ff">6400</span>, Max(us): <span style="color:#ae81ff">20879</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">13175</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">15527</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">16767</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">20879</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">20879</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">20879</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>workloadc
-</span></span><span style="display:flex;"><span>Run finished, takes 596.022766ms
-</span></span><span style="display:flex;"><span>READ   - Takes(s): 0.6, Count: 1000, OPS: 1680.6, Avg(us): 590, Min(us): 313, Max(us): 60863, 50th(us): 511, 90th(us): 614, 95th(us): 682, 99th(us): 1099, 99.9th(us): 1634, 99.99th(us): 60863
-</span></span><span style="display:flex;"><span>TOTAL  - Takes(s): 0.6, Count: 1000, OPS: 1680.0, Avg(us): 590, Min(us): 313, Max(us): 60863, 50th(us): 511, 90th(us): 614, 95th(us): 682, 99th(us): 1099, 99.9th(us): 1634, 99.99th(us): 60863
+</span></span><span style="display:flex;"><span>Run finished, takes <span style="color:#ae81ff">596.022766</span>ms
+</span></span><span style="display:flex;"><span>READ   <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">0.6</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">1680.6</span>, Avg(us): <span style="color:#ae81ff">590</span>, Min(us): <span style="color:#ae81ff">313</span>, Max(us): <span style="color:#ae81ff">60863</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">511</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">614</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">682</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">1099</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">1634</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">60863</span>
+</span></span><span style="display:flex;"><span>TOTAL  <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">0.6</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">1680.0</span>, Avg(us): <span style="color:#ae81ff">590</span>, Min(us): <span style="color:#ae81ff">313</span>, Max(us): <span style="color:#ae81ff">60863</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">511</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">614</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">682</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">1099</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">1634</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">60863</span>
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p><strong>Raft</strong></p>
@@ -1344,22 +1357,22 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>workloada
-</span></span><span style="display:flex;"><span>Run finished, takes 6.741194029s
-</span></span><span style="display:flex;"><span>READ   - Takes(s): 6.7, Count: 490, OPS: 72.8, Avg(us): 4182, Min(us): 3188, Max(us): 25279, 50th(us): 3571, 90th(us): 4787, 95th(us): 7699, 99th(us): 12015, 99.9th(us): 25279, 99.99th(us): 25279
-</span></span><span style="display:flex;"><span>TOTAL  - Takes(s): 6.7, Count: 1000, OPS: 148.7, Avg(us): 6733, Min(us): 3188, Max(us): 42047, 50th(us): 7979, 90th(us): 9599, 95th(us): 12111, 99th(us): 17407, 99.9th(us): 25279, 99.99th(us): 42047
-</span></span><span style="display:flex;"><span>UPDATE - Takes(s): 6.7, Count: 510, OPS: 76.0, Avg(us): 9183, Min(us): 6908, Max(us): 42047, 50th(us): 8295, 90th(us): 11175, 95th(us): 15455, 99th(us): 18591, 99.9th(us): 20079, 99.99th(us): 42047
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>workloada
+</span></span><span style="display:flex;"><span>Run finished, takes <span style="color:#ae81ff">6.741194029</span>s
+</span></span><span style="display:flex;"><span>READ   <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">6.7</span>, Count: <span style="color:#ae81ff">490</span>, OPS: <span style="color:#ae81ff">72.8</span>, Avg(us): <span style="color:#ae81ff">4182</span>, Min(us): <span style="color:#ae81ff">3188</span>, Max(us): <span style="color:#ae81ff">25279</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">3571</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">4787</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">7699</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">12015</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">25279</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">25279</span>
+</span></span><span style="display:flex;"><span>TOTAL  <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">6.7</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">148.7</span>, Avg(us): <span style="color:#ae81ff">6733</span>, Min(us): <span style="color:#ae81ff">3188</span>, Max(us): <span style="color:#ae81ff">42047</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">7979</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">9599</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">12111</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">17407</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">25279</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">42047</span>
+</span></span><span style="display:flex;"><span>UPDATE <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">6.7</span>, Count: <span style="color:#ae81ff">510</span>, OPS: <span style="color:#ae81ff">76.0</span>, Avg(us): <span style="color:#ae81ff">9183</span>, Min(us): <span style="color:#ae81ff">6908</span>, Max(us): <span style="color:#ae81ff">42047</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">8295</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">11175</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">15455</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">18591</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">20079</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">42047</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>workloadb
-</span></span><span style="display:flex;"><span>Run finished, takes 4.386455138s
-</span></span><span style="display:flex;"><span>READ   - Takes(s): 4.4, Count: 952, OPS: 217.6, Avg(us): 4152, Min(us): 3196, Max(us): 27407, 50th(us): 3553, 90th(us): 5947, 95th(us): 10591, 99th(us): 11487, 99.9th(us): 18127, 99.99th(us): 27407
-</span></span><span style="display:flex;"><span>TOTAL  - Takes(s): 4.4, Count: 1000, OPS: 228.6, Avg(us): 4380, Min(us): 3196, Max(us): 27407, 50th(us): 3559, 90th(us): 7479, 95th(us): 10799, 99th(us): 11599, 99.9th(us): 18127, 99.99th(us): 27407
-</span></span><span style="display:flex;"><span>UPDATE - Takes(s): 4.3, Count: 48, OPS: 11.1, Avg(us): 8898, Min(us): 7096, Max(us): 15031, 50th(us): 8271, 90th(us): 10735, 95th(us): 14975, 99th(us): 15031, 99.9th(us): 15031, 99.99th(us): 15031
+</span></span><span style="display:flex;"><span>Run finished, takes <span style="color:#ae81ff">4.386455138</span>s
+</span></span><span style="display:flex;"><span>READ   <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">4.4</span>, Count: <span style="color:#ae81ff">952</span>, OPS: <span style="color:#ae81ff">217.6</span>, Avg(us): <span style="color:#ae81ff">4152</span>, Min(us): <span style="color:#ae81ff">3196</span>, Max(us): <span style="color:#ae81ff">27407</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">3553</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">5947</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">10591</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">11487</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">18127</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">27407</span>
+</span></span><span style="display:flex;"><span>TOTAL  <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">4.4</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">228.6</span>, Avg(us): <span style="color:#ae81ff">4380</span>, Min(us): <span style="color:#ae81ff">3196</span>, Max(us): <span style="color:#ae81ff">27407</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">3559</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">7479</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">10799</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">11599</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">18127</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">27407</span>
+</span></span><span style="display:flex;"><span>UPDATE <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">4.3</span>, Count: <span style="color:#ae81ff">48</span>, OPS: <span style="color:#ae81ff">11.1</span>, Avg(us): <span style="color:#ae81ff">8898</span>, Min(us): <span style="color:#ae81ff">7096</span>, Max(us): <span style="color:#ae81ff">15031</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">8271</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">10735</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">14975</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">15031</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">15031</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">15031</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>workloadc
-</span></span><span style="display:flex;"><span>Run finished, takes 4.143589849s
-</span></span><span style="display:flex;"><span>READ   - Takes(s): 4.1, Count: 1000, OPS: 242.1, Avg(us): 4138, Min(us): 3272, Max(us): 44351, 50th(us): 3575, 90th(us): 5939, 95th(us): 7511, 99th(us): 11207, 99.9th(us): 13191, 99.99th(us): 44351
-</span></span><span style="display:flex;"><span>TOTAL  - Takes(s): 4.1, Count: 1000, OPS: 242.1, Avg(us): 4138, Min(us): 3272, Max(us): 44351, 50th(us): 3575, 90th(us): 5939, 95th(us): 7511, 99th(us): 11207, 99.9th(us): 13191, 99.99th(us): 44351
+</span></span><span style="display:flex;"><span>Run finished, takes <span style="color:#ae81ff">4.143589849</span>s
+</span></span><span style="display:flex;"><span>READ   <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">4.1</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">242.1</span>, Avg(us): <span style="color:#ae81ff">4138</span>, Min(us): <span style="color:#ae81ff">3272</span>, Max(us): <span style="color:#ae81ff">44351</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">3575</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">5939</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">7511</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">11207</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">13191</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">44351</span>
+</span></span><span style="display:flex;"><span>TOTAL  <span style="color:#f92672">-</span> Takes(s): <span style="color:#ae81ff">4.1</span>, Count: <span style="color:#ae81ff">1000</span>, OPS: <span style="color:#ae81ff">242.1</span>, Avg(us): <span style="color:#ae81ff">4138</span>, Min(us): <span style="color:#ae81ff">3272</span>, Max(us): <span style="color:#ae81ff">44351</span>, <span style="color:#ae81ff">50</span>th(us): <span style="color:#ae81ff">3575</span>, <span style="color:#ae81ff">90</span>th(us): <span style="color:#ae81ff">5939</span>, <span style="color:#ae81ff">95</span>th(us): <span style="color:#ae81ff">7511</span>, <span style="color:#ae81ff">99</span>th(us): <span style="color:#ae81ff">11207</span>, <span style="color:#ae81ff">99.9</span>th(us): <span style="color:#ae81ff">13191</span>, <span style="color:#ae81ff">99.99</span>th(us): <span style="color:#ae81ff">44351</span>
 </span></span></code></pre></td></tr></table>
 </div>
 </div><h2 id="todo">TODO<a hidden class="anchor" aria-hidden="true" href="#todo">#</a></h2>
@@ -1386,8 +1399,8 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">stateChangeC</span> {
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Trace</span>(<span style="color:#a6e22e">trace</span>.<span style="color:#a6e22e">Vote</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">NodeId</span>, <span style="color:#e6db74">&#34;raft state update: before: %s,current: %s&#34;</span>, <span style="color:#a6e22e">stmap</span>[<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">raftState</span>], <span style="color:#a6e22e">stmap</span>[<span style="color:#a6e22e">state</span>])
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 如果是Leader，那么就生成新配置
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">raftState</span> = <span style="color:#a6e22e">state</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 如果是Leader，那么就生成新配置</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">raftState</span> = <span style="color:#a6e22e">state</span>
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
 </span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>}
@@ -1408,7 +1421,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="next" href="https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/">
+  <a class="next" href="http://localhost:1313/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/">
     <span class="title">Next »</span>
     <br>
     <span>01-CURP: 共识算法的重新思考</span>
@@ -1419,7 +1432,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
 <ul class="share-buttons">
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on x"
-            href="https://x.com/intent/tweet/?text=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f&amp;hashtags=">
+            href="https://x.com/intent/tweet/?text=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f&amp;hashtags=">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
@@ -1428,7 +1441,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f&amp;title=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;summary=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;source=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f&amp;title=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;summary=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;source=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
@@ -1437,7 +1450,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on reddit"
-            href="https://reddit.com/submit?url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f&title=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP">
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f&title=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
@@ -1446,7 +1459,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
@@ -1455,7 +1468,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on whatsapp"
-            href="https://api.whatsapp.com/send?text=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP%20-%20https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
+            href="https://api.whatsapp.com/send?text=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP%20-%20http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
@@ -1464,7 +1477,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on telegram"
-            href="https://telegram.me/share/url?text=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
+            href="https://telegram.me/share/url?text=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
             <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
@@ -1473,7 +1486,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 02-从0.5实现CURP on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
+            href="https://news.ycombinator.com/submitlink?t=02-%e4%bb%8e0.5%e5%ae%9e%e7%8e%b0CURP&u=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2f%25E4%25BB%258E0.5%25E5%2588%25B01%25E5%25AE%259E%25E7%258E%25B0curp%2f">
             <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
                 <path
@@ -1488,7 +1501,7 @@ fast path通过 <code>Propose ()</code> 完成，无论读写请求都会被封�
     </main>
     
 <footer class="footer">
-    <span>&copy; 2025 <a href="https://fischer0522.github.io/en/">Fischer&#39;s Blog</a></span>
+    <span>&copy; 2026 <a href="http://localhost:1313/en/">Fischer&#39;s Blog</a></span>
     <span>
         Powered by
         <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &

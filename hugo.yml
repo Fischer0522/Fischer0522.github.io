@@ -17,7 +17,8 @@ buildExpired: false
 #googleAnalytics: UA-123-45 # 谷歌统计
 # Copyright: Sulv
 
-paginate: 15    # 每页显示的文章数
+pagination:
+    pagerSize: 15    # 每页显示的文章数
 
 minify:
     disableXML: true
@@ -35,19 +36,6 @@ languages:
       languageName: "English"
       # contentDir: content/english
       weight: 1
-      profileMode:
-        enabled: true
-        title: Fischer's Whisper
-        subtitle: "Student <br/> Storage, Database,And Distrubuted System<br/>Can you hear me?"
-        imageUrl: "img/Asuka.png" #图片放在static/img/Q.gif
-        imageTitle: 
-        imageWidth: 150
-        imageHeight: 150
-        buttons:
-          - name: ⌥Tech
-            url: posts/tech
-          - name: ♨︎Life
-            url: posts/life
       menu:
         main:
           - identifier: search
@@ -58,10 +46,14 @@ languages:
             name: Home
             url: /
             weight: 2
+          - identifier: publications
+            name: Publications
+            url: publications
+            weight: 3
           - identifier: posts
             name: Posts
             url: posts
-            weight: 3
+            weight: 4
           - identifier: archives
             name: Archives
             url: archives/
@@ -106,6 +98,20 @@ params:
     TocOpen: true # 自动展开目录
 
     comments: true
+
+    profileMode:
+        enabled: true
+        title: Fischer's Blog
+        subtitle: "Student <br/> Storage, File System, And Distributed System<br/>Can you hear me?"
+        imageUrl: "img/Asuka.png"
+        imageTitle:
+        imageWidth: 150
+        imageHeight: 150
+        buttons:
+            - name: ⌥Tech
+              url: posts/tech
+            - name: ♨︎Life
+              url: posts/life
     
     socialIcons:
         - name: github
@@ -190,7 +196,7 @@ privacy:
         disabled: false
         simple: true
 
-    twitter:
+    x:
         disabled: false
         enableDNT: true
         simple: true
@@ -206,7 +212,5 @@ privacy:
 services:
     instagram:
         disableInlineCSS: true
-    twitter:
+    x:
         disableInlineCSS: true
-        
-

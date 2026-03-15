@@ -2,46 +2,56 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>etcd on Fischer&#39;s Blog</title>
-    <link>https://fischer0522.github.io/en/posts/tech/etcd/</link>
+    <link>http://localhost:1313/en/posts/tech/etcd/</link>
     <description>Recent content in etcd on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Mon, 12 Jun 2023 22:09:29 +0000</lastBuildDate>
-    <atom:link href="https://fischer0522.github.io/en/posts/tech/etcd/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/en/posts/tech/etcd/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>etcd/raft</title>
-      <link>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft/</link>
+      <link>http://localhost:1313/en/posts/tech/etcd/etcd-raft/</link>
       <pubDate>Mon, 12 Jun 2023 22:09:29 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft/</guid>
-      <description>raft-example etcd/raft整体架构 etcd/raft选举流程 etcd/raft日志复制</description>
+      <guid>http://localhost:1313/en/posts/tech/etcd/etcd-raft/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;http://itfischer.space/2023/05/31/etcd/raft-example/&#34;&gt;raft-example&lt;/a&gt;
+&lt;a href=&#34;http://itfischer.space/2023/06/07/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/&#34;&gt;etcd/raft整体架构&lt;/a&gt;
+&lt;a href=&#34;http://itfischer.space/2023/06/07/etcd/Raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/&#34;&gt;etcd/raft选举流程&lt;/a&gt;
+&lt;a href=&#34;http://itfischer.space/2023/06/11/etcd/Raft%E6%97%A5%E5%BF%97/&#34;&gt;etcd/raft日志复制&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     <item>
       <title>etcd/raft日志复制</title>
-      <link>https://fischer0522.github.io/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</link>
+      <link>http://localhost:1313/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</link>
       <pubDate>Sun, 11 Jun 2023 10:48:19 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</guid>
-      <description>Raft日志 日志存储 Raft日志在存储上分为两部分，一部分为新写入或者新生成的日志，暂时存储于内存当中，还未来得及进行稳定存储。而另一部分则</description>
+      <guid>http://localhost:1313/en/posts/tech/etcd/raft%E6%97%A5%E5%BF%97/</guid>
+      <description>&lt;h1 id=&#34;raft日志&#34;&gt;Raft日志&lt;/h1&gt;
+&lt;h2 id=&#34;日志存储&#34;&gt;日志存储&lt;/h2&gt;
+&lt;p&gt;Raft日志在存储上分为两部分，一部分为新写入或者新生成的日志，暂时存储于内存当中，还未来得及进行稳定存储。而另一部分则是目前已经进行稳定存储的。&lt;br /&gt;在Log接口中可以看到，分为对应于Storage和unstable&lt;/p&gt;</description>
     </item>
     <item>
       <title>etcd-raft整体架构</title>
-      <link>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
+      <link>http://localhost:1313/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</link>
       <pubDate>Wed, 07 Jun 2023 09:31:59 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
-      <description>etcd-raft整体架构 引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-ma</description>
+      <guid>http://localhost:1313/en/posts/tech/etcd/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/</guid>
+      <description>&lt;h1 id=&#34;etcd-raft整体架构&#34;&gt;etcd-raft整体架构&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-made-simple/2-overview/&lt;/p&gt;</description>
     </item>
     <item>
       <title>etcd/raft选举流程</title>
-      <link>https://fischer0522.github.io/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</link>
+      <link>http://localhost:1313/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</link>
       <pubDate>Wed, 07 Jun 2023 00:25:29 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</guid>
-      <description>Raft选举流程 引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-made-si</description>
+      <guid>http://localhost:1313/en/posts/tech/etcd/raft%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B/</guid>
+      <description>&lt;h1 id=&#34;raft选举流程&#34;&gt;Raft选举流程&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;引用：http://blog.mrcroxx.com/posts/code-reading/etcdraft-made-simple/3-election/&lt;/p&gt;</description>
     </item>
     <item>
       <title>raft-example</title>
-      <link>https://fischer0522.github.io/en/posts/tech/etcd/raft-example/</link>
+      <link>http://localhost:1313/en/posts/tech/etcd/raft-example/</link>
       <pubDate>Wed, 31 May 2023 20:28:32 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/etcd/raft-example/</guid>
-      <description>raft-example 在etcd当中，提供了一个raft-example，该程序并非构建了一个完整的Raft模块，而是对Raft模块的的基本使用。并在此基础上构</description>
+      <guid>http://localhost:1313/en/posts/tech/etcd/raft-example/</guid>
+      <description>&lt;h1 id=&#34;raft-example&#34;&gt;raft-example&lt;/h1&gt;
+&lt;p&gt;在etcd当中，提供了一个raft-example，该程序并非构建了一个完整的Raft模块，而是对Raft模块的的基本使用。并在此基础上构建了一个简单的KV存储结构。而Raft模块是作为一个包的形式存在的，Raft模块只提供如Leader Election Log Replication Snapshot等Raft的基本逻辑功能，而在此之上的存储、网络通信等都交给了使用Raft包的开发者来自行决定。&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

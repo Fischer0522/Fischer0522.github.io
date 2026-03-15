@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto">
 
-<head><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
 <title>00-Etcd-Raft整体架构 | Fischer&#39;s Blog</title>
 <meta name="keywords" content="">
-<meta name="description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e">
+<meta name="description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被etcd引用:GitHub - etcd-io/raft: Raft library for maintaining a replicated state machine">
 <meta name="author" content="Fischer">
-<link rel="canonical" href="https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.b609c58d5c11bb90b1a54e04005d74ad1ddf22165eb79f5533967e57df9c3b50.css" integrity="sha256-tgnFjVwRu5CxpU4EAF10rR3fIhZet59VM5Z&#43;V9&#43;cO1A=" rel="preload stylesheet" as="style">
-<link rel="icon" href="https://fischer0522.github.io/img/Navigation.svg">
-<link rel="icon" type="image/png" sizes="16x16" href="https://fischer0522.github.io/img/Navigation.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="https://fischer0522.github.io/img/Navigation.svg">
-<link rel="apple-touch-icon" href="https://fischer0522.github.io/Navigation.svg">
-<link rel="mask-icon" href="https://fischer0522.github.io/Navigation.svg">
+<link rel="canonical" href="http://localhost:1313/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.c5de734fbd88c3d21543485ffbcb1ccdda89a86a780cf987fa00199c41dbc947.css" integrity="sha256-xd5zT72Iw9IVQ0hf&#43;8sczdqJqGp4DPmH&#43;gAZnEHbyUc=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/img/Navigation.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/img/Navigation.svg">
+<link rel="apple-touch-icon" href="http://localhost:1313/Navigation.svg">
+<link rel="mask-icon" href="http://localhost:1313/Navigation.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/">
 <noscript>
     <style>
         #theme-toggle,
@@ -55,15 +56,15 @@
 
     </style>
 </noscript><meta property="og:title" content="00-Etcd-Raft整体架构" />
-<meta property="og:description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e" />
+<meta property="og:description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被etcd引用:GitHub - etcd-io/raft: Raft library for maintaining a replicated state machine" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" /><meta property="article:section" content="posts" />
+<meta property="og:url" content="http://localhost:1313/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2024-05-02T09:31:59+00:00" />
 <meta property="article:modified_time" content="2024-05-02T09:31:59+00:00" />
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="00-Etcd-Raft整体架构"/>
-<meta name="twitter:description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e"/>
+<meta name="twitter:description" content="在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被etcd引用:GitHub - etcd-io/raft: Raft library for maintaining a replicated state machine"/>
 
 
 <script type="application/ld+json">
@@ -75,25 +76,25 @@
       "@type": "ListItem",
       "position":  1 ,
       "name": "Blog",
-      "item": "https://fischer0522.github.io/en/posts/"
+      "item": "http://localhost:1313/en/posts/"
     }, 
     {
       "@type": "ListItem",
       "position":  2 ,
       "name": "Tech",
-      "item": "https://fischer0522.github.io/en/posts/tech/"
+      "item": "http://localhost:1313/en/posts/tech/"
     }, 
     {
       "@type": "ListItem",
       "position":  3 ,
       "name": "CURP",
-      "item": "https://fischer0522.github.io/en/posts/tech/curp/"
+      "item": "http://localhost:1313/en/posts/tech/curp/"
     }, 
     {
       "@type": "ListItem",
       "position":  4 ,
       "name": "00-Etcd-Raft整体架构",
-      "item": "https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"
+      "item": "http://localhost:1313/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"
     }
   ]
 }
@@ -104,7 +105,7 @@
   "@type": "BlogPosting",
   "headline": "00-Etcd-Raft整体架构",
   "name": "00-Etcd-Raft整体架构",
-  "description": "在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被e",
+  "description": "在etcd中，raft作为一个单独的模块被拆分出来，位于etcd的目录下，在新版本当中, etcd/raft被拆分出来，处于一个单独的仓库被etcd引用:GitHub - etcd-io/raft: Raft library for maintaining a replicated state machine\n",
   "keywords": [
     
   ],
@@ -119,14 +120,14 @@
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://fischer0522.github.io/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"
+    "@id": "http://localhost:1313/en/posts/tech/curp/etcd-raft%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/"
   },
   "publisher": {
     "@type": "Organization",
     "name": "Fischer's Blog",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://fischer0522.github.io/img/Navigation.svg"
+      "url": "http://localhost:1313/img/Navigation.svg"
     }
   }
 }
@@ -148,8 +149,8 @@
 <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="https://fischer0522.github.io/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
-                <img src="https://fischer0522.github.io/img/Navigation.svg" alt="" aria-label="logo"
+            <a href="http://localhost:1313/en/" accesskey="h" title="Fischer&#39;s Blog (Alt + H)">
+                <img src="http://localhost:1313/img/Navigation.svg" alt="" aria-label="logo"
                     height="35">Fischer&#39;s Blog</a>
             <div class="logo-switches">
                 <button id="theme-toggle" accesskey="t" title="(Alt + T)">
@@ -172,36 +173,43 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
+                <ul class="lang-switch"><li>|</li>
+                </ul>
             </div>
         </div>
         <ul id="menu">
             <li>
-                <a href="https://fischer0522.github.io/en/search" title="Search (Alt &#43; /)" accesskey=/>
+                <a href="http://localhost:1313/en/search" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/" title="Home">
+                <a href="http://localhost:1313/en/" title="Home">
                     <span>Home</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/posts" title="Posts">
+                <a href="http://localhost:1313/en/publications" title="Publications">
+                    <span>Publications</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/en/posts" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/archives/" title="Archives">
+                <a href="http://localhost:1313/en/archives/" title="Archives">
                     <span>Archives</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/tags" title="Tags">
+                <a href="http://localhost:1313/en/tags" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
             <li>
-                <a href="https://fischer0522.github.io/en/about" title="About">
+                <a href="http://localhost:1313/en/about" title="About">
                     <span>About</span>
                 </a>
             </li>
@@ -212,7 +220,7 @@
 
 <article class="post-single">
   <header class="post-header">
-    <div class="breadcrumbs"><a href="https://fischer0522.github.io/en/">Home</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="https://fischer0522.github.io/en/posts/tech/curp/">CURP</a></div>
+    <div class="breadcrumbs"><a href="http://localhost:1313/en/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/">Blog</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/tech/">Tech</a>&nbsp;»&nbsp;<a href="http://localhost:1313/en/posts/tech/curp/">CURP</a></div>
     <h1 class="post-title entry-hint-parent">
       00-Etcd-Raft整体架构
     </h1>
@@ -285,10 +293,10 @@
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
 <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">kvstore</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">proposeC</span>    <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// channel for proposing updates
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mu</span>          <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">kvStore</span>     <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span> <span style="color:#75715e">// current committed key-value pairs
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">snapshotter</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">proposeC</span>    <span style="color:#66d9ef">chan</span><span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// channel for proposing updates</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mu</span>          <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">kvStore</span>     <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span> <span style="color:#75715e">// current committed key-value pairs</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">snapshotter</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -332,8 +340,8 @@
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panic</span>(<span style="color:#a6e22e">err</span>)
 </span></span><span style="display:flex;"><span>		}
 </span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// read commits from raft into kvStore map until error
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">readCommits</span>(<span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// read commits from raft into kvStore map until error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">readCommits</span>(<span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>)
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
@@ -493,118 +501,118 @@
 </span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Node represents a node in a raft cluster.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Node</span> <span style="color:#66d9ef">interface</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Tick increments the internal logical clock for the Node by a single tick. Election
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// timeouts and heartbeat timeouts are in units of ticks.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Tick</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Campaign causes the Node to transition to candidate state and start campaigning to become leader.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Campaign</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Propose proposes that data be appended to the log. Note that proposals can be lost without
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// notice, therefore it is user&#39;s job to ensure proposal retries.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Propose</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ProposeConfChange proposes a configuration change. Like any proposal, the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// configuration change may be dropped with or without an error being
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// returned. In particular, configuration changes are dropped unless the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader has certainty that there is no prior unapplied configuration
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// change in its log.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// The method accepts either a pb.ConfChange (deprecated) or pb.ConfChangeV2
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// message. The latter allows arbitrary configuration changes via joint
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// consensus, notably including replacing a voter. Passing a ConfChangeV2
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// message is only allowed if all Nodes participating in the cluster run a
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// version of this library aware of the V2 API. See pb.ConfChangeV2 for
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// usage details and semantics.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ProposeConfChange</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfChangeI</span>) <span style="color:#66d9ef">error</span>
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Node represents a node in a raft cluster.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Node</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Tick increments the internal logical clock for the Node by a single tick. Election</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// timeouts and heartbeat timeouts are in units of ticks.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Tick</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Campaign causes the Node to transition to candidate state and start campaigning to become leader.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Campaign</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Propose proposes that data be appended to the log. Note that proposals can be lost without</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// notice, therefore it is user&#39;s job to ensure proposal retries.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Propose</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ProposeConfChange proposes a configuration change. Like any proposal, the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// configuration change may be dropped with or without an error being</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// returned. In particular, configuration changes are dropped unless the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// leader has certainty that there is no prior unapplied configuration</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// change in its log.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The method accepts either a pb.ConfChange (deprecated) or pb.ConfChangeV2</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// message. The latter allows arbitrary configuration changes via joint</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// consensus, notably including replacing a voter. Passing a ConfChangeV2</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// message is only allowed if all Nodes participating in the cluster run a</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// version of this library aware of the V2 API. See pb.ConfChangeV2 for</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// usage details and semantics.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ProposeConfChange</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfChangeI</span>) <span style="color:#66d9ef">error</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Step advances the state machine using the given message. ctx.Err() will be returned, if any.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Step</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Message</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Step advances the state machine using the given message. ctx.Err() will be returned, if any.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Step</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Message</span>) <span style="color:#66d9ef">error</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Ready returns a channel that returns the current point-in-time state.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Users of the Node must call Advance after retrieving the state returned by Ready (unless
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// async storage writes is enabled, in which case it should never be called).
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// NOTE: No committed entries from the next Ready may be applied until all committed entries
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// and snapshots from the previous one have finished.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Ready</span>() <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">Ready</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Ready returns a channel that returns the current point-in-time state.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Users of the Node must call Advance after retrieving the state returned by Ready (unless</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// async storage writes is enabled, in which case it should never be called).</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// NOTE: No committed entries from the next Ready may be applied until all committed entries</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// and snapshots from the previous one have finished.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Ready</span>() <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">Ready</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Advance notifies the Node that the application has saved progress up to the last Ready.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// It prepares the node to return the next available Ready.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// The application should generally call Advance after it applies the entries in last Ready.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// However, as an optimization, the application may call Advance while it is applying the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// commands. For example. when the last Ready contains a snapshot, the application might take
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// a long time to apply the snapshot data. To continue receiving Ready without blocking raft
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// progress, it can call Advance before finishing applying the last ready.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// NOTE: Advance must not be called when using AsyncStorageWrites. Response messages from the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// local append and apply threads take its place.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Advance</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ApplyConfChange applies a config change (previously passed to
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// ProposeConfChange) to the node. This must be called whenever a config
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// change is observed in Ready.CommittedEntries, except when the app decides
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// to reject the configuration change (i.e. treats it as a noop instead), in
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// which case it must not be called.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Returns an opaque non-nil ConfState protobuf which must be recorded in
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// snapshots.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ApplyConfChange</span>(<span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfChangeI</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfState</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Advance notifies the Node that the application has saved progress up to the last Ready.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// It prepares the node to return the next available Ready.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The application should generally call Advance after it applies the entries in last Ready.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// However, as an optimization, the application may call Advance while it is applying the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// commands. For example. when the last Ready contains a snapshot, the application might take</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// a long time to apply the snapshot data. To continue receiving Ready without blocking raft</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// progress, it can call Advance before finishing applying the last ready.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// NOTE: Advance must not be called when using AsyncStorageWrites. Response messages from the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// local append and apply threads take its place.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Advance</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ApplyConfChange applies a config change (previously passed to</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ProposeConfChange) to the node. This must be called whenever a config</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// change is observed in Ready.CommittedEntries, except when the app decides</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// to reject the configuration change (i.e. treats it as a noop instead), in</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// which case it must not be called.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Returns an opaque non-nil ConfState protobuf which must be recorded in</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// snapshots.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ApplyConfChange</span>(<span style="color:#a6e22e">cc</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfChangeI</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">ConfState</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// TransferLeadership attempts to transfer leadership to the given transferee.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">TransferLeadership</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">lead</span>, <span style="color:#a6e22e">transferee</span> <span style="color:#66d9ef">uint64</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// TransferLeadership attempts to transfer leadership to the given transferee.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">TransferLeadership</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">lead</span>, <span style="color:#a6e22e">transferee</span> <span style="color:#66d9ef">uint64</span>)
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ForgetLeader forgets a follower&#39;s current leader, changing it to None. It
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// remains a leaderless follower in the current term, without campaigning.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// This is useful with PreVote+CheckQuorum, where followers will normally not
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// grant pre-votes if they&#39;ve heard from the leader in the past election
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// timeout interval. Leaderless followers can grant pre-votes immediately, so
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// if a quorum of followers have strong reason to believe the leader is dead
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// (for example via a side-channel or external failure detector) and forget it
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// then they can elect a new leader immediately, without waiting out the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// election timeout. They will also revert to normal followers if they hear
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// from the leader again, or transition to candidates on an election timeout.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// For example, consider a three-node cluster where 1 is the leader and 2+3
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// have just received a heartbeat from it. If 2 and 3 believe the leader has
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// now died (maybe they know that an orchestration system shut down 1&#39;s VM),
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// we can instruct 2 to forget the leader and 3 to campaign. 2 will then be
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// able to grant 3&#39;s pre-vote and elect 3 as leader immediately (normally 2
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// would reject the vote until an election timeout passes because it has heard
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// from the leader recently). However, 3 can not campaign unilaterally, a
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// quorum have to agree that the leader is dead, which avoids disrupting the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader if individual nodes are wrong about it being dead.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// This does nothing with ReadOnlyLeaseBased, since it would allow a new
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader to be elected without the old leader knowing.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ForgetLeader</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ForgetLeader forgets a follower&#39;s current leader, changing it to None. It</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// remains a leaderless follower in the current term, without campaigning.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// This is useful with PreVote+CheckQuorum, where followers will normally not</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// grant pre-votes if they&#39;ve heard from the leader in the past election</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// timeout interval. Leaderless followers can grant pre-votes immediately, so</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// if a quorum of followers have strong reason to believe the leader is dead</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// (for example via a side-channel or external failure detector) and forget it</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// then they can elect a new leader immediately, without waiting out the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// election timeout. They will also revert to normal followers if they hear</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// from the leader again, or transition to candidates on an election timeout.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// For example, consider a three-node cluster where 1 is the leader and 2+3</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// have just received a heartbeat from it. If 2 and 3 believe the leader has</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// now died (maybe they know that an orchestration system shut down 1&#39;s VM),</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// we can instruct 2 to forget the leader and 3 to campaign. 2 will then be</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// able to grant 3&#39;s pre-vote and elect 3 as leader immediately (normally 2</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// would reject the vote until an election timeout passes because it has heard</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// from the leader recently). However, 3 can not campaign unilaterally, a</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// quorum have to agree that the leader is dead, which avoids disrupting the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// leader if individual nodes are wrong about it being dead.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// This does nothing with ReadOnlyLeaseBased, since it would allow a new</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// leader to be elected without the old leader knowing.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ForgetLeader</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReadIndex request a read state. The read state will be set in the ready.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Read state has a read index. Once the application advances further than the read
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// index, any linearizable read requests issued before the read request can be
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// processed safely. The read state will have the same rctx attached.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Note that request can be lost without notice, therefore it is user&#39;s job
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// to ensure read index retries.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReadIndex</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">rctx</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReadIndex request a read state. The read state will be set in the ready.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Read state has a read index. Once the application advances further than the read</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// index, any linearizable read requests issued before the read request can be</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// processed safely. The read state will have the same rctx attached.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Note that request can be lost without notice, therefore it is user&#39;s job</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// to ensure read index retries.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ReadIndex</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">rctx</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Status returns the current status of the raft state machine.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Status</span>() <span style="color:#a6e22e">Status</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReportUnreachable reports the given node is not reachable for the last send.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReportUnreachable</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">uint64</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReportSnapshot reports the status of the sent snapshot. The id is the raft ID of the follower
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// who is meant to receive the snapshot, and the status is SnapshotFinish or SnapshotFailure.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Calling ReportSnapshot with SnapshotFinish is a no-op. But, any failure in applying a
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// snapshot (for e.g., while streaming it from leader to follower), should be reported to the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// leader with SnapshotFailure. When leader sends a snapshot to a follower, it pauses any raft
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// log probes until the follower can apply the snapshot and advance its state. If the follower
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// can&#39;t do that, for e.g., due to a crash, it could end up in a limbo, never getting any
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// updates from the leader. Therefore, it is crucial that the application ensures that any
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// failure in snapshot sending is caught and reported back to the leader; so it can resume raft
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// log probing in the follower.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReportSnapshot</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">uint64</span>, <span style="color:#a6e22e">status</span> <span style="color:#a6e22e">SnapshotStatus</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Stop performs any necessary termination of the Node.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Stop</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Status returns the current status of the raft state machine.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Status</span>() <span style="color:#a6e22e">Status</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReportUnreachable reports the given node is not reachable for the last send.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ReportUnreachable</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">uint64</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReportSnapshot reports the status of the sent snapshot. The id is the raft ID of the follower</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// who is meant to receive the snapshot, and the status is SnapshotFinish or SnapshotFailure.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Calling ReportSnapshot with SnapshotFinish is a no-op. But, any failure in applying a</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// snapshot (for e.g., while streaming it from leader to follower), should be reported to the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// leader with SnapshotFailure. When leader sends a snapshot to a follower, it pauses any raft</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// log probes until the follower can apply the snapshot and advance its state. If the follower</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// can&#39;t do that, for e.g., due to a crash, it could end up in a limbo, never getting any</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// updates from the leader. Therefore, it is crucial that the application ensures that any</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// failure in snapshot sending is caught and reported back to the leader; so it can resume raft</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// log probing in the follower.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ReportSnapshot</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">uint64</span>, <span style="color:#a6e22e">status</span> <span style="color:#a6e22e">SnapshotStatus</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Stop performs any necessary termination of the Node.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Stop</span>()
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -654,12 +662,12 @@
 </span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// newRaftNode initiates a raft instance and returns a committed log entry
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// channel and error channel. Proposals for log updates are sent over the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// provided the proposal channel. All log entries are replayed over the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// commit channel, followed by a nil message (to indicate the channel is
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// current), then new log entries. To shutdown, close proposeC and read errorC.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newRaftNode</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">peers</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">join</span> <span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">getSnapshot</span> <span style="color:#66d9ef">func</span>() ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>), <span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>,
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// newRaftNode initiates a raft instance and returns a committed log entry</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// channel and error channel. Proposals for log updates are sent over the</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// provided the proposal channel. All log entries are replayed over the</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// commit channel, followed by a nil message (to indicate the channel is</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// current), then new log entries. To shutdown, close proposeC and read errorC.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newRaftNode</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">peers</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">join</span> <span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">getSnapshot</span> <span style="color:#66d9ef">func</span>() ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>), <span style="color:#a6e22e">proposeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>,
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">confChangeC</span> <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">raftpb</span>.<span style="color:#a6e22e">ConfChange</span>) (<span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>, <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>, <span style="color:#f92672">&lt;-</span><span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>) {
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">commitC</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">commit</span>)
@@ -684,8 +692,8 @@
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">logger</span>: <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>(),
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapshotterReady</span>: make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>, <span style="color:#ae81ff">1</span>),
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// rest of structure populated after WAL replay
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	}
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// rest of structure populated after WAL replay</span>
+</span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">startRaft</span>()
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>, <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span>
 </span></span><span style="display:flex;"><span>}
@@ -767,8 +775,8 @@
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">oldwal</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">wal</span>.<span style="color:#a6e22e">Exist</span>(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">waldir</span>)
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">wal</span> = <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">replayWAL</span>()
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// signal replay has finished
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotter</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// signal replay has finished</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotter</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rpeers</span> <span style="color:#f92672">:=</span> make([]<span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">Peer</span>, len(<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">peers</span>))
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rpeers</span> {
@@ -896,72 +904,72 @@
 </span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67
 </span></code></pre></td>
 <td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
-<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Ready encapsulates the entries and messages that are ready to read,
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// be saved to stable storage, committed or sent to other peers.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// All fields in Ready are read-only.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Ready</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The current volatile state of a Node.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// SoftState will be nil if there is no update.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// It is not required to consume or store SoftState.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">*</span><span style="color:#a6e22e">SoftState</span>
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Ready encapsulates the entries and messages that are ready to read,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// be saved to stable storage, committed or sent to other peers.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// All fields in Ready are read-only.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Ready</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The current volatile state of a Node.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// SoftState will be nil if there is no update.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// It is not required to consume or store SoftState.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span><span style="color:#a6e22e">SoftState</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The current state of a Node to be saved to stable storage BEFORE
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages are sent.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// HardState will be equal to empty state if there is no update.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">HardState</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The current state of a Node to be saved to stable storage BEFORE</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages are sent.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// HardState will be equal to empty state if there is no update.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages slice.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">HardState</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReadStates can be used for node to serve linearizable read requests locally
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// when its applied index is greater than the index in ReadState.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Note that the readState will be returned when raft receives msgReadIndex.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// The returned is only valid for the request that requested to read.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ReadStates</span> []<span style="color:#a6e22e">ReadState</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ReadStates can be used for node to serve linearizable read requests locally</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// when its applied index is greater than the index in ReadState.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Note that the readState will be returned when raft receives msgReadIndex.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// The returned is only valid for the request that requested to read.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ReadStates</span> []<span style="color:#a6e22e">ReadState</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Entries specifies entries to be saved to stable storage BEFORE
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages are sent.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Entries</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Entry</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Entries specifies entries to be saved to stable storage BEFORE</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages are sent.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages slice.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Entries</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Entry</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Snapshot specifies the snapshot to be saved to stable storage.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Snapshot</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Snapshot</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Snapshot specifies the snapshot to be saved to stable storage.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageAppend message in the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages slice.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Snapshot</span> <span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Snapshot</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// CommittedEntries specifies entries to be committed to a
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// store/state-machine. These have previously been appended to stable
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// storage.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageApply message in the
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Messages slice.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">CommittedEntries</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Entry</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// CommittedEntries specifies entries to be committed to a</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// store/state-machine. These have previously been appended to stable</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// storage.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If async storage writes are enabled, this field does not need to be acted</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// on immediately. It will be reflected in a MsgStorageApply message in the</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages slice.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CommittedEntries</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Entry</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages specifies outbound messages.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are not enabled, these messages must be sent
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// AFTER Entries are appended to stable storage.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If async storage writes are enabled, these messages can be sent
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// immediately as the messages that have the completion of the async writes
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// as a precondition are attached to the individual MsgStorage{Append,Apply}
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// messages instead.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// If it contains a MsgSnap message, the application MUST report back to raft
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// when the snapshot has been received or has failed by calling ReportSnapshot.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Messages</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Message</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Messages specifies outbound messages.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If async storage writes are not enabled, these messages must be sent</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// AFTER Entries are appended to stable storage.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If async storage writes are enabled, these messages can be sent</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// immediately as the messages that have the completion of the async writes</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// as a precondition are attached to the individual MsgStorage{Append,Apply}</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// messages instead.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// If it contains a MsgSnap message, the application MUST report back to raft</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// when the snapshot has been received or has failed by calling ReportSnapshot.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Messages</span> []<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">Message</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// MustSync indicates whether the HardState and Entries must be durably
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// written to disk or if a non-durable write is permissible.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">MustSync</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// MustSync indicates whether the HardState and Entries must be durably</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// written to disk or if a non-durable write is permissible.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">MustSync</span> <span style="color:#66d9ef">bool</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></td></tr></table>
 </div>
@@ -1011,11 +1019,11 @@
 </span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">C</span>:
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">Tick</span>()
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// store raft entries to wal, then publish over commit channel
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">rd</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">Ready</span>():
-</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// Must save the snapshot file and WAL snapshot entry before saving any other entries
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#75715e">// or hardstate to ensure that recovery after a snapshot restore is possible.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">IsEmptySnap</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// store raft entries to wal, then publish over commit channel</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">rd</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">Ready</span>():
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// Must save the snapshot file and WAL snapshot entry before saving any other entries</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// or hardstate to ensure that recovery after a snapshot restore is possible.</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">raft</span>.<span style="color:#a6e22e">IsEmptySnap</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>) {
 </span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">saveSnap</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Snapshot</span>)
 </span></span><span style="display:flex;"><span>			}
 </span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">wal</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">HardState</span>, <span style="color:#a6e22e">rd</span>.<span style="color:#a6e22e">Entries</span>)
@@ -1106,8 +1114,8 @@
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">logger</span>: <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>(),
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snapshotterReady</span>: make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">snap</span>.<span style="color:#a6e22e">Snapshotter</span>, <span style="color:#ae81ff">1</span>),
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// rest of structure populated after WAL replay
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	}
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// rest of structure populated after WAL replay</span>
+</span></span><span style="display:flex;"><span>	}
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">startRaft</span>()
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">commitC</span>, <span style="color:#a6e22e">errorC</span>, <span style="color:#a6e22e">rc</span>.<span style="color:#a6e22e">snapshotterReady</span>
 </span></span><span style="display:flex;"><span>}
@@ -1168,15 +1176,15 @@
     <ul class="post-tags">
     </ul>
 <nav class="paginav">
-  <a class="prev" href="https://fischer0522.github.io/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/">
+  <a class="prev" href="http://localhost:1313/en/posts/tech/curp/curp-exploiting-commutativity-for-practical-fast-replication/">
     <span class="title">« Prev</span>
     <br>
     <span>01-CURP: 共识算法的重新思考</span>
   </a>
-  <a class="next" href="https://fischer0522.github.io/en/posts/tech/toydb/06-sql-execution/">
+  <a class="next" href="http://localhost:1313/en/posts/tech/%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">
     <span class="title">Next »</span>
     <br>
-    <span>06-SQL Execution</span>
+    <span>Rust内存管理</span>
   </a>
 </nav>
 
@@ -1184,7 +1192,7 @@
 <ul class="share-buttons">
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on x"
-            href="https://x.com/intent/tweet/?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&amp;hashtags=">
+            href="https://x.com/intent/tweet/?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&amp;hashtags=">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
@@ -1193,7 +1201,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&amp;title=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;summary=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;source=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&amp;title=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;summary=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;source=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
@@ -1202,7 +1210,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on reddit"
-            href="https://reddit.com/submit?url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&title=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84">
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f&title=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
@@ -1211,7 +1219,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
@@ -1220,7 +1228,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on whatsapp"
-            href="https://api.whatsapp.com/send?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84%20-%20https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            href="https://api.whatsapp.com/send?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84%20-%20http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
             <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
@@ -1229,7 +1237,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on telegram"
-            href="https://telegram.me/share/url?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;url=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            href="https://telegram.me/share/url?text=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&amp;url=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
             <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
                 <path
                     d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
@@ -1238,7 +1246,7 @@
     </li>
     <li>
         <a target="_blank" rel="noopener noreferrer" aria-label="share 00-Etcd-Raft整体架构 on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&u=https%3a%2f%2ffischer0522.github.io%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
+            href="https://news.ycombinator.com/submitlink?t=00-Etcd-Raft%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84&u=http%3a%2f%2flocalhost%3a1313%2fen%2fposts%2ftech%2fcurp%2fetcd-raft%25E6%2595%25B4%25E4%25BD%2593%25E6%259E%25B6%25E6%259E%2584%2f">
             <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
                 <path
@@ -1253,7 +1261,7 @@
     </main>
     
 <footer class="footer">
-    <span>&copy; 2025 <a href="https://fischer0522.github.io/en/">Fischer&#39;s Blog</a></span>
+    <span>&copy; 2026 <a href="http://localhost:1313/en/">Fischer&#39;s Blog</a></span>
     <span>
         Powered by
         <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &

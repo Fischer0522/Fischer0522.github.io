@@ -2,53 +2,83 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Bustub通关指南 on Fischer&#39;s Blog</title>
-    <link>https://fischer0522.github.io/en/posts/tech/bustub/</link>
+    <link>http://localhost:1313/en/posts/tech/bustub/</link>
     <description>Recent content in Bustub通关指南 on Fischer&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sun, 23 Apr 2023 21:21:13 +0000</lastBuildDate>
-    <atom:link href="https://fischer0522.github.io/en/posts/tech/bustub/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/en/posts/tech/bustub/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>BusTub-Lab4</title>
-      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab4/</link>
+      <link>http://localhost:1313/en/posts/tech/bustub/bustub-lab4/</link>
       <pubDate>Sun, 23 Apr 2023 21:21:13 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab4/</guid>
-      <description>Lab4 由于五一临近考试，再加上后续还需要准备各种机试以及408等，整个Lab4做的比较的草率，基本上只实现了最基础的功能，Leaderboard</description>
+      <guid>http://localhost:1313/en/posts/tech/bustub/bustub-lab4/</guid>
+      <description>&lt;h1 id=&#34;lab4&#34;&gt;Lab4&lt;/h1&gt;
+&lt;p&gt;由于五一临近考试，再加上后续还需要准备各种机试以及408等，整个Lab4做的比较的草率，基本上只实现了最基础的功能，Leaderboard Bonus的各种优化都没去实现，确实是没时间了，在这里也只能简单记录一下&lt;/p&gt;</description>
     </item>
     <item>
       <title>BusTub Lab3 Query Execution</title>
-      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab3/</link>
+      <link>http://localhost:1313/en/posts/tech/bustub/bustub-lab3/</link>
       <pubDate>Sat, 15 Apr 2023 23:31:34 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab3/</guid>
-      <description>Lab3 Task1 火山模型 在Task1当中实现了SeqScan​ Insert​ Delete​ IndexScan​，由于均为火山模型，因此在实现上大同小异，</description>
+      <guid>http://localhost:1313/en/posts/tech/bustub/bustub-lab3/</guid>
+      <description>&lt;h1 id=&#34;lab3&#34;&gt;Lab3&lt;/h1&gt;
+&lt;h2 id=&#34;task1&#34;&gt;Task1&lt;/h2&gt;
+&lt;h3 id=&#34;火山模型&#34;&gt;火山模型&lt;/h3&gt;
+&lt;p&gt;在Task1当中实现了&lt;code&gt;SeqScan&lt;/code&gt;​ &lt;code&gt;Insert&lt;/code&gt;​ &lt;code&gt;Delete&lt;/code&gt;​ &lt;code&gt;IndexScan&lt;/code&gt;​，由于均为火山模型，因此在实现上大同小异，就集中说明一下火山模型，和各自所需要注意的即可。&lt;/p&gt;</description>
     </item>
     <item>
       <title>BusTub Lab2 B&#43;Tree Index checkpoint2</title>
-      <link>https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/</link>
+      <link>http://localhost:1313/en/posts/tech/bustub/busttub-lab2-c2/</link>
       <pubDate>Fri, 14 Apr 2023 20:46:05 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/bustub/busttub-lab2-c2/</guid>
-      <description>checkpoint2 Task3 在支持并发前没什么好说的，一个简单的迭代器。根据begin的条件找到一个起始页，之后在该页内遍历即可，当遍历完该页之后，根据nextPa</description>
+      <guid>http://localhost:1313/en/posts/tech/bustub/busttub-lab2-c2/</guid>
+      <description>&lt;h1 id=&#34;checkpoint2&#34;&gt;checkpoint2&lt;/h1&gt;
+&lt;h2 id=&#34;task3&#34;&gt;Task3&lt;/h2&gt;
+&lt;p&gt;在支持并发前没什么好说的，一个简单的迭代器。根据begin的条件找到一个起始页，之后在该页内遍历即可，当遍历完该页之后，根据nextPageId找到下一页继续遍历即可。&lt;/p&gt;</description>
     </item>
     <item>
       <title>BusTub Lab2 B&#43;Tree Index checkpoint1</title>
-      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/</link>
+      <link>http://localhost:1313/en/posts/tech/bustub/bustub-lab2-c1/</link>
       <pubDate>Fri, 24 Mar 2023 15:04:09 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab2-c1/</guid>
-      <description>Lab2 对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b+树的模拟动画，然后再使用官方的画图工具比较自己的B+树，一般</description>
+      <guid>http://localhost:1313/en/posts/tech/bustub/bustub-lab2-c1/</guid>
+      <description>&lt;h1 id=&#34;lab2&#34;&gt;Lab2&lt;/h1&gt;
+&lt;p&gt;对于Lab的debug，由于并没有开放测试样例，因此最好的就是找一个合适的b+树的模拟动画，然后再使用官方的画图工具比较自己的B+树，一般3-4层没有问题了大多就是没有问题了，把分裂、合并、重分配等各种情况全部涉及到一次基本就可以了。&lt;/p&gt;</description>
     </item>
     <item>
       <title>BusTub Lab1 Buffer Pool Manager</title>
-      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/</link>
+      <link>http://localhost:1313/en/posts/tech/bustub/bustub-lab1/</link>
       <pubDate>Mon, 20 Mar 2023 14:54:39 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab1/</guid>
-      <description>BusTub Lab1 Buffer Pool Manager Task1 可扩展哈希表 相关函数 Find(K,V)​：查询一个Key是否存在，如果存在则将其V指针指向相关的值，返回true，否则返回fal</description>
+      <guid>http://localhost:1313/en/posts/tech/bustub/bustub-lab1/</guid>
+      <description>&lt;h1 id=&#34;bustub-lab1-buffer-pool-manager&#34;&gt;BusTub Lab1 Buffer Pool Manager&lt;/h1&gt;
+&lt;h2 id=&#34;task1-可扩展哈希表&#34;&gt;Task1 可扩展哈希表&lt;/h2&gt;
+&lt;h3 id=&#34;相关函数&#34;&gt;相关函数&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;Find(K,V)&lt;/code&gt;​：查询一个Key是否存在，如果存在则将其V指针指向相关的值，返回true，否则返回false&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;Insert(K,V)&lt;/code&gt;:插入一个值，如果已经存在，则覆盖原本的值，返回true，如果当前k-v不能被插入（bucket满了，并且不是对原有的key进行更新），则：&lt;/p&gt;</description>
     </item>
     <item>
       <title>BusTub Lab0 cpp primer</title>
-      <link>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</link>
+      <link>http://localhost:1313/en/posts/tech/bustub/bustub-lab0/</link>
       <pubDate>Sat, 18 Mar 2023 00:28:50 +0000</pubDate>
-      <guid>https://fischer0522.github.io/en/posts/tech/bustub/bustub-lab0/</guid>
-      <description>BusTub Lab0 cpp primer 实现一个字典树，主要定义了三个类： TrieNode TrieNodeWithValue Trie Task1 实现一个不支持并发的字典树 TrieNode 内部存储的数据为一个char字符， 并且有一个标识位置来表示是否</description>
+      <guid>http://localhost:1313/en/posts/tech/bustub/bustub-lab0/</guid>
+      <description>&lt;h1 id=&#34;bustub-lab0-cpp-primer&#34;&gt;BusTub Lab0 cpp primer&lt;/h1&gt;
+&lt;p&gt;实现一个字典树，主要定义了三个类：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;TrieNode&lt;/li&gt;
+&lt;li&gt;TrieNodeWithValue&lt;/li&gt;
+&lt;li&gt;Trie&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;task1&#34;&gt;Task1&lt;/h2&gt;
+&lt;p&gt;实现一个不支持并发的字典树&lt;/p&gt;
+&lt;h3 id=&#34;trienode&#34;&gt;TrieNode&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;内部存储的数据为一个char字符，&lt;/li&gt;
+&lt;li&gt;并且有一个标识位置来表示是否到达了结束位置&lt;/li&gt;
+&lt;li&gt;对于字节点通过一个char-&amp;gt; unique_ptr的Map来进行存储&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用unique_ptr则意味着当将其分配给其他的变量时需要小心，&lt;code&gt;InsertChildNode&lt;/code&gt;​ &lt;code&gt;GetChildNode&lt;/code&gt;​的返回格式均为&lt;code&gt;unique_ptr&lt;/code&gt;​，因此可以不进行copy的直接访问当中的数据&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

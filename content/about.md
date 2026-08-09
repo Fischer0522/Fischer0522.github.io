@@ -28,9 +28,16 @@ cover:
 
 ## Work Experience
 
+
+### Sixie Capital
+**Distributed Storage System Development Intern**  
+**June 2026 - Present**
+
+Designing and developing the foundational storage layer that powers quant research and model training.
+
 ### Ant Group Research Institute, Computing Systems Lab, Asterinas OS
 **Research Intern**  
-**January 2026 - Present**
+**January 2026 - June 2026**
 
 Developing the Asterinas storage stack, including filesystem validation, VFS/ProcFS interfaces, and the ongoing Ext2 redesign.
 
